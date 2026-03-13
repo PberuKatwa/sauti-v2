@@ -7,6 +7,7 @@ import { ConfigService } from "@nestjs/config";
 import type {
   UserProfile,
   CreateUserPayload,
+  UpdateUserPayload
 } from "../../types/user.types";
 
 @Injectable()
@@ -90,6 +91,83 @@ export class WhatsappUsersModel {
       throw error;
     }
   }
+
+  async updateUser(payload: UpdateUserPayload): Promise<void> {
+     try {
+       const { id, whatsappAccessToken, whatsappPermanentToken } = payload;
+
+       this.logger.warn(`Attempting to update user id: ${id}`);
+
+       const query = `
+         UPDATE whatsapp_users
+         SET whatsapp_access_token=$1, whatsapp_permanent_token=$2
+         WHERE id=$3
+       `;
+
+       const pgPool = this.pgConfig.getPool();
+       await pgPool.query(query, [whatsappAccessToken, whatsappPermanentToken, id]);
+
+       this.logger.info(`Successfully updated user id: ${id}`);
+     } catch (error) {
+       throw error;
+     }
+   }
+
+   async fetchUser(id: number): Promise<UserProfile> {
+     try {
+       this.logger.warn(`Attempting to fetch WhatsApp user id: ${id}`);
+
+       const query = `
+         SELECT
+           id,
+           first_name,
+           last_name,
+           phone_number,
+           phone_number_id,
+           business_account_id,
+           status
+         FROM whatsapp_users
+         WHERE id=$1 AND status != 'trash'
+       `;
+
+       const pgPool = this.pgConfig.getPool();
+       const result = await pgPool.query(query, [id]);
+
+       const user: UserProfile = result.rows[0];
+       return user;
+     } catch (error) {
+       throw error;
+     }
+   }
+
+   async fetchUserByPhone(phoneNumber: number): Promise<UserProfile> {
+     try {
+       this.logger.warn(`Attempting to fetch WhatsApp user by phone: ${phoneNumber}`);
+
+       const query = `
+         SELECT
+           id,
+           first_name,
+           last_name,
+           phone_number,
+           phone_number_id,
+           business_account_id,
+           status
+         FROM whatsapp_users
+         WHERE phone_number=$1 AND status != 'trash'
+       `;
+
+       const pgPool = this.pgConfig.getPool();
+       const result = await pgPool.query(query, [phoneNumber]);
+
+       if (result.rowCount === 0) throw new Error(`No user found with this phone number`);
+
+       const user: UserProfile = result.rows[0];
+       return user;
+     } catch (error) {
+       throw error;
+     }
+   }
 
 
 }

@@ -8,7 +8,6 @@ export interface UserProfile {
   status: "active" | "inactive" | "trash";
 }
 
-/** Payload required to create a  user */
 export interface CreateUserPayload {
   firstName: string;
   lastName: string;
@@ -18,12 +17,10 @@ export interface CreateUserPayload {
   whatsappAccessToken: string;
 }
 
-/** Payload to update  user fields */
 export interface UpdateUserPayload {
   id: number;
-  firstName?: string;
-  lastName?: string;
-  status?: "active" | "inactive" | "trash";
+  whatsappAccessToken: string;
+  whatsappPermanentToken: string;
 }
 
 /** Incoming  webhook message user type */
