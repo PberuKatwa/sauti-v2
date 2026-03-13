@@ -5,42 +5,22 @@ import { AppLoggerModule } from './logger/logger.module';
 import { GarageModule } from './modules/garage/garage.module';
 import { PostgresModule } from './databases/postgres.module';
 import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
-
-
 import { FilesModule } from './modules/files/files.module';
 import { UsersModule } from './modules/users/users.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { PropertiesModule } from './modules/properties/properties.module';
-import { BlogModule } from './modules/blog/blog.module';
-import { PublicModule } from './modules/public/public.module';
-import { MailModule } from './modules/mail/mail.module';
+
 
 @Module({
   imports: [
     ConfigModule.forRoot(
       {
-        load: [s3Config, postgresEnv, globalConfig, emailConfig],
+        load: [s3Config, postgresEnv, globalConfig],
         isGlobal: true,
-
-        // validationSchema: Joi.object({
-        //   jwtSecret: Joi.string().required(),
-        // }),
-        // validationOptions: {
-        //   allowUnknown: true,
-        //   abortEarly: true,
-        // },
-
       }),
     AppLoggerModule,
     GarageModule,
     FilesModule,
     PostgresModule,
     UsersModule,
-    AuthModule,
-    PropertiesModule,
-    BlogModule,
-    PublicModule,
-    MailModule
   ]
 })
 export class AppModule implements NestModule{
