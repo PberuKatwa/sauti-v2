@@ -14,9 +14,9 @@ import { Readable } from 'stream';
 import { ConfigService } from '@nestjs/config';
 import path from 'path';
 import { S3_CLIENT } from './garage.storage';
-import { APP_LOGGER } from 'src/logger/logger.provider';
+import { APP_LOGGER } from '../../logger/logger.provider';
 import type { AppLogger } from '../../logger/winston.logger';
-import type { listFilesRes, keyFileFetchRes } from 'src/types/storage.types';
+import type { listFilesRes, keyFileFetchRes } from '../../types/storage.types';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
