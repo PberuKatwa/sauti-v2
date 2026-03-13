@@ -5,6 +5,7 @@ import {
   S3Config,
   GlobalEnvironment,
   PostgresEnv,
+  WhatsappConfig,
 } from "./types/env.types"
 
 const getGlobalEnvironment: GlobalEnvironmentChecker = function (): string {
@@ -56,3 +57,8 @@ export const globalConfig = (): GlobalEnvironment => ({
   environment: getGlobalEnvironment(),
   port: getEnv(getGlobalEnvironment, "PORT"),
 });
+
+export const whatsappConfig = (): WhatsappConfig => ({
+  whatsappAcessToken: getEnv(getGlobalEnvironment, "WHATSAPP_TOKEN"),
+  phoneNumberId:getEnv(getGlobalEnvironment,"PHONE_NUMBER_ID")
+})

@@ -19,6 +19,11 @@ export interface PostgresEnv{
   pgDatabase: string;
 }
 
+export interface WhatsappConfig{
+  whatsappAcessToken: string;
+  phoneNumberId: string;
+}
+
 export type EnvConfig = PostgresEnv | S3Config | GlobalEnvironment
 
 export type SuffixChecker = (value:string,suffix:string) => boolean;
