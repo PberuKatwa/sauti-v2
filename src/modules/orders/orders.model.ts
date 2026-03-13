@@ -28,10 +28,7 @@ export class OrdersModel {
       const query = `
         CREATE TABLE IF NOT EXISTS orders (
           id SERIAL PRIMARY KEY,
-
           client_id INTEGER NOT NULL,
-
-          items JSONB NOT NULL,
 
           subtotal NUMERIC(10,2) NOT NULL,
           tax NUMERIC(10,2) DEFAULT 0,
@@ -39,11 +36,16 @@ export class OrdersModel {
 
           status TEXT DEFAULT 'pending',
           payment_status TEXT DEFAULT 'unpaid',
-
           invoice_number TEXT,
 
           created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+          updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+          items JSONB NOT NULL,
+
+          FOREIGN KEY(client_id)
+            REFERENCES clients(id)
+            ON DELETE SET NULL
         );
 
         DROP TRIGGER IF EXISTS update_orders_timestamp ON orders;
@@ -82,7 +84,7 @@ export class OrdersModel {
         subtotal += item.quantity * item.unitPrice;
       }
 
-      const tax = 0;
+      const tax = Math.floor((0.15)/subtotal);
       const total = subtotal + tax;
 
       const query = `
@@ -112,47 +114,6 @@ export class OrdersModel {
       const order: OrderProfile = result.rows[0];
 
       this.logger.info(`Successfully created order id: ${order.id}`);
-
-      return order;
-
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async generateInvoice(orderId: number): Promise<OrderProfile> {
-    try {
-
-      this.logger.warn(`Attempting to generate invoice for order: ${orderId}`);
-
-      const invoiceNumber = `INV-${orderId.toString().padStart(6, '0')}`;
-
-      const query = `
-        UPDATE orders
-        SET invoice_number=$1
-        WHERE id=$2
-        RETURNING
-          id,
-          client_id,
-          items,
-          subtotal,
-          tax,
-          total,
-          status,
-          payment_status,
-          invoice_number;
-      `;
-
-      const pool = this.pgConfig.getPool();
-      const result = await pool.query(query, [invoiceNumber, orderId]);
-
-      if (result.rowCount === 0) {
-        throw new Error(`Order not found`);
-      }
-
-      const order: OrderProfile = result.rows[0];
-
-      this.logger.info(`Successfully generated invoice for order: ${orderId}`);
 
       return order;
 

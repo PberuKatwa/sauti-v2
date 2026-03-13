@@ -1,18 +1,10 @@
 import type { ApiResponse } from "./api.types";
 
-/* ================================
-   Order Item
-================================ */
-
 export interface OrderItem {
   name: string;
   quantity: number;
   unitPrice: number;
 }
-
-/* ================================
-   Order Profile
-================================ */
 
 export interface OrderProfile {
   id: number;
@@ -29,10 +21,6 @@ export interface OrderProfile {
 
   invoice_number: string | null;
 }
-
-/* ================================
-   Payloads
-================================ */
 
 export interface CreateOrderPayload {
   clientId: number;
