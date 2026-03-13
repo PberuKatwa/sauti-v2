@@ -84,11 +84,11 @@ export class OrdersModel {
         subtotal += item.quantity * item.unitPrice;
       }
 
-      const tax = Math.floor((0.15)/subtotal);
+      const tax = Math.floor(subtotal * (0.15));
       const total = subtotal + tax;
 
       const precision = 10000
-      const randomNum = Math.floor(Math.random() * precision) / precision;
+      const randomNum = Math.floor(Math.random() * 9000) + 1000;
       const invoiceNumber = `INV-${randomNum}`;
 
       const query = `
