@@ -6,11 +6,13 @@ import { UsersModule } from "../modules/users/users.module";
 import { UsersModel } from "../modules/users/users.model";
 import { FilesModel } from "../modules/files/files.model";
 import { FilesModule } from "../modules/files/files.module";
+import { ClientModule } from "../modules/client/client.module";
+import { ClientModel } from "../modules/client/client.model";
 
 @Global()
 @Module({
-  imports: [AppLoggerModule, UsersModule, FilesModule],
-  providers:[PostgresConfig,PostgresGlobals, FilesModel],
+  imports: [AppLoggerModule, UsersModule, FilesModule, ClientModule],
+  providers:[PostgresConfig,PostgresGlobals, FilesModel, ClientModel],
   exports:[PostgresConfig]
 })
 
@@ -19,7 +21,8 @@ export class PostgresModule implements OnModuleInit {
   constructor(
     private readonly postgresConfig: PostgresConfig,
     private readonly users: UsersModel,
-    private readonly files:FilesModel,
+    private readonly files: FilesModel,
+    private readonly clients:ClientModel,
     private readonly pgGlobals:PostgresGlobals
   ) { };
 
@@ -30,6 +33,7 @@ export class PostgresModule implements OnModuleInit {
     await this.pgGlobals.createTimestampTrigger()
     await this.users.createTable()
     await this.files.createTable()
+    await this.clients.createTable()
   }
 
 }
