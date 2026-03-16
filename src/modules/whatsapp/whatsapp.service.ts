@@ -5,6 +5,9 @@ import type { AppLogger } from "../../logger/winston.logger";
 @Injectable()
 export class WhatsappService{
 
+  private readonly token: string;
+  private readonly phoneId: string;
+
   constructor(@Inject(APP_LOGGER) private readonly logger: AppLogger) { };
 
 
