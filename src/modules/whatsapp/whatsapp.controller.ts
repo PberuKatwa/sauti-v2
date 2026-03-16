@@ -1,10 +1,11 @@
-import { Controller, Get, Inject, Req, Res } from "@nestjs/common";
+import { Controller, Get, Inject, Req, Res, Post } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { APP_LOGGER } from "../../logger/logger.provider";
 import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappService } from "./whatsapp.service";
 import { ConfigService } from "@nestjs/config";
 import { ApiResponse } from "../../types/api.types";
+import { WhatsappWebhook } from "../../types/whatsapp.webhook";
 
 @Controller('whatsapp')
 export class WhatsappController{
@@ -47,66 +48,64 @@ export class WhatsappController{
     }
   }
 
-  async receiveFromWebhook(
-    req: Request<{}, {}, WhatsappWebhook>,
-    res: Response
-  ) {
-    try {
+  @Post('webhook')
+    async receiveFromWebhook(
+      @Req() req: Request,
+      @Res() res: Response
+    ): Promise<Response> {
+      try {
+        const body = req.body as WhatsappWebhook;
 
-      console.log("webhook configgg", JSON.stringify(req.body, null, 2));
+        this.logger.warn(`Webhook received: ${JSON.stringify(body, null, 2)}`);
 
-      const changes = req.body.entry?.[0]?.changes?.[0];
+        const changes = body.entry?.[0]?.changes?.[0];
 
-      if (!changes) {
-        return res.status(400).json({ error: "Invalid webhook payload" });
+        if (!changes) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid webhook payload"
+          });
+        }
+
+        const messages = changes.value?.messages;
+
+        if (!messages?.length) {
+          return res.status(200).json({
+            success: true,
+            message: "No messages to process"
+          });
+        }
+
+        const msg = messages[0];
+        const sender = parseInt(msg.from);
+        let userMessage: string | undefined;
+
+        // Extract message content
+        if (msg.type === "text") {
+          userMessage = msg.text?.body;
+        } else if (msg.type === "interactive") {
+          userMessage = msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id;
+        }
+
+        if (!userMessage) {
+          throw new Error("Unsupported message type");
+        }
+
+        await this.whatsappService.sendText(userMessage, `${sender}`);
+
+        return res.status(200).json({
+          success: true,
+          message: "Webhook processed"
+        });
+
+      } catch (error: any) {
+        this.logger.error("Error receiving WhatsApp webhook", error.stack);
+
+        return res.status(200).json({
+          success: false,
+          message: `Webhook received but error occurred: ${error.message}`
+        });
       }
-
-      const messages = changes.value?.messages;
-
-      if (!messages?.length) {
-        return res.status(200).json("No messages");
-      }
-
-      const msg = messages[0];
-
-      console.log("Incoming message:", msg);
-
-      const sender = parseInt(msg.from);
-
-      let userMessage: string | undefined;
-
-      // TEXT MESSAGE
-      if (msg.type === "text") {
-        userMessage = msg.text?.body;
-      }
-
-      // BUTTON CLICK
-      if (msg.type === "interactive" && msg.interactive?.button_reply) {
-        userMessage = msg.interactive.button_reply.id;
-      }
-
-      // LIST SELECTION
-      if (msg.type === "interactive" && msg.interactive?.list_reply) {
-        userMessage = msg.interactive.list_reply.id;
-      }
-
-      if (!userMessage) {
-        throw new Error("Unsupported message type");
-      }
-
-      const reply = await replyService(sender, userMessage);
-
-      res.status(200).json("Webhook processed");
-
-    } catch (error: any) {
-
-      logger.error("Error receiving WhatsApp webhook", {
-        errorMessage: error.message,
-        errorStack: error.stack,
-      });
-
-      res.status(200).json("Webhook processed");
     }
-  }
 
 }
