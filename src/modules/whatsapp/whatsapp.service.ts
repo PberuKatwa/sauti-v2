@@ -51,44 +51,37 @@ export class WhatsappService{
 
       const response = await this.callApi(recipient, payload);
 
-      if(!response) throw new Error(`Error: No response from meta api`);
       this.logger.info(`Successfully sent whatsapp template message`)
       return response
-      }catch(error:any){
-
-          throw error
-
-      }
-
+    }catch(error:any){
+      throw error
+    }
   }
 
-  async sendText(textBody:string, rec){
-      try{
+  async sendText(textBody:string, recipient:string){
+    try{
 
-        if (!textBody.trim()) {
-        throw new Error("sendText: textBody is required");
-        }
-
-        this.logger.warn('Begining sending text whatsapp message')
-
-        const payload:WhatsappText = {
-          messaging_product:"whatsapp",
-          to:`${this.recipient}`,
-          type:'text',
-          text:{
-            body:textBody
-          }
-        }
-
-        const response = await this.callApi(payload)
-
-        if(!response) throw new Error("No api reponse form meta")
-
-        return response
-
-      }catch(error){
-          throw error
+      if (!textBody.trim()) {
+      throw new Error("sendText: textBody is required");
       }
+
+      this.logger.warn('Begining sending text whatsapp message');
+
+      const payload: WhatsappText = {
+        messaging_product: "whatsapp",
+        to: `${recipient}`,
+        type: 'text',
+        text: {
+          body: textBody
+        }
+      };
+
+      const response = await this.callApi(recipient, payload);
+
+      return response;
+    }catch(error){
+      throw error;
+    }
   }
 
 }
