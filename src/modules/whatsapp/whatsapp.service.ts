@@ -12,11 +12,19 @@ export class WhatsappService{
 
   constructor(@Inject(APP_LOGGER) private readonly logger: AppLogger) { };
 
-  private callApi( recepient:string, data:WhatsappUnionMessage ) {
+  private async callApi( recepient:string, data:WhatsappUnionMessage ) {
     try {
       this.logger.httpreq("Calling whatsapp api", { recipient: recepient, data: data.type });
 
-      const response = ``
+      const response = await axios.post(
+        `https://graph.facebook.com/v22.0/${this.phoneId}/messages`,
+        data,
+        { headers: { Authorization:`Bearer ${this.token}`, "Content-Type":'application/json' } }
+      )
+
+      this.logger.info("WhatsApp API success", { status: response.status });
+
+      return response.data
 
     } catch (error) {
       throw error;
