@@ -10,5 +10,12 @@ export class WhatsappService{
 
   constructor(@Inject(APP_LOGGER) private readonly logger: AppLogger) { };
 
+  private callApi() {
+    try {
+
+    } catch (error) {
+      throw error;
+    }
+  }
 
 }
