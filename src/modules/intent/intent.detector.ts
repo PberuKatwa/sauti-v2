@@ -33,7 +33,7 @@ export class IntentDetectorService {
   /**
    * Orchestrates the detection flow
    */
-  public process(message: string): BestIntent {
+  public processIntent(message: string): BestIntent {
     const { stemmedTokens } = this.tokenize(message);
     let bestIntent: BestIntent = this.getInitialBestIntent();
 

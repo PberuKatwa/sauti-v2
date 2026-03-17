@@ -4,10 +4,14 @@ import { AppLogger } from "../../logger/winston.logger";
 import { IncomingMessages, StatusesValue, WebhookType, WhatsappWebhook } from "../../types/whatsapp.webhook";
 import { WhatsappWebhookSchema } from "../../validators/webhook.schema";
 import { WhatsappReply } from "../../types/reply.types";
+import { IntentDetectorService } from "../intent/intent.detector";
 
 export class HandlerService{
 
-  constructor(@Inject(APP_LOGGER) private readonly logger: AppLogger) { };
+  constructor(
+    @Inject(APP_LOGGER) private readonly logger: AppLogger,
+    private readonly intentDetector:IntentDetectorService
+  ) { };
 
   private extractWhatsappWebhookType(webhook: WhatsappWebhook): {
     type: WebhookType,
@@ -69,8 +73,12 @@ export class HandlerService{
 
       const { userMessage, recipient } = this.extractMessageAndRecepient(messages);
 
+      let messageReply = "UNKNOWN";
+
+      const intent = this.intentDetector.processIntent(userMessage);
+
       return {
-        messageReply: "helooooo",
+        messageReply: messageReply,
         recipient:recipient
       }
     } catch (error) {

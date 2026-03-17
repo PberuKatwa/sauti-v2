@@ -16,6 +16,7 @@ import { loadIntentsFromFile } from '../../utils/intentLoader';
       },
       inject:[INTENT_DEFINITIONS]
     }
-  ]
+  ],
+  exports:[IntentDetectorService]
 })
 export class IntentModule { };
