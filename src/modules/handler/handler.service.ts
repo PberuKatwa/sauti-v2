@@ -20,6 +20,12 @@ export class HandlerService{
     }
   }
 
-  public
+  public whatsappReply(message:string) {
+    try {
+
+    } catch (error) {
+      throw error;
+    }
+  }
 
 }
