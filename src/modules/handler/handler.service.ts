@@ -21,7 +21,7 @@ export class HandlerService{
   }
 
   private extractMessageAndRecepient(message: WhatsappWebhook): {
-    message: string,
+    userMessage: string,
     recipient:string
   }{
     try {
@@ -36,7 +36,6 @@ export class HandlerService{
       const sender = msg.from;
       let userMessage: string | undefined;
 
-      // Extract message content
       if (msg.type === "text") {
         userMessage = msg.text?.body;
       } else if (msg.type === "interactive") {
@@ -44,36 +43,26 @@ export class HandlerService{
       }
 
       return {
-        message: userMessage,
+        userMessage: userMessage,
         recipient:sender
       }
+
     } catch (error) {
       throw error;
     }
   }
 
-  public async whatsappReply(message:WhatsappWebhook) {
+  public async whatsappReply(payload: WhatsappWebhook):Promise<{
+    messageReply: string,
+    recipient:string
+  }> {
     try {
 
-      const payload = this.validateWhatsappWebhook(message);
-      const changes = payload.entry?.[0]?.changes?.[0];
-      const messages = changes.value?.messages;
+      const { userMessage, recipient } = this.extractMessageAndRecepient(payload);
 
-      if (!messages?.length) return `No message was found`
-
-      const msg = messages[0];
-      const sender = parseInt(msg.from);
-      let userMessage: string | undefined;
-
-      // Extract message content
-      if (msg.type === "text") {
-        userMessage = msg.text?.body;
-      } else if (msg.type === "interactive") {
-        userMessage = msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id;
-      }
-
-      if (!userMessage) {
-        throw new Error("Unsupported message type");
+      return {
+        messageReply: "hello",
+        recipient:recipient
       }
 
     } catch (error) {
