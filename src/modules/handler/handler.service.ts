@@ -34,7 +34,7 @@ export class HandlerService{
     }
   }
 
-  private extractMessageAndRecepient(messages: IncomingMessages): {
+  private extractMessageAndRecepient(messages: IncomingMessages[]): {
     userMessage: string,
     recipient:string
   }{
@@ -60,11 +60,14 @@ export class HandlerService{
     }
   }
 
-  private processMessage(messages: IncomingMessages):{
+  private processMessage(messages: IncomingMessages[]):{
     messageReply: string,
     recipient:string
   } {
     try {
+
+      const { userMessage, recipient } = this.extractMessageAndRecepient(messages);
+
       return {
         messageReply: "helooooo",
         recipient:recipient
@@ -83,12 +86,11 @@ export class HandlerService{
       const { type, data } = this.extractWhatsappWebhookType(payload);
 
       if (type === "MESSAGE") {
-        const messages = data.entry?.[0]?.changes?.[0]?.value.messages;
 
+        const messages = data.entry?.[0]?.changes?.[0]?.value.messages;
+        const { messageReply, recipient } = this.processMessage(messages);
 
       }
-
-      const { userMessage, recipient } = this.extractMessageAndRecepient(payload);
 
       return {
         messageReply: "hello",
