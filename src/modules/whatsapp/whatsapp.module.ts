@@ -4,8 +4,10 @@ import { WhatsappService } from "./whatsapp.service";
 import { WhatsappController } from "./whatsapp.controller";
 import { AppLogger } from "../../logger/winston.logger";
 import { APP_LOGGER } from "../../logger/logger.provider";
+import { HandlerModule } from "../handler/handler.module";
 
 @Module({
+  imports:[HandlerModule],
   controllers:[WhatsappController],
   providers: [
     {

@@ -6,6 +6,7 @@ import { WhatsappService } from "./whatsapp.service";
 import { ConfigService } from "@nestjs/config";
 import { ApiResponse } from "../../types/api.types";
 import { WhatsappWebhook } from "../../types/whatsapp.webhook";
+import { HandlerService } from "../handler/handler.service";
 
 @Controller('whatsapp')
 export class WhatsappController{
@@ -13,7 +14,8 @@ export class WhatsappController{
   constructor(
     @Inject(APP_LOGGER) private readonly logger: AppLogger,
     private readonly whatsappService: WhatsappService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly handlerService:HandlerService
   ) { };
 
   @Get('webhook')
@@ -58,40 +60,42 @@ export class WhatsappController{
 
       this.logger.warn(`Webhook received: ${JSON.stringify(body, null, 2)}`);
 
-      const changes = body.entry?.[0]?.changes?.[0];
+      const { messageReply, recipient } = await this.handlerService.whatsappReply(body);
 
-      if (!changes) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid webhook payload"
-        });
-      }
+      // const changes = body.entry?.[0]?.changes?.[0];
 
-      const messages = changes.value?.messages;
+      // if (!changes) {
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: "Invalid webhook payload"
+      //   });
+      // }
 
-      if (!messages?.length) {
-        return res.status(200).json({
-          success: true,
-          message: "No messages to process"
-        });
-      }
+      // const messages = changes.value?.messages;
 
-      const msg = messages[0];
-      const sender = parseInt(msg.from);
-      let userMessage: string | undefined;
+      // if (!messages?.length) {
+      //   return res.status(200).json({
+      //     success: true,
+      //     message: "No messages to process"
+      //   });
+      // }
 
-      // Extract message content
-      if (msg.type === "text") {
-        userMessage = msg.text?.body;
-      } else if (msg.type === "interactive") {
-        userMessage = msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id;
-      }
+      // const msg = messages[0];
+      // const sender = parseInt(msg.from);
+      // let userMessage: string | undefined;
 
-      if (!userMessage) {
-        throw new Error("Unsupported message type");
-      }
+      // // Extract message content
+      // if (msg.type === "text") {
+      //   userMessage = msg.text?.body;
+      // } else if (msg.type === "interactive") {
+      //   userMessage = msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id;
+      // }
 
-      await this.whatsappService.sendText("helloooooooooooo", `${sender}`);
+      // if (!userMessage) {
+      //   throw new Error("Unsupported message type");
+      // }
+
+      await this.whatsappService.sendText(messageReply, recipient);
 
       return res.status(200).json({
         success: true,
