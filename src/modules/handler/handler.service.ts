@@ -75,7 +75,21 @@ export class HandlerService{
 
       let messageReply = "UNKNOWN";
 
-      const intent = this.intentDetector.processIntent(userMessage);
+      const intentResult = this.intentDetector.processIntent(userMessage);
+
+      if( intentResult.id === "MAKE_ORDER" ){
+
+        messageReply = "MAKE ORDER INTENT"
+
+      }else if( intentResult.id === "TRACK_ORDER" ){
+
+        messageReply = "TRACK ORDER INTENT"
+
+      }else if( intentResult.id === "PAY_FOR_ORDER" ){
+
+        messageReply = "PAY FOR ORDER INTENT"
+
+      }
 
       return {
         messageReply: messageReply,
