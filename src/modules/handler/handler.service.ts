@@ -114,9 +114,7 @@ export class HandlerService{
 
       }
 
-
       return result;
-
     } catch (error) {
       throw error;
     }
