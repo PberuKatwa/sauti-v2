@@ -38,7 +38,7 @@ import { OrdersModel } from "../orders/orders.model";
 
         return new WhatsappReplyService(logger, token, phoneNumberId, clientService, ordersService);
       },
-      inject:[APP_LOGGER,ConfigService]
+      inject: [APP_LOGGER, ConfigService, ClientModel, OrdersModel]
     },
   ],
   exports:[WhatsappService]

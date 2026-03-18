@@ -57,16 +57,15 @@ export class ClientModel {
 
   async createClient(payload: CreateClientPayload): Promise<ClientProfile> {
     try {
-
       const { phoneNumber } = payload;
-
       if (!phoneNumber) throw new Error(`Please provide a phone number`);
 
-      this.logger.warn(`Attempting to create client with phone: ${phoneNumber}`);
-
+      // Using ON CONFLICT to handle the duplicate key error gracefully at the DB level
       const query = `
         INSERT INTO clients (phone_number)
         VALUES ($1)
+        ON CONFLICT (phone_number)
+        DO UPDATE SET phone_number = EXCLUDED.phone_number -- This is a "No-Op" update to trigger RETURNING
         RETURNING id, first_name, last_name, phone_number;
       `;
 
@@ -75,11 +74,11 @@ export class ClientModel {
 
       const client: ClientProfile = result.rows[0];
 
-      this.logger.info(`Successfully created client`);
-
+      this.logger.info(`Handled client: ${phoneNumber}`);
       return client;
 
     } catch (error) {
+      this.logger.error(`Failed to handle client creation: ${error.message}`);
       throw error;
     }
   }

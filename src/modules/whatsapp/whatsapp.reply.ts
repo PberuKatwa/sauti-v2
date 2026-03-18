@@ -37,16 +37,13 @@ const catalog: (OrderItem & { imageUrl: string, description: string, productId:n
 export class WhatsappReplyService extends WhatsappService{
 
   constructor(
-      // Parent dependencies (passed to super)
       @Inject(APP_LOGGER) logger: AppLogger,
       @Inject('WHATSAPP_TOKEN') token: string,
       @Inject('WHATSAPP_PHONE_ID') phoneId: string,
 
-      // Specific dependencies (Only in this class)
       private readonly clientService: ClientModel,
       private readonly ordersService: OrdersModel,
     ) {
-      // super calls the base WhatsappService constructor
       super(logger, token, phoneId);
     }
 
@@ -59,13 +56,12 @@ export class WhatsappReplyService extends WhatsappService{
 
       } else if (intent.id === "CREATE_ORDER") {
 
-        const client = await this.clie
+        const client = await this.clientService.createClient({ phoneNumber: parseInt(recipient) });
 
         const match = userMessage.match(/ProductID:(\d+)/);
         const productId = match ? Number(match[1]) : null;
 
         const product = catalog.find(item => item.productId === productId);
-
         const items = product
           ? [
               {
@@ -76,11 +72,15 @@ export class WhatsappReplyService extends WhatsappService{
             ]
           : [];
 
-        console.log("the itemsssssss", { items });
-        console.log("the itemsssssss",{ items });
-        console.log("the itemsssssss",{ items });
+        const orderCreated = await this.ordersService.createOrder({clientId:client.id, items:items})
 
-        await this.sendText(`WERE AT ORDER CREATIONNNNNN with ID:${productId}`, recipient)
+        console.log("orderrrrrrrr", orderCreated);
+        console.log("orderrrrrrrr", orderCreated);
+        console.log("orderrrrrrrr", orderCreated);
+
+        // await this.sendText(`WERE AT ORDER CREATIONNNNNN with ID:${productId}`, recipient)
+
+        await this.sendOrderInvoice(recipient, orderCreated)
 
       }
       else if (intent.id === "TRACK_ORDER") {
@@ -141,6 +141,58 @@ export class WhatsappReplyService extends WhatsappService{
 
       await this.callApi(recipient, payload);
     }
+  }
+
+  async sendOrderInvoice(recipient: string, order: any) {
+    const itemSummary = order.items
+      .map((item: any) => `• ${item.name} (x${item.quantity})`)
+      .join('\n');
+
+    const payload = {
+      messaging_product: "whatsapp",
+      to: recipient,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        header: {
+          type: "text",
+          text: `Order Confirmation ${order.invoice_number}`
+        },
+        body: {
+          text:
+            `Hi there! 💜 Your order has been placed.\n\n` +
+            `*Order Details:*\n${itemSummary}\n\n` +
+            `*Summary:*\n` +
+            `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
+            `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
+            `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
+            `Status: _${order.status.toUpperCase()}_`
+        },
+        footer: {
+          text: "Thank you for choosing Purple Hearts 🌸"
+        },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: {
+                id: `pay_order_${order.id}`,
+                title: "Pay Now 💳"
+              }
+            },
+            {
+              type: "reply",
+              reply: {
+                id: `cancel_order_${order.id}`,
+                title: "Cancel Order ❌"
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    await this.callApi(recipient, payload);
   }
 
 }
