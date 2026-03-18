@@ -11,4 +11,31 @@ class HandlerReplyService{
     private readonly intentDetector:IntentDetectorService
   ) { };
 
+  private processMessage(userMessage: string): { messageReply: string }
+  {
+    try {
+
+      const intentResult = this.intentDetector.processIntent(userMessage);
+      let messageReply = "UNKNOWN";
+
+      if( intentResult.id === "MAKE_ORDER" ){
+
+        messageReply = "MAKE ORDER INTENT"
+
+      }else if( intentResult.id === "TRACK_ORDER" ){
+
+        messageReply = "TRACK ORDER INTENT"
+
+      }else if( intentResult.id === "PAY_FOR_ORDER" ){
+
+        messageReply = "PAY FOR ORDER INTENT"
+
+      }
+
+      return { messageReply: messageReply };
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
