@@ -8,6 +8,8 @@ import { HandlerModule } from "../handler/handler.module";
 import { WhatsappReplyService } from "./whatsapp.reply";
 import { ClientModule } from "../client/client.module";
 import { OrdersModule } from "../orders/orders.module";
+import { ClientModel } from "../client/client.model";
+import { OrdersModel } from "../orders/orders.model";
 
 @Module({
   imports: [HandlerModule, ClientModule, OrdersModule],
@@ -25,11 +27,16 @@ import { OrdersModule } from "../orders/orders.module";
     },
     {
       provide: WhatsappReplyService,
-      useFactory: function (logger: AppLogger, config: ConfigService) {
+      useFactory: function (
+        logger: AppLogger,
+        config: ConfigService,
+        clientService: ClientModel,
+        ordersService: OrdersModel
+      ) {
         const token = config.get<string>('whatsappAccessToken');
         const phoneNumberId = config.get<string>('phoneNumberId');
 
-        return new WhatsappReplyService(logger, token, phoneNumberId);
+        return new WhatsappReplyService(logger, token, phoneNumberId, clientService, ordersService);
       },
       inject:[APP_LOGGER,ConfigService]
     },

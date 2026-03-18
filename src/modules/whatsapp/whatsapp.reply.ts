@@ -1,6 +1,11 @@
+import { Inject } from "@nestjs/common";
+import { APP_LOGGER } from "../../logger/logger.provider";
+import { AppLogger } from "../../logger/winston.logger";
 import { BestIntent } from "../../types/intent.types";
 import { OrderItem } from "../../types/orders.types";
 import { WhatsappService } from "./whatsapp.service";
+import { ClientModel } from "../client/client.model";
+import { OrdersModel } from "../orders/orders.model";
 
 const catalog: (OrderItem & { imageUrl: string, description: string, productId:number })[] = [
   {
@@ -31,6 +36,20 @@ const catalog: (OrderItem & { imageUrl: string, description: string, productId:n
 
 export class WhatsappReplyService extends WhatsappService{
 
+  constructor(
+      // Parent dependencies (passed to super)
+      @Inject(APP_LOGGER) logger: AppLogger,
+      @Inject('WHATSAPP_TOKEN') token: string,
+      @Inject('WHATSAPP_PHONE_ID') phoneId: string,
+
+      // Specific dependencies (Only in this class)
+      private readonly clientService: ClientModel,
+      private readonly ordersService: OrdersModel,
+    ) {
+      // super calls the base WhatsappService constructor
+      super(logger, token, phoneId);
+    }
+
   async processMessage(intent: BestIntent, recipient:string, userMessage:string) {
     try {
 
@@ -39,6 +58,8 @@ export class WhatsappReplyService extends WhatsappService{
         await this.sendFlowerCatalog(recipient);
 
       } else if (intent.id === "CREATE_ORDER") {
+
+        const client = await this.clie
 
         const match = userMessage.match(/ProductID:(\d+)/);
         const productId = match ? Number(match[1]) : null;

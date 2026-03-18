@@ -3,6 +3,8 @@ import { Inject, Injectable } from "@nestjs/common";
 import { APP_LOGGER } from "../../logger/logger.provider";
 import type { AppLogger } from "../../logger/winston.logger";
 import { WhatsappTemplate, WhatsappText, WhatsappUnionMessage } from "../../types/whatsapp.base";
+import { OrdersModel } from "../orders/orders.model";
+import { ClientModel } from "../client/client.model";
 
 @Injectable()
 export class WhatsappService{
@@ -10,7 +12,7 @@ export class WhatsappService{
 
     @Inject(APP_LOGGER) private readonly logger: AppLogger,
     @Inject('WHATSAPP_TOKEN') private readonly token: string,
-    @Inject('WHATSAPP_PHONE_ID') private readonly phoneId: string,
+    @Inject('WHATSAPP_PHONE_ID') private readonly phoneId: string
   ) {};
 
   public async callApi( recipient:string, data:any ) {

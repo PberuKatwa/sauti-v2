@@ -8,6 +8,8 @@ import { ApiResponse } from "../../types/api.types";
 import { WhatsappWebhook } from "../../types/whatsapp.webhook";
 import { HandlerService } from "../handler/handler.service";
 import { WhatsappReplyService } from "./whatsapp.reply";
+import { ClientModel } from "../client/client.model";
+import { OrdersModel } from "../orders/orders.model";
 
 @Controller('whatsapp')
 export class WhatsappController{
@@ -17,7 +19,7 @@ export class WhatsappController{
     private readonly whatsappService: WhatsappService,
     private readonly configService: ConfigService,
     private readonly handlerService: HandlerService,
-    private readonly whatsappReplyService:WhatsappReplyService
+    private readonly whatsappReplyService: WhatsappReplyService
   ) { };
 
   @Get('webhook')
