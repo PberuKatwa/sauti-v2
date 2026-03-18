@@ -62,10 +62,10 @@ export class WhatsappController{
 
       this.logger.warn(`Webhook received: ${JSON.stringify(body, null, 2)}`);
 
-      const { type, recipient, intent } = await this.handlerService.processWhatsappWebhook(body);
+      const { type, recipient, intent, userMessage } = await this.handlerService.processWhatsappWebhook(body);
 
       if (type === "MESSAGE") {
-        await this.whatsappReplyService.processMessage(intent, recipient);
+        await this.whatsappReplyService.processMessage(intent, recipient, userMessage);
       }
 
       return res.status(200).json({

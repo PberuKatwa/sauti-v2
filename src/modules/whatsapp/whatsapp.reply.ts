@@ -4,16 +4,26 @@ import { WhatsappService } from "./whatsapp.service";
 
 export class WhatsappReplyService extends WhatsappService{
 
-  async processMessage(intent: BestIntent, recipient:string) {
+  async processMessage(intent: BestIntent, recipient:string, userMessage:string) {
     try {
 
       if( intent.id === "REQUEST_CATALOGUE" ){
 
         await this.sendFlowerCatalog(recipient);
 
-      }else if( intent.id === "CREATE_ORDER" ){
+      } else if (intent.id === "CREATE_ORDER") {
 
-        await this.sendText(`WERE AT ORDER CREATIONNNNNN`, recipient)
+        const str = "generate_an_invoice -ProductID:3";
+
+        const match = userMessage.match(/ProductID:(\d+)/);
+        const productId = match ? Number(match[1]) : null;
+
+        console.log("jagfklhgdfkkljdfhjklahkljhljkhajklhjlklkj", productId);
+        console.log("jagfklhgdfkkljdfhjklahkljhljkhajklhjlklkj",productId);
+        console.log("jagfklhgdfkkljdfhjklahkljhljkhajklhjlklkj",productId);
+
+
+        await this.sendText(`WERE AT ORDER CREATIONNNNNN with ID:${productId}`, recipient)
 
       }
       else if (intent.id === "TRACK_ORDER") {
@@ -90,7 +100,7 @@ export class WhatsappReplyService extends WhatsappService{
               {
                 type: "reply",
                 reply: {
-                  id: `generate_an_invoice ${flower.productId}`,
+                  id: `generate_an_invoice -ProductID:${flower.productId}`,
                   title: "Order Now 🛍️"
                 }
               }
