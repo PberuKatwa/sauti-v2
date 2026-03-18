@@ -2,16 +2,18 @@ import { Inject } from "@nestjs/common";
 import { APP_LOGGER } from "../../logger/logger.provider";
 import { AppLogger } from "../../logger/winston.logger";
 import { IntentDetectorService } from "../intent/intent.detector";
+import { WhatsappService } from "../whatsapp/whatsapp.service";
 
 
 class HandlerReplyService{
 
   constructor(
     @Inject(APP_LOGGER) private readonly logger: AppLogger,
-    private readonly intentDetector:IntentDetectorService
+    private readonly intentDetector: IntentDetectorService,
+    private readonly whatsappService:WhatsappService
   ) { };
 
-  public generateReply(userMessage: string): { messageReply: string }
+  public generateReply(recipient:string,userMessage: string): { messageReply: string }
   {
     try {
 
@@ -20,7 +22,7 @@ class HandlerReplyService{
 
       if( intentResult.id === "MAKE_ORDER" ){
 
-        messageReply = "MAKE ORDER INTENT"
+        this.whatsappService.sendFlowerCatalog(recipient)
 
       }else if( intentResult.id === "TRACK_ORDER" ){
 
