@@ -73,6 +73,7 @@ export class HandlerService{
     try {
 
       const { userMessage, recipient } = this.extractMessageAndRecepient(messages);
+      console.log("userr messages", userMessage)
 
       const intentResult = this.intentDetector.processIntent(userMessage);
 

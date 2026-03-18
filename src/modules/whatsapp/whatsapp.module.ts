@@ -21,7 +21,16 @@ import { WhatsappReplyService } from "./whatsapp.reply";
       },
       inject:[APP_LOGGER,ConfigService]
     },
-    WhatsappReplyService
+    {
+      provide: WhatsappReplyService,
+      useFactory: function (logger: AppLogger, config: ConfigService) {
+        const token = config.get<string>('whatsappAccessToken');
+        const phoneNumberId = config.get<string>('phoneNumberId');
+
+        return new WhatsappReplyService(logger, token, phoneNumberId);
+      },
+      inject:[APP_LOGGER,ConfigService]
+    },
   ],
   exports:[WhatsappService]
 })
