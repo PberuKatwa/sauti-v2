@@ -2,6 +2,33 @@ import { BestIntent } from "../../types/intent.types";
 import { OrderItem } from "../../types/orders.types";
 import { WhatsappService } from "./whatsapp.service";
 
+const catalog: (OrderItem & { imageUrl: string, description: string, productId:number })[] = [
+  {
+    productId:1,
+    name: "Savage Love Bouquet",
+    quantity: 1, // Default quantity for display
+    unitPrice: 3500,
+    imageUrl: "https://www.purpink.co.ke/cdn/shop/files/f636f5c0-28dc-4b29-9a91-ffd8f6716894_Savage_Love.jpg?v=1769510893&width=535",
+    description: "A bold arrangement of deep red roses and seasonal greens."
+  },
+  {
+    productId:2,
+    name: "Premium Arrangement",
+    quantity: 1,
+    unitPrice: 5200,
+    imageUrl: "https://www.purpink.co.ke/cdn/shop/files/premium-flower-arrangement-new.jpg?v=1758710108&width=535",
+    description: "Our signature luxury mix for special anniversaries."
+  },
+  {
+    productId:3,
+    name: "Midnight Petals",
+    quantity: 1,
+    unitPrice: 2800,
+    imageUrl: "https://www.purpink.co.ke/cdn/shop/files/Screenshot2025-04-08at17.46.02.png?v=1744784467&width=535",
+    description: "Elegant and mysterious. Perfect for a quiet surprise."
+  }
+];
+
 export class WhatsappReplyService extends WhatsappService{
 
   async processMessage(intent: BestIntent, recipient:string, userMessage:string) {
@@ -13,15 +40,24 @@ export class WhatsappReplyService extends WhatsappService{
 
       } else if (intent.id === "CREATE_ORDER") {
 
-        const str = "generate_an_invoice -ProductID:3";
-
         const match = userMessage.match(/ProductID:(\d+)/);
         const productId = match ? Number(match[1]) : null;
 
-        console.log("jagfklhgdfkkljdfhjklahkljhljkhajklhjlklkj", productId);
-        console.log("jagfklhgdfkkljdfhjklahkljhljkhajklhjlklkj",productId);
-        console.log("jagfklhgdfkkljdfhjklahkljhljkhajklhjlklkj",productId);
+        const product = catalog.find(item => item.productId === productId);
 
+        const items = product
+          ? [
+              {
+                name: product.name,
+                quantity: product.quantity,
+                unitPrice: product.unitPrice
+              }
+            ]
+          : [];
+
+        console.log("the itemsssssss", { items });
+        console.log("the itemsssssss",{ items });
+        console.log("the itemsssssss",{ items });
 
         await this.sendText(`WERE AT ORDER CREATIONNNNNN with ID:${productId}`, recipient)
 
@@ -49,33 +85,6 @@ export class WhatsappReplyService extends WhatsappService{
   }
 
   async sendFlowerCatalog(recipient: string) {
-    // 1. Define your flower inventory using the OrderItem interface
-    const catalog: (OrderItem & { imageUrl: string, description: string, productId:number })[] = [
-      {
-        productId:1,
-        name: "Savage Love Bouquet",
-        quantity: 1, // Default quantity for display
-        unitPrice: 3500,
-        imageUrl: "https://www.purpink.co.ke/cdn/shop/files/f636f5c0-28dc-4b29-9a91-ffd8f6716894_Savage_Love.jpg?v=1769510893&width=535",
-        description: "A bold arrangement of deep red roses and seasonal greens."
-      },
-      {
-        productId:2,
-        name: "Premium Arrangement",
-        quantity: 1,
-        unitPrice: 5200,
-        imageUrl: "https://www.purpink.co.ke/cdn/shop/files/premium-flower-arrangement-new.jpg?v=1758710108&width=535",
-        description: "Our signature luxury mix for special anniversaries."
-      },
-      {
-        productId:3,
-        name: "Midnight Petals",
-        quantity: 1,
-        unitPrice: 2800,
-        imageUrl: "https://www.purpink.co.ke/cdn/shop/files/Screenshot2025-04-08at17.46.02.png?v=1744784467&width=535",
-        description: "Elegant and mysterious. Perfect for a quiet surprise."
-      }
-    ];
 
     for (const flower of catalog) {
       const payload = {

@@ -6,9 +6,11 @@ import { AppLogger } from "../../logger/winston.logger";
 import { APP_LOGGER } from "../../logger/logger.provider";
 import { HandlerModule } from "../handler/handler.module";
 import { WhatsappReplyService } from "./whatsapp.reply";
+import { ClientModule } from "../client/client.module";
+import { OrdersModule } from "../orders/orders.module";
 
 @Module({
-  imports:[HandlerModule],
+  imports: [HandlerModule, ClientModule, OrdersModule],
   controllers:[WhatsappController],
   providers: [
     {
