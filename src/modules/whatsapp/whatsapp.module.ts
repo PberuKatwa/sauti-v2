@@ -5,6 +5,7 @@ import { WhatsappController } from "./whatsapp.controller";
 import { AppLogger } from "../../logger/winston.logger";
 import { APP_LOGGER } from "../../logger/logger.provider";
 import { HandlerModule } from "../handler/handler.module";
+import { WhatsappReplyService } from "./whatsapp.reply";
 
 @Module({
   imports:[HandlerModule],
@@ -19,7 +20,8 @@ import { HandlerModule } from "../handler/handler.module";
         return new WhatsappService(logger, token, phoneNumberId);
       },
       inject:[APP_LOGGER,ConfigService]
-    }
+    },
+    WhatsappReplyService
   ],
   exports:[WhatsappService]
 })
