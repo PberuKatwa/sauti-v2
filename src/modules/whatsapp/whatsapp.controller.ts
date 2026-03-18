@@ -60,7 +60,7 @@ export class WhatsappController{
     try {
       const body = req.body as WhatsappWebhook;
 
-      // this.logger.warn(`Webhook received: ${JSON.stringify(body, null, 2)}`);
+      this.logger.warn(`Webhook received: ${JSON.stringify(body, null, 2)}`);
 
       const { type, recipient, intent } = await this.handlerService.processWhatsappWebhook(body);
 
@@ -74,7 +74,12 @@ export class WhatsappController{
       });
 
     } catch (error: any) {
-      this.logger.error("Error receiving WhatsApp webhook", error);
+      this.logger.error("Error receiving WhatsApp webhook", {
+        message: error.message,
+        stack: error.stack,
+        status: error.response?.status,
+        data: error.response?.data
+      });
 
       return res.status(200).json({
         success: false,

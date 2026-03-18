@@ -11,7 +11,12 @@ export class WhatsappReplyService extends WhatsappService{
 
         await this.sendFlowerCatalog(recipient);
 
-      }else if( intent.id === "TRACK_ORDER" ){
+      }else if( intent.id === "CREATE_ORDER" ){
+
+        await this.sendText(`WERE AT ORDER CREATIONNNNNN`, recipient)
+
+      }
+      else if (intent.id === "TRACK_ORDER") {
 
         await this.sendText(`I can check your order status. Please share your order number or tracking ID.`, recipient)
 
@@ -35,8 +40,9 @@ export class WhatsappReplyService extends WhatsappService{
 
   async sendFlowerCatalog(recipient: string) {
     // 1. Define your flower inventory using the OrderItem interface
-    const catalog: (OrderItem & { imageUrl: string, description: string })[] = [
+    const catalog: (OrderItem & { imageUrl: string, description: string, productId:number })[] = [
       {
+        productId:1,
         name: "Savage Love Bouquet",
         quantity: 1, // Default quantity for display
         unitPrice: 3500,
@@ -44,6 +50,7 @@ export class WhatsappReplyService extends WhatsappService{
         description: "A bold arrangement of deep red roses and seasonal greens."
       },
       {
+        productId:2,
         name: "Premium Arrangement",
         quantity: 1,
         unitPrice: 5200,
@@ -51,6 +58,7 @@ export class WhatsappReplyService extends WhatsappService{
         description: "Our signature luxury mix for special anniversaries."
       },
       {
+        productId:3,
         name: "Midnight Petals",
         quantity: 1,
         unitPrice: 2800,
@@ -82,8 +90,7 @@ export class WhatsappReplyService extends WhatsappService{
               {
                 type: "reply",
                 reply: {
-                  // Using the name in the ID helps your Handler identify the item
-                  id: `order_${flower.name.toLowerCase().replace(/\s+/g, '_')}`,
+                  id: `generate_an_invoice ${flower.productId}`,
                   title: "Order Now 🛍️"
                 }
               }

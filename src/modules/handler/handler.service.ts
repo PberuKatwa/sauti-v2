@@ -66,7 +66,8 @@ export class HandlerService{
     }
   }
 
-  private processMessage(messages: IncomingMessages[]):{
+  private processMessage(messages: IncomingMessages[]): {
+    userMessage:string,
     intent: BestIntent,
     recipient:string
   } {
@@ -78,6 +79,7 @@ export class HandlerService{
       const intentResult = this.intentDetector.processIntent(userMessage);
 
       return {
+        userMessage:userMessage,
         intent:intentResult,
         recipient:recipient
       }
@@ -103,6 +105,7 @@ export class HandlerService{
 
       const result: WhatsappReply = {
         type,
+        userMessage:"",
         intent: null,
         recipient: null
       };
@@ -110,9 +113,10 @@ export class HandlerService{
       if (type === "MESSAGE") {
 
         const messages = data.entry?.[0]?.changes?.[0]?.value.messages;
-        const { intent, recipient } = this.processMessage(messages);
+        const { intent, recipient, userMessage } = this.processMessage(messages);
 
         result.intent = intent;
+        result.userMessage = userMessage;
         result.recipient = recipient;
 
       } else if (type === "STATUS") {

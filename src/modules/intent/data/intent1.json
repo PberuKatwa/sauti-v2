@@ -96,6 +96,7 @@
       "label": "create order",
       "phrases": [
         "generate invoice",
+        "generate_an_invoice",
         "create invoice",
         "make invoice",
         "issue invoice",
