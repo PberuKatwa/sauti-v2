@@ -10,7 +10,7 @@ export class HandlerService{
 
   constructor(
     @Inject(APP_LOGGER) private readonly logger: AppLogger,
-    private readonly intentDetector:IntentDetectorService
+    private readonly intentDetector: IntentDetectorService
   ) { };
 
   private extractWhatsappWebhookType(webhook: WhatsappWebhook): {
