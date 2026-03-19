@@ -205,13 +205,6 @@ export class WhatsappReplyService extends WhatsappService{
                 id: `track order location - OrderId:${order.id}`,
                 title: "Track Order Location"
               }
-            },
-            {
-              type: "reply",
-              reply: {
-                id: `cancel order - OrderId:${order.id}`,
-                title: "Track Order Location"
-              }
             }
           ]
         }
