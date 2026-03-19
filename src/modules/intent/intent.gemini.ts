@@ -1,14 +1,14 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { GoogleGenAI } from "@google/genai";
 import { APP_LOGGER } from "../../logger/logger.provider";
 import type { AppLogger } from "../../logger/winston.logger";
 
 @Injectable()
-export class GeminiChatService {
+export class IntentGeminiService {
   private readonly client: GoogleGenAI;
 
   constructor(
-    private readonly logger: AppLogger,
+    @Inject(APP_LOGGER) private readonly logger: AppLogger,
     apiKey: string
   ) {
     this.client = new GoogleGenAI({ apiKey });
