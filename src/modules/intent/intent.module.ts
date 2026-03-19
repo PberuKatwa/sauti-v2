@@ -11,12 +11,12 @@ import { APP_LOGGER } from "../../logger/logger.provider";
   providers: [
     {
       provide: IntentDetectorService,
-      useFactory: function () {
+      useFactory: function (geminiService:IntentGeminiService) {
 
         const filePath = path.join(process.cwd(), 'src/modules/intent/data/intent1.json');
         const intents = loadIntentsFromFile(filePath);
 
-        return new IntentDetectorService(intents);
+        return new IntentDetectorService(intents, geminiService);
       }
     },
     {
@@ -25,7 +25,7 @@ import { APP_LOGGER } from "../../logger/logger.provider";
         logger: AppLogger,
         config: ConfigService
       ) {
-        const apiKey = config.get<string>("GEMINI_API_KEY");
+        const apiKey = config.get<string>("geminiApiKey");
 
         return new IntentGeminiService(logger, apiKey);
       },

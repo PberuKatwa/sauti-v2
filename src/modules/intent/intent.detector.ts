@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import natural from "natural";
 import { BestIntent, ReadOnlyIntentDefinition } from "../../types/intent.types";
+import { IntentGeminiService } from './intent.gemini';
 
 const getLevenshteinDistance = natural.LevenshteinDistance;
 const stemmer = natural.PorterStemmer.stem;
@@ -27,8 +28,24 @@ export class IntentDetectorService {
   ]);
 
   constructor(
-    @Inject(INTENT_DEFINITIONS) private readonly intents: Array<ReadOnlyIntentDefinition>
+    @Inject(INTENT_DEFINITIONS) private readonly intents: Array<ReadOnlyIntentDefinition>,
+    private readonly geminiService:IntentGeminiService
   ) {}
+
+  public async getFinalIntent(message: string): Promise<BestIntent>{
+    try {
+
+      const intent = this.processIntent(message);
+
+      if (intent.id === "UNKNOWN") {
+
+      }
+
+      return intent
+    } catch(error) {
+      throw error;
+    }
+  }
 
   /**
    * Orchestrates the detection flow

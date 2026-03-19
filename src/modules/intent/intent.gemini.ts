@@ -15,13 +15,66 @@ export class IntentGeminiService {
   }
 
   async basicPrompt(
-    prompt: string,
+    userMessage: string,
     model: string = "gemini-2.5-flash"
   ): Promise<string> {
     try {
-      if (!prompt.trim()) {
+      if (!userMessage.trim()) {
         throw new Error("runPrompt: prompt cannot be empty");
       }
+
+      const SYSTEM_PROMPT = `
+        You are an intent classification engine.
+
+        Your ONLY job is to map a user message to ONE intent from a predefined list.
+
+        -----------------------
+        🎯 AVAILABLE INTENTS
+        -----------------------
+        1. CREATE_ORDER → creating or generating an order/invoice
+        2. REQUEST_CATALOGUE → browsing, viewing, or asking for available items/products
+        3. FETCH_ALL_ORDERS → retrieving multiple orders or order history
+        4. FETCH_SINGLE_ORDER → retrieving one specific order/invoice
+        5. TRACK_ORDER → checking delivery status, location, or progress
+        6. PAY_FOR_ORDER → anything related to payment, cost, balance, or paying
+
+        -----------------------
+        🧠 RULES
+        -----------------------
+        - Return ONLY ONE intent
+        - Be strict
+        - If unclear → return UNKNOWN
+
+        -----------------------
+        📦 OUTPUT FORMAT (MANDATORY)
+        -----------------------
+        {
+          id: string;
+          label: string;
+          score: number;
+          matchedPhrase?: string;
+          partialPhrases?: string[];
+          weakTokens?: string[];
+          strongTokens?: string[];
+          fuzzyTokens?: string[];
+        }
+
+        -----------------------
+        ❌ UNKNOWN FORMAT
+        -----------------------
+        {
+          id: "UNKNOWN",
+          label: "UNKNOWN",
+          score: 0,
+          matchedPhrase: "UNKNOWN",
+          partialPhrases: [],
+          weakTokens: [],
+          strongTokens: [],
+          fuzzyTokens: [],
+        }
+
+        Return ONLY JSON. No explanations.
+      `;
 
       this.logger.warn(`Sending prompt to Gemini model: ${model}`);
 
@@ -29,8 +82,12 @@ export class IntentGeminiService {
         model,
         contents: [
           {
+            role: "system",
+            parts: [{ text: SYSTEM_PROMPT }],
+          },
+          {
             role: "user",
-            parts: [{ text: prompt }],
+            parts: [{ text: userMessage }],
           },
         ],
       });
