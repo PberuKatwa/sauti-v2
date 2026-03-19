@@ -50,10 +50,16 @@ export class WhatsappReplyService extends WhatsappService{
   async processMessage(intent: BestIntent, recipient:string, userMessage:string) {
     try {
 
-      if( intent.id === "REQUEST_CATALOGUE" ){
+      if( intent.id === "GREETING" ){
+        await this.sendTemplate("welcome_actions", "en", recipient);
+      }
 
+      else if( intent.id === "HELP" ){
+        await this.sendHelpMenu(recipient);
+      }
+
+      else if( intent.id === "REQUEST_CATALOGUE" ){
         await this.sendFlowerCatalog(recipient);
-
       }
 
       else if (intent.id === "CREATE_ORDER") {
@@ -260,6 +266,107 @@ export class WhatsappReplyService extends WhatsappService{
             {
               title: "Recent Orders",
               rows
+            }
+          ]
+        }
+      }
+    };
+
+    await this.callApi(recipient, payload);
+  }
+
+  async sendHelpMenu(recipient: string) {
+    const payload = {
+      messaging_product: "whatsapp",
+      to: recipient,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        header: {
+          type: "text",
+          text: "How can we help you today? 💜"
+        },
+        body: {
+          text:
+            `Welcome to *Purple Hearts*! 🌸\n\n` +
+            `I'm your floral assistant. I didn't quite catch that, but here is what I can help you with:\n\n` +
+            `• *Browse Catalog:* See our latest bouquets.\n` +
+            `• *Track Order:* Check where your flowers are.\n` +
+            `• *Past Orders:* View your order history.\n\n` +
+            `Simply tap one of the buttons below to continue!`
+        },
+        footer: {
+          text: "Purple Hearts - Spreading Love, One Bloom at a Time."
+        },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: {
+                id: "request_catalogue",
+                title: "View Flowers 💐"
+              }
+            },
+            {
+              type: "reply",
+              reply: {
+                id: "track_order_general",
+                title: "Track Delivery 🚚"
+              }
+            },
+            {
+              type: "reply",
+              reply: {
+                id: "fetch_all_orders",
+                title: "My Orders 📝"
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    await this.callApi(recipient, payload);
+  }
+
+  async sendComplaintEscalation(recipient: string) {
+    const payload = {
+      messaging_product: "whatsapp",
+      to: recipient,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        header: {
+          type: "text",
+          text: "We're here to help 💜"
+        },
+        body: {
+          text:
+            `We are truly sorry to hear that your experience wasn't perfect. 🌸\n\n` +
+            `At *Purple Hearts*, we take our blooms seriously and want to make this right for you immediately.\n\n` +
+            `*Support Lead:* Sarah W.\n` +
+            `*Direct Line:* +254 700 000 000\n\n` +
+            `You can tap the button below to speak with her directly on WhatsApp, or stay here to track your current status.`
+        },
+        footer: {
+          text: "Our goal is your 100% satisfaction."
+        },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: {
+                id: "talk_to_human",
+                // Note: WhatsApp button titles are limited to 20 characters
+                title: "Chat with Sarah 👩‍💻"
+              }
+            },
+            {
+              type: "reply",
+              reply: {
+                id: "track_order_general",
+                title: "Check Order Status"
+              }
             }
           ]
         }

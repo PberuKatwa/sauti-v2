@@ -28,7 +28,6 @@ export class IntentGeminiService {
       const PROMPT = `
         You are the AI Intent Classifier for "Purple Hearts," a premium flower delivery service.
         Your goal is to parse customer messages and map them to the correct business action.
-
         -----------------------
         🎯 AVAILABLE INTENTS & LOGIC
         -----------------------
@@ -56,13 +55,17 @@ export class IntentGeminiService {
           - Keywords: "Pay", "M-Pesa", "Payment link", "How do I pay?", "Settled", "Balance".
           - Context: The user is ready to finalize the transaction or asking about payment methods.
 
-        -----------------------
-        🧠 INTELLIGENCE RULES
-        -----------------------
-        - If the user uses emotional language like "I want to surprise my wife," map to REQUEST_CATALOGUE (browsing for a gift).
-        - If the user provides a specific ID or Invoice number (e.g., "INV-3077"), map to FETCH_SINGLE_ORDER.
-        - If the user is angry or asking for a person, but it's regarding a current delivery, map to TRACK_ORDER.
-        - Return ONLY JSON. No conversational text. Be extremely strict.
+        7. GREETING
+          - Keywords: "Hello", "Hi", "Hey", "Good morning", "Good afternoon", "Good evening", "Howdy", "Greetings".
+          - Context: The user is initiating a conversation or exchanging pleasantries. Respond warmly and prompt them toward what they need.
+
+        8. HELP
+          - Keywords: "Help", "Assist", "Support", "Guide", "What can you do?", "I'm confused", "How does this work?", "What are my options?".
+          - Context: The user is unsure what to do, needs guidance, or wants to understand available features.
+
+        9. COMPLAINT
+          - Keywords: "Complaint", "Unhappy", "Disappointed", "Wrong order", "Damaged", "Bad service", "Not satisfied", "This is unacceptable", "Problem", "Issue".
+          - Context: The user is expressing dissatisfaction with their order, delivery, or service experience.
 
         -----------------------
         📦 OUTPUT FORMAT (MANDATORY)
@@ -76,14 +79,22 @@ export class IntentGeminiService {
           "weakTokens": [],
           "fuzzyTokens": []
         }
-
         -----------------------
         ❌ UNKNOWN FALLBACK
         -----------------------
-        If the message is "hi", "hello", or gibberish, return "UNKNOWN" with a score of 0.
-
+        If the message is gibberish, completely off-topic, or cannot be mapped to any of the 9 intents above, return:
+        {
+          "id": "UNKNOWN",
+          "label": "Unknown Intent",
+          "score": 0,
+          "matchedPhrase": "",
+          "strongTokens": [],
+          "weakTokens": [],
+          "fuzzyTokens": []
+        }
+        NOTE: Do NOT return UNKNOWN for greetings like "hi" or "hello" — those should map to GREETING.
         -----------------------
-        ==> THIS IS THE PAYLOAD :${userMessage}
+        ==> THIS IS THE PAYLOAD: ${userMessage}
         -----------------------
       `;
 
