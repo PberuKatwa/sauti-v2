@@ -6,7 +6,7 @@ import { APP_LOGGER } from '../../logger/logger.provider';
 import { AppLogger } from '../../logger/winston.logger';
 
 @Injectable()
-export class GeminiChatService {
+export class IntentGeminiService {
   private readonly client: GoogleGenAI;
 
   constructor(

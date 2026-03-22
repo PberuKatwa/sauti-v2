@@ -1,8 +1,8 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import * as natural from "natural";
 import { BestIntent, IntentDefinition } from "../../types/intent.types";
-import { GeminiChatService } from "../gemini.service"; // Ensure correct export/path
-import { buildIntentPrompt } from "../../utils/build.prompt";
+import { IntentGeminiService } from "./intent.gemini"; // Ensure correct export/path
+import { buildIntentPrompt } from "../../utils/intent.prompt";
 import { addOrganisationToken } from "../../utils/json.utils";
 
 const stemmer = natural.PorterStemmer.stem;
@@ -20,7 +20,7 @@ export class IntentDetectorService {
   };
 
   // Only inject other services here
-  constructor(private readonly geminiService: GeminiChatService) {}
+  constructor(private readonly geminiService: IntentGeminiService) {}
 
   /**
    * Initialize the service with data (Call this in OnModuleInit or from a Controller)
