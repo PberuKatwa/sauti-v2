@@ -1,4 +1,5 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import nlp from 'compromise';
 import * as natural from "natural";
 import { BestIntent, IntentDefinition } from "../../types/intent.types";
 import { IntentGeminiService } from "./intent.gemini";
@@ -20,7 +21,7 @@ export class IntentDetectorService {
 
   constructor(private readonly geminiService: IntentGeminiService) {}
 
-  public setup(intents: IntentDefinition[], stopWords: string[]) {
+  public setup(intents: IntentDefinition[], stopWords: Set<string>) {
     this.intents = intents;
     this.stopWords = new Set(stopWords);
   }
@@ -150,7 +151,7 @@ export class IntentDetectorService {
         const { matchedTokens, phraseScore, usedIndices, isExactMatch } =
           this.scoreTokensInverted(usedTokenIndices,intent.organisation_tokens, stemmedTokens);
 
-        console.log("founddddd organisationnn", matchedTokens, phraseScore, usedIndices, isExactMatch)
+        // console.log("founddddd organisationnn", matchedTokens, phraseScore, usedIndices, isExactMatch)
 
         if (isExactMatch) {
           return {
@@ -176,7 +177,7 @@ export class IntentDetectorService {
         const { matchedTokens, phraseScore, usedIndices, isExactMatch } =
           this.scoreTokensInverted(usedTokenIndices,intent.phrase_tokens, stemmedTokens);
 
-        console.log("PHRASEEEEEEEEEE", matchedTokens, phraseScore, usedIndices, isExactMatch)
+        // console.log("PHRASEEEEEEEEEE", matchedTokens, phraseScore, usedIndices, isExactMatch)
 
         if (isExactMatch) {
           return {
@@ -235,12 +236,11 @@ export class IntentDetectorService {
   }
 
   private tokenize(text: string) {
-    const cleanText = text.toLocaleLowerCase()
-      .replace(/[^a-z0-9\s]/g, " ")
-      .split(/\s+/)
-      .filter(Boolean);
+    const doc = nlp(text);
 
-    const originalTokens: string[] = Array.from(new Set(cleanText));
+    const normalizedWords = doc.normalize().out('array');
+    const originalTokens: string[] = Array.from(new Set(normalizedWords));
+
     const stemmedTokens: string[] = Array.from(
       new Set(
         originalTokens

@@ -6,6 +6,14 @@ import { WhatsappWebhookSchema } from "../../validators/webhook.schema";
 import { WhatsappReply } from "../../types/reply.types";
 import { IntentDetectorService } from "../intent/intent.detector";
 import { BestIntent } from "../../types/intent.types";
+import { loadIntentsFromFile } from "../../utils/intentLoader";
+
+const STOP_WORDS = new Set([
+  'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been',
+  'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+  'could', 'should', 'may', 'might', 'can', 'i', 'you', 'it','for',
+  'my'
+]);
 
 export class HandlerService{
 
@@ -97,6 +105,8 @@ export class HandlerService{
         recipient:recipient
       })
 
+      const intentsFile = loadIntentsFromFile();
+      this.intentDetector.setup(intentsFile, STOP_WORDS);
       const intentResult = await this.intentDetector.getFinalIntent(userMessage);
 
       this.logger.info(`Successfully detected intent wit id:${intentResult.id}`);

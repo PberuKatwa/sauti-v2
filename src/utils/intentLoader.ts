@@ -1,4 +1,5 @@
 import fs from "fs";
+import * as path from 'path';
 import { IntentFileSchema } from "../validators/intent.schema";
 import { IntentDefinition } from "../types/intent.types";
 import { logger } from "../logger/winston.logger";
@@ -7,14 +8,17 @@ function normalizeArray(arr: string[]): string[] {
   return [...new Set(arr.map(v => v.trim().toLowerCase()))];
 }
 
-export function loadIntentsFromFile(filePath:string):IntentDefinition[]{
+const INTENT_FILE_PATH = path.join(process.cwd(), 'src', 'files', 'intent.json');
+
+export function loadIntentsFromFile():IntentDefinition[]{
   try{
 
-    if( !fs.existsSync( filePath ) ) throw new Error(`Intent File path doesnt exist`);
-    if( !fs.statSync(filePath).isFile() ) throw new Error(`File path exists but no file was found`)
+    if (!fs.existsSync(INTENT_FILE_PATH)) {
+      throw new Error(`Intent File not found at: ${INTENT_FILE_PATH}`);
+    }
 
-    const rawJson = fs.readFileSync( filePath, "utf-8" )
-    const json = JSON.parse(rawJson)
+    const rawJson = fs.readFileSync(INTENT_FILE_PATH, "utf-8");
+    const json = JSON.parse(rawJson);
 
     const parsed = IntentFileSchema.parse(json)
     logger.info(`Successfully parsed file`)

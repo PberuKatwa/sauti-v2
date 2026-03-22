@@ -7,6 +7,7 @@
     "entity": "Products",
     "category": "General",
     "organisation_tokens": [
+      "What flowers do you have available for me",
       "do you have any roses",
       "can I get some flowers",
       "can i get some flowers",
@@ -75,6 +76,7 @@
     "entity": "Products",
     "category": "General",
     "organisation_tokens": [
+      "Do you have any tulips",
       "Tell me more about the red roses bouquet",
       "Can I see details on the sunflower arrangement?",
       "What does the birthday special bouquet include?"
@@ -130,6 +132,7 @@
     "entity": "Orders",
     "category": "General",
     "organisation_tokens": [
+      "Can I see all my invoices",
       "Show me all the flower orders I have made",
       "List all my bouquet deliveries",
       "Can I see my full order history with you?"
@@ -185,6 +188,7 @@
     "entity": "Orders",
     "category": "General",
     "organisation_tokens": [
+      "retrieve order info - ORDER_ID:17",
       "Show me order number 1045",
       "I need to view my last flower delivery invoice",
       "Can you pull up my specific bouquet order?"
@@ -240,6 +244,7 @@
     "entity": "Orders",
     "category": "General",
     "organisation_tokens": [
+      "Can I order a dozen roses",
       "I would like to order a bouquet of red roses",
       "Place an order for the birthday special arrangement",
       "I want to buy the sunflower bouquet and have it delivered"
@@ -350,6 +355,7 @@
     "entity": "Payments",
     "category": "General",
     "organisation_tokens": [
+      "pay for order OrderId:17",
       "I am ready to pay for my flower order",
       "How do I pay for my bouquet delivery?",
       "Let me complete the payment for my roses"
@@ -460,6 +466,7 @@
     "entity": "Payments",
     "category": "General",
     "organisation_tokens": [
+      "What is my last payment",
       "Show me the payment I made last Tuesday",
       "Pull up payment receipt number 4821",
       "I need details on a specific transaction I made"
@@ -515,7 +522,6 @@
     "entity": "CustomerCare",
     "category": "General",
     "organisation_tokens": [
-      "hello",
       "Hello there purple hearts",
       "Hey, I am looking for some beautiful flowers today",
       "Good morning, I need to send someone a bouquet"
