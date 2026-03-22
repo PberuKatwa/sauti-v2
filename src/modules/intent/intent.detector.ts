@@ -30,12 +30,12 @@ export class IntentDetectorService {
     try {
       let intent: BestIntent = this.processIntent(userMessage);
 
-      if (intent.name === "UNKNOWN") {
-        const prompt = buildIntentPrompt(userMessage);
-        intent = await this.geminiService.getLlmIntent(prompt);
+      // if (intent.name === "UNKNOWN") {
+      //   const prompt = buildIntentPrompt(userMessage);
+      //   intent = await this.geminiService.getLlmIntent(prompt);
 
-        addOrganisationToken(intent.id, intent.userMessage);
-      }
+      //   addOrganisationToken(intent.id, intent.userMessage);
+      // }
 
       return intent;
     } catch (error) {
@@ -151,7 +151,7 @@ export class IntentDetectorService {
         const { matchedTokens, phraseScore, usedIndices, isExactMatch } =
           this.scoreTokensInverted(usedTokenIndices,intent.organisation_tokens, stemmedTokens);
 
-        // console.log("founddddd organisationnn", matchedTokens, phraseScore, usedIndices, isExactMatch)
+        console.log("founddddd organisationnn", matchedTokens, phraseScore, usedIndices, isExactMatch)
 
         if (isExactMatch) {
           return {
@@ -177,7 +177,7 @@ export class IntentDetectorService {
         const { matchedTokens, phraseScore, usedIndices, isExactMatch } =
           this.scoreTokensInverted(usedTokenIndices,intent.phrase_tokens, stemmedTokens);
 
-        // console.log("PHRASEEEEEEEEEE", matchedTokens, phraseScore, usedIndices, isExactMatch)
+        console.log("PHRASEEEEEEEEEE", matchedTokens, phraseScore, usedIndices, isExactMatch)
 
         if (isExactMatch) {
           return {

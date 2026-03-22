@@ -179,7 +179,7 @@ export class WhatsappReplyService extends WhatsappService{
               {
                 type: "reply",
                 reply: {
-                  id: `generate_an_invoice -ProductID:${flower.productId}`,
+                  id: `generate an invoice exact -ProductID:${flower.productId}`,
                   title: "Order Now 🛍️"
                 }
               }

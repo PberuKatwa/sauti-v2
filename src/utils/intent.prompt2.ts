@@ -34,11 +34,13 @@ export function buildIntentPrompt(
 
     ID  NAME                ENTITY         DESCRIPTION
     ──  ──────────────────  ─────────────  ──────────────────────────────────────────────────────────────
-    1   GET_ALL_PRODUCTS    Products       User wants to browse, make a new order  or view all available products.
+    1   GET_ALL_PRODUCTS    Products       User wants to browse or view all available products.
     2   GET_PRODUCT         Products       User wants details on one specific product.
     3   GET_ALL_ORDERS      Orders         User wants to view or list all their past or current orders and invoices.
     4   GET_ORDER           Orders         User wants a specific order or invoice by ID / reference.
+    5   CREATE_ORDER        Orders         User wants to place, create, or finalise a new order.
     6   GET_ORDER_STATUS    Orders         User wants to track or check the delivery status of an order.
+    7   CREATE_PAYMENT      Payments       User wants to pay or checkout for an order.
     8   GET_ALL_PAYMENTS    Payments       User wants to view all their past payments / transactions.
     9   GET_PAYMENT         Payments       User wants a specific payment record or receipt.
     10  GREETING            CustomerCare   User is initiating a conversation or exchanging pleasantries.
