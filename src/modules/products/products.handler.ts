@@ -95,32 +95,33 @@ export class ProductsHandler{
     @Inject(APP_LOGGER) private readonly logger:AppLogger
   ) { };
 
-  private readonly intentMap: Record< string, (msg: string) => Promise<any> > = {
-    'GET_ALL_PRODUCTS': (msg) => this.handleGetAllProducts(msg),
-    'GET_PRODUCT': (msg) => this.handleGetProduct(msg),
+  private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
+    'GET_ALL_PRODUCTS': (msg,recipient) => this.handleGetAllProducts(msg,recipient),
+    'GET_PRODUCT': (msg,recipient) => this.handleGetProduct(msg,recipient)
   };
 
-  public async handleIntent(intent: BestIntent):Promise<void> {
+  public async handleIntent(intent: BestIntent, recipient:string):Promise<void> {
     try {
 
       const handler = this.intentMap[intent.name];
 
       if (!handler) throw new Error(`No handler was found`)
 
-      return handler(intent.userMessage);
+      return handler(intent.userMessage, recipient);
     } catch (error) {
       throw error;
     }
   }
 
-  private async handleGetAllProducts(userMessage: string) {
+  private async handleGetAllProducts(userMessage: string, recipient:string) {
 
+    const itemList = catalog.slice(0, 4);
 
-
+    await this.sendFlowerCatalog(itemList, recipient);
   }
 
-  private async handleGetProduct(userMessage: string) {
-
+  private async handleGetProduct(userMessage: string, recipient:string) {
+    await this.whatsappService.sendText(`WERE AT GET_PRODUCT`, recipient);
   }
 
   async sendFlowerCatalog(
