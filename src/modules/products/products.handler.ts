@@ -123,7 +123,10 @@ export class ProductsHandler{
 
   }
 
-  async sendFlowerCatalog(itemsList: (OrderItem & { imageUrl: string, description: string, productId:number })[] , recipient: string) {
+  async sendFlowerCatalog(
+    itemsList: (OrderItem & { imageUrl: string, description: string, productId: number })[],
+    recipient: string
+  ) {
 
     for (const flower of itemsList) {
       const payload = {
