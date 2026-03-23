@@ -99,6 +99,13 @@ export class HandlerService{
     }
   }
 
+  private readonly intentEntityMap: Record< string, (intent:BestIntent, recipient:string) => Promise<any> > = {
+    'Products': (intent, recipient) => this.productsHandler.handleIntent(intent,recipient),
+    'Orders': (intent, recipient) => this.ordersHandler.handleIntent(intent,recipient),
+    'Payments': (intent, recipient) => this.paymentsHandler.handleIntent(intent,recipient),
+    'CustomerCare': (intent, recipient) => this.customerCareHandler.handleIntent(intent,recipient)
+  };
+
   private async processMessage(messages: IncomingMessages[]):Promise< {
     userMessage:string,
     intent: BestIntent,
@@ -116,6 +123,12 @@ export class HandlerService{
       const intentsFile = loadIntentsFromFile();
       this.intentDetector.setup(intentsFile, STOP_WORDS);
       const intentResult = await this.intentDetector.getFinalIntent(userMessage);
+
+      try {
+
+      } catch (error) {
+
+      }
 
       this.logger.info(`Successfully detected intent wit id:${intentResult.id}`);
       return {
