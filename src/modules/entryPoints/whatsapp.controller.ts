@@ -2,7 +2,6 @@ import { Controller, Get, Inject, Req, Res, Post } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { APP_LOGGER } from "../../logger/logger.provider";
 import { AppLogger } from "../../logger/winston.logger";
-import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { ConfigService } from "@nestjs/config";
 import { ApiResponse } from "../../types/api.types";
 import { WhatsappWebhook } from "../../types/whatsapp.webhook";

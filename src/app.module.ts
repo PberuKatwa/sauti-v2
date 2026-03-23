@@ -11,6 +11,7 @@ import { ClientModule } from './modules/client/client.module';
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { CustomerCareModule } from './modules/customerCare/care.module';
 import { ProductsModule } from './modules/products/products.module';
+import { EntryPointModule } from './modules/entryPoints/entry.module';
 
 
 @Module({
@@ -28,7 +29,8 @@ import { ProductsModule } from './modules/products/products.module';
     ClientModule,
     WhatsappModule,
     CustomerCareModule,
-    ProductsModule
+    ProductsModule,
+    EntryPointModule
   ]
 })
 export class AppModule implements NestModule{

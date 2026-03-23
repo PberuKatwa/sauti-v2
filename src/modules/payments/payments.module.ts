@@ -3,7 +3,7 @@ import { PaymentsHandler } from "./payments.handler";
 import { WhatsappModule } from "../whatsapp/whatsapp.module";
 
 @Module({
-  // imports:[WhatsappModule],
+  imports:[WhatsappModule],
   providers: [PaymentsHandler],
   exports:[PaymentsHandler]
 })

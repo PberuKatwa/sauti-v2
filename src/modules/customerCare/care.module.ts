@@ -4,7 +4,7 @@ import { CustomerCareHandler } from "./care.handler";
 
 @Global()
 @Module({
-  // imports: [WhatsappModule],
+  imports: [WhatsappModule],
   providers: [CustomerCareHandler],
   exports:[CustomerCareHandler]
 })

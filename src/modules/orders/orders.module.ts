@@ -7,7 +7,7 @@ import { ClientModule } from "../client/client.module";
 import { ProductsModule } from "../products/products.module";
 
 @Module({
-  imports: [ ClientModule, ProductsModule],
+  imports: [ ClientModule, ProductsModule, WhatsappModule],
   providers:[OrdersModel, OrdersHandler],
   controllers:[OrdersController],
   exports: [OrdersModel, OrdersHandler]

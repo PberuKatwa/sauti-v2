@@ -1,10 +1,16 @@
 import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { WhatsappService } from "./whatsapp.service";
+import { WhatsappController } from "./whatsapp.controller";
 import { AppLogger } from "../../logger/winston.logger";
 import { APP_LOGGER } from "../../logger/logger.provider";
+import { HandlerModule } from "../handler/handler.module";
+import { ClientModule } from "../client/client.module";
+import { OrdersModule } from "../orders/orders.module";
 
 @Module({
+  imports: [HandlerModule, ClientModule, OrdersModule],
+  controllers:[WhatsappController],
   providers: [
     {
       provide: WhatsappService,
