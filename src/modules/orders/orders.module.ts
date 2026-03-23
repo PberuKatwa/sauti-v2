@@ -1,11 +1,13 @@
 import { Module } from "@nestjs/common";
 import { OrdersModel } from "./orders.model";
 import { OrdersController } from "./orders.controllers";
+import { WhatsappModule } from "../whatsapp/whatsapp.module";
+import { OrdersHandler } from "./orders.handler";
 
 @Module({
-  imports: [],
-  providers:[OrdersModel],
+  imports: [WhatsappModule],
+  providers:[OrdersModel, OrdersHandler],
   controllers:[OrdersController],
-  exports:[OrdersModel]
+  exports:[OrdersModel, OrdersHandler]
 })
 export class OrdersModule { };
