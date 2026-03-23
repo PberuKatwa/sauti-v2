@@ -124,16 +124,17 @@ export class HandlerService{
       this.intentDetector.setup(intentsFile, STOP_WORDS);
       const intentResult = await this.intentDetector.getFinalIntent(userMessage);
 
-      const handler = this.intentEntityMap[intentResult.entity];
+      this.logger.info(`Successfully extracted intent:${intentResult.name} passing message to handler`)
 
       try {
+        const handler = this.intentEntityMap[intentResult.entity];
         await handler(intentResult, recipient);
       } catch (error) {
         this.logger.error(`Error in processing message to handler ${error}`)
         await this.customerCareHandler.sendHelpMenu(recipient);
       }
 
-      this.logger.info(`Successfully detected intent wit id:${intentResult.id}`);
+      this.logger.info(`Successfully handled message.`);
       return {
         userMessage:userMessage,
         intent:intentResult,

@@ -123,7 +123,7 @@ export class ProductsHandler{
 
   private async handleGetAllProducts(userMessage: string, recipient:string) {
 
-    const itemList = catalog.slice(0, 4);
+    const itemList = catalog.slice(0, 3);
 
     await this.sendFlowerCatalog(recipient,itemList);
   }
@@ -137,7 +137,7 @@ export class ProductsHandler{
     itemsList: CatalogItem[] = [],
   ) {
 
-    const allItems = itemsList ? itemsList.length > 0 : catalog.slice(0, 4);
+    const allItems = itemsList ? itemsList.length > 0 : catalog.slice(0, 3);
 
     for (const flower of itemsList) {
       const payload = {

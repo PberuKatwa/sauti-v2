@@ -72,7 +72,7 @@ export class CustomerCareHandler{
             {
               type: "reply",
               reply: {
-                id: "request_catalogue",
+                id: "View Flowers",
                 title: "View Flowers 💐"
               }
             },
@@ -86,7 +86,7 @@ export class CustomerCareHandler{
             {
               type: "reply",
               reply: {
-                id: "fetch_all_orders",
+                id: "Can I see all my invoices",
                 title: "My Orders 📝"
               }
             }
