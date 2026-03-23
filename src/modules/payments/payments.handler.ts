@@ -13,7 +13,7 @@ export class PaymentsHandler{
 
   private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
     'GET_ALL_PAYMENTS': (msg,recipient) => this.handleGetAllPayments(msg,recipient),
-    'GET_PRODUCT': (msg,recipient) => this.handleGetProduct(msg,recipient)
+    'GET_PAYMENT': (msg,recipient) => this.handleGetPayment(msg,recipient)
   };
 
   public async handleIntent(intent: BestIntent, recipient:string):Promise<void> {
@@ -30,10 +30,10 @@ export class PaymentsHandler{
   }
 
   private async handleGetAllPayments(userMessage: string, recipient:string) {
-
+    await this.whatsappService.sendText(`GET_ALL_PAYMENTS`, recipient )
   }
 
-  private async handleGetProduct(userMessage: string, recipient:string) {
-    await this.whatsappService.sendText(`WERE AT GET_PRODUCT`, recipient);
+  private async handleGetPayment(userMessage: string, recipient:string) {
+    await this.whatsappService.sendText(`WERE AT GET_PAYMENT`, recipient);
   }
 }
