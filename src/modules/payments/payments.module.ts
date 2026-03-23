@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
 import { PaymentsHandler } from "./payments.handler";
-import { WhatsappService } from "../whatsapp/whatsapp.service";
+import { WhatsappModule } from "../whatsapp/whatsapp.module";
 
 @Module({
-  imports:[WhatsappService],
+  imports:[WhatsappModule],
   providers: [PaymentsHandler],
   exports:[PaymentsHandler]
 })
