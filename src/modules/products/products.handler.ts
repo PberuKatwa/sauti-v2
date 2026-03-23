@@ -5,7 +5,13 @@ import { APP_LOGGER } from "../../logger/logger.provider";
 import type { AppLogger } from "../../logger/winston.logger";
 import { OrderItem } from "../../types/orders.types";
 
-const catalog: (OrderItem & { imageUrl: string, description: string, productId:number })[] = [
+interface CatalogItem extends OrderItem {
+  imageUrl: string;
+  description: string;
+  productId: number;
+}
+
+const catalog: CatalogItem[] = [
   {
     productId: 1,
     name: "Red Rose Bouquet",
@@ -88,6 +94,8 @@ const catalog: (OrderItem & { imageUrl: string, description: string, productId:n
   }
 ];
 
+
+
 export class ProductsHandler{
 
   constructor(
@@ -117,7 +125,7 @@ export class ProductsHandler{
 
     const itemList = catalog.slice(0, 4);
 
-    await this.sendFlowerCatalog(itemList, recipient);
+    await this.sendFlowerCatalog(recipient,itemList);
   }
 
   private async handleGetProduct(userMessage: string, recipient:string) {
@@ -125,9 +133,11 @@ export class ProductsHandler{
   }
 
   async sendFlowerCatalog(
-    itemsList: (OrderItem & { imageUrl: string, description: string, productId: number })[],
-    recipient: string
+    recipient: string,
+    itemsList: CatalogItem[] = [],
   ) {
+
+    const allItems = itemsList ? itemsList.length > 0 : catalog.slice(0, 4);
 
     for (const flower of itemsList) {
       const payload = {

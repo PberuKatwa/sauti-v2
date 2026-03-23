@@ -3,9 +3,11 @@ import { OrdersModel } from "./orders.model";
 import { OrdersController } from "./orders.controllers";
 import { WhatsappModule } from "../whatsapp/whatsapp.module";
 import { OrdersHandler } from "./orders.handler";
+import { ClientModule } from "../client/client.module";
+import { ProductsModule } from "../products/products.module";
 
 @Module({
-  imports: [WhatsappModule],
+  imports: [WhatsappModule, ClientModule, ProductsModule],
   providers:[OrdersModel, OrdersHandler],
   controllers:[OrdersController],
   exports: [OrdersModel, OrdersHandler]
