@@ -13,25 +13,14 @@ export class CustomerCareHandler{
 
   private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
     'GREETING': (msg,recipient) => this.handleGreeting(msg,recipient),
-    'GET_ALL_ORDERS': (msg, recipient) => this.handleGetAllOrders(msg, recipient),
-    'GET_ORDER': (msg, recipient) => this.handleGetOrder(msg, recipient)
+    'HELP': (msg, recipient) => this.handleHelp(msg, recipient),
+    'COMPLAINT': (msg, recipient) => this.handleComplaint(msg, recipient)
   };
 
   public async handleIntent(intent: BestIntent, recipient:string):Promise<void> {
     try {
 
       const handler = this.intentMap[intent.name];
-      if( intent.name === "GREETING" ){
-        await this.sendTemplate("welcome_actions", "en", recipient);
-      }
-
-      else if( intent.name === "HELP" ){
-        await this.sendHelpMenu(recipient);
-      }
-
-      else if( intent.name === "COMPLAINT" ){
-        await this.sendComplaintEscalation(recipient);
-      }
 
       if (!handler) throw new Error(`No handler was found`)
 
