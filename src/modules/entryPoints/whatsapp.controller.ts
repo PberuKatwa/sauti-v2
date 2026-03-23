@@ -7,19 +7,14 @@ import { ConfigService } from "@nestjs/config";
 import { ApiResponse } from "../../types/api.types";
 import { WhatsappWebhook } from "../../types/whatsapp.webhook";
 import { HandlerService } from "../handler/handler.service";
-import { WhatsappReplyService } from "../whatsapp/whatsapp.reply";
-import { ClientModel } from "../client/client.model";
-import { OrdersModel } from "../orders/orders.model";
 
 @Controller('whatsapp')
 export class WhatsappController{
 
   constructor(
     @Inject(APP_LOGGER) private readonly logger: AppLogger,
-    private readonly whatsappService: WhatsappService,
     private readonly configService: ConfigService,
     private readonly handlerService: HandlerService,
-    private readonly whatsappReplyService: WhatsappReplyService
   ) { };
 
   @Get('webhook')
@@ -64,11 +59,7 @@ export class WhatsappController{
 
       // this.logger.warn(`Webhook received: ${JSON.stringify(body, null, 2)}`);
 
-      const { type, recipient, intent, userMessage } = await this.handlerService.processWhatsappWebhook(body);
-
-      // if (type === "MESSAGE") {
-      //   await this.whatsappReplyService.processMessage(intent, recipient, userMessage);
-      // }
+      await this.handlerService.processWhatsappWebhook(body);
 
       return res.status(200).json({
         success: true,
