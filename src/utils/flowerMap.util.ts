@@ -81,6 +81,8 @@ export function getProductIdsFromMessage(
     }
   }
 
+  const idArrays = Array.from(matchedIds)
+
   if (matchedIds.size === 0) {
     return catalog.slice(0, 3).map(item => item.productId);
   }
