@@ -210,17 +210,16 @@ export class OrdersHandler{
   }
 
   private async sendOrderTracking(recipient: string, order: any) {
-
     const steps = [
       {
         key: "pending",
-        title: "Preparing Your Flowers",
+        title: "🌸 Preparing Your Flowers",
         description: "Our florist is carefully arranging your bouquet."
       },
       {
         key: "pending_delivery",
-        title: "Out for Delivery",
-        description: "Rider: John Doe\nPhone: +254 712 345 678"
+        title: "🚚 Currently being delivered",
+        description: `Rider: John Kamau\nPhone: +254 712 345 678`
       },
       {
         key: "delivered",
@@ -231,28 +230,29 @@ export class OrdersHandler{
 
     const currentIndex = steps.findIndex(s => s.key === order.status);
 
-    const progressText = steps.map((step, index) => {
+    const progressText = steps
+      .map((step, index) => {
+        const isLast = index === steps.length - 1;
+        const connector = isLast ? "" : "\n┆";
 
-      const isLast = index === steps.length - 1;
+        // ✅ Completed step
+        if (index < currentIndex) {
+          return `✅ ~${step.title}~${connector}`;
+        }
 
-      // completed
-      if (index < currentIndex) {
-        return `🟢 *${step.title}*\n${isLast ? "" : "│"}`;
-      }
+        // 🔵 Current active step
+        if (index === currentIndex) {
+          return (
+            `🔵 *${step.title}*\n` +
+            `     _${step.description}_` +
+            connector
+          );
+        }
 
-      // current
-      if (index === currentIndex) {
-        return (
-          `🟣 *${step.title}*\n` +
-          `   _${step.description}_\n` +
-          `${isLast ? "" : "│"}`
-        );
-      }
-
-      // pending
-      return `⚪ ${step.title}\n${isLast ? "" : "│"}`;
-
-    }).join("\n");
+        // ⬜ Pending step
+        return `⬜ ${step.title}${connector}`;
+      })
+      .join("\n");
 
     const payload = {
       messaging_product: "whatsapp",
@@ -262,12 +262,12 @@ export class OrdersHandler{
         type: "button",
         header: {
           type: "text",
-          text: `Order Tracking • ${order.invoice_number}`
+          text: `🌸 Order Tracking • ${order.invoice_number}`
         },
         body: {
           text:
             `Hi there! 💜\n\n` +
-            `Here’s your delivery progress:\n\n` +
+            `Here's your delivery progress:\n\n` +
             `${progressText}\n\n` +
             `━━━━━━━━━━━━━━━\n` +
             `*Total:* KES ${Number(order.total).toLocaleString()}`
