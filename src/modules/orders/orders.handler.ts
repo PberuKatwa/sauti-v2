@@ -90,6 +90,7 @@ export class OrdersHandler{
     const match = userMessage.match(/ORDER_ID:(\d+)/);
     const orderId = match ? Number(match[1]) : null;
 
+    console.log("helllloooooo", orderId, userMessage)
     let currentOrder = null;
     if (orderId) {
       currentOrder = await this.ordersModel.fetchOrder(orderId);
@@ -136,14 +137,14 @@ export class OrdersHandler{
             {
               type: "reply",
               reply: {
-                id: `pay for order OrderId:${order.id}`,
+                id: `pay for order - ORDER_ID:${order.id}`,
                 title: "Pay Now 💳"
               }
             },
             {
               type: "reply",
               reply: {
-                id: `where is my order - OrderId:${order.id}`,
+                id: `where is my order - ORDER_ID:${order.id}`,
                 title: "Track Order"
               }
             }
@@ -244,7 +245,7 @@ export class OrdersHandler{
         if (index === currentIndex) {
           return (
             `🔵 *${step.title}*\n` +
-            `     _${step.description}_` +
+          `      ${step.description}` +
             connector
           );
         }
@@ -280,14 +281,14 @@ export class OrdersHandler{
             {
               type: "reply",
               reply: {
-                id: `pay_order_${order.id}`,
+                id: `pay for order - ORDER_ID${order.id}`,
                 title: "Pay Now 💳"
               }
             },
             {
               type: "reply",
               reply: {
-                id: `view_products`,
+                id: `show me your products`,
                 title: "View More 🌷"
               }
             }
