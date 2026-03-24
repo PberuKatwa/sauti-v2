@@ -5,6 +5,8 @@ import { APP_LOGGER } from "../../logger/logger.provider";
 import type { AppLogger } from "../../logger/winston.logger";
 import { OrderItem } from "../../types/orders.types";
 
+import { getMap, getProductIdsFromMessage } from "../../utils/flowerMap.util";
+
 export interface CatalogItem extends OrderItem {
   imageUrl: string;
   description: string;
@@ -121,9 +123,17 @@ export class ProductsHandler{
 
   private async handleGetAllProducts(userMessage: string, recipient:string) {
 
-    const itemList = catalog.slice(0, 3);
+    const flowerMap = getMap(catalog)
+    const productIds = getProductIdsFromMessage(userMessage, flowerMap, catalog);
 
-    await this.sendFlowerCatalog(recipient,itemList);
+    this.logger.info("Matched product IDs:", productIds);
+
+    const products = catalog.filter(item =>
+      productIds.includes(item.productId)
+    );
+
+    // send via whatsapp service
+    return this.sendFlowerCatalog(recipient, products);
   }
 
   private async handleGetProduct(userMessage: string, recipient:string) {

@@ -1,4 +1,4 @@
-import { catalog, CatalogItem } from "../modules/products/products.handler";
+import { CatalogItem } from "../modules/products/products.handler";
 
 type FlowerMap = Record<string, number[]>;
 
@@ -40,6 +40,11 @@ export function buildFlowerMap(catalog: CatalogItem[]): FlowerMap {
     }
   }
 
+  return map;
+}
+
+export const getMap = (catalog:CatalogItem[]):FlowerMap => {
+  const map = buildFlowerMap(catalog);
   return map;
 }
 
