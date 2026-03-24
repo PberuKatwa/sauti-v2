@@ -87,7 +87,19 @@ export class OrdersHandler{
 
   private async handleGetOrderStatus(userMessage: string, recipient: string) {
 
-    await this.whatsappService.sendText(`I can check your order status. Please share your order number or tracking ID.`, recipient)
+    const match = userMessage.match(/ORDER_ID:(\d+)/);
+    const orderId = match ? Number(match[1]) : null;
+
+    let currentOrder = null;
+    if (orderId) {
+      currentOrder = await this.ordersModel.fetchOrder(orderId);
+    } else {
+      const client = await this.clientsModel.fetchClientByPhone(parseInt(recipient));
+      currentOrder = await this.ordersModel.fetchLatestOrderByClient(client.id)
+    }
+
+    return await this.sendOrderTracking(recipient, currentOrder);
+
   }
 
   private async sendOrderInvoice(recipient: string, order: any) {
@@ -188,6 +200,92 @@ export class OrdersHandler{
             {
               title: "Recent Orders",
               rows
+            }
+          ]
+        }
+      }
+    };
+
+    await this.whatsappService.callApi(recipient, payload);
+  }
+
+  private async sendOrderTracking(recipient: string, order: any) {
+
+    const currentStatus = order.status;
+
+    const steps = [
+      {
+        key: "pending",
+        title: "Preparing Your Flowers 🌸",
+        description: "Our florist is carefully arranging your bouquet."
+      },
+      {
+        key: "pending_delivery",
+        title: "Out for Delivery 🚚",
+        description: "Rider: John Doe\nPhone: +254 712 345 678"
+      },
+      {
+        key: "delivered",
+        title: "Delivered ✅",
+        description: "Your flowers have been successfully delivered. Enjoy! 💜"
+      }
+    ];
+
+    // determine active index
+    const currentIndex = steps.findIndex(s => s.key === currentStatus);
+
+    const progressText = steps
+      .map((step, index) => {
+
+        // completed
+        if (index < currentIndex) {
+          return `✅ *${step.title}*`;
+        }
+
+        // current step (show details)
+        if (index === currentIndex) {
+          return `🟣 *${step.title}*\n_${step.description}_`;
+        }
+
+        // upcoming
+        return `⚪ ${step.title}`;
+      })
+      .join("\n\n");
+
+    const payload = {
+      messaging_product: "whatsapp",
+      to: recipient,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        header: {
+          type: "text",
+          text: `Order Tracking • ${order.invoice_number}`
+        },
+        body: {
+          text:
+            `Hi there! 💜 Track your order below:\n\n` +
+            `${progressText}\n\n` +
+            `*Total:* KES ${Number(order.total).toLocaleString()}`
+        },
+        footer: {
+          text: "Purple Hearts 🌸 • Fresh flowers, delivered with love"
+        },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: {
+                id: `pay_order_${order.id}`,
+                title: "Pay Now 💳"
+              }
+            },
+            {
+              type: "reply",
+              reply: {
+                id: `view_products`,
+                title: "View More 🌷"
+              }
             }
           ]
         }
