@@ -15,7 +15,7 @@ export class IntentDetectorService {
 
   private readonly SCORES = {
     EXACT_PHRASE: 10,
-    MIN_THRESHOLD: 4,
+    MIN_THRESHOLD: 3,
     PARTIAL_PHRASE_MULTIPLIER: 0.5,
   };
 
