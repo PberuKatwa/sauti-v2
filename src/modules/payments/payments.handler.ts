@@ -4,13 +4,15 @@ import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { BestIntent } from "../../validators/bestIntent.schema";
 import { OrdersModel } from "../orders/orders.model";
+import { ClientModel } from "../client/client.model";
 
 export class PaymentsHandler{
 
   constructor(
     @Inject(APP_LOGGER) private readonly logger: AppLogger,
     private readonly whatsappService: WhatsappService,
-    private readonly ordersModel:OrdersModel
+    private readonly ordersModel: OrdersModel,
+    private readonly clientsModel:ClientModel
   ) { };
 
   private readonly intentMap: Record<string, (msg: string, recipient: string) => Promise<any>> = {
@@ -32,7 +34,20 @@ export class PaymentsHandler{
     }
   }
 
-  private async createPayment(userMessage: string, recipient:string) {
+  private async createPayment(userMessage: string, recipient: string) {
+
+    const match = userMessage.match(/ORDER_ID:(\d+)/);
+    const orderId = match ? Number(match[1]) : null;
+
+    console.log("helllloooooo", orderId, userMessage)
+    let currentOrder = null;
+    if (orderId) {
+      currentOrder = await this.ordersModel.fetchOrder(orderId);
+    } else {
+      const client = await this.clientsModel.fetchClientByPhone(parseInt(recipient));
+      currentOrder = await this.ordersModel.fetchLatestOrderByClient(client.id)
+    }
+
     await this.whatsappService.sendText(`CREATE_PAYMENT .......`, recipient )
   }
 
