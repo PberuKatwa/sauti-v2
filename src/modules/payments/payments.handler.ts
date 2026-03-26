@@ -3,12 +3,14 @@ import { APP_LOGGER } from "../../logger/logger.provider";
 import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { BestIntent } from "../../validators/bestIntent.schema";
+import { OrdersModel } from "../orders/orders.model";
 
 export class PaymentsHandler{
 
   constructor(
     @Inject(APP_LOGGER) private readonly logger: AppLogger,
-    private readonly whatsappService:WhatsappService
+    private readonly whatsappService: WhatsappService,
+    private readonly ordersModel:OrdersModel
   ) { };
 
   private readonly intentMap: Record<string, (msg: string, recipient: string) => Promise<any>> = {

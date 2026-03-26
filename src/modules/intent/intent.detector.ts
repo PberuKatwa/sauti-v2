@@ -30,12 +30,12 @@ export class IntentDetectorService {
     try {
       let intent: BestIntent = this.processIntent(userMessage);
 
-      // if (intent.name === "UNKNOWN") {
-      //   const prompt = buildIntentPrompt(userMessage);
-      //   intent = await this.geminiService.getLlmIntent(prompt);
+      if (intent.name === "UNKNOWN") {
+        const prompt = buildIntentPrompt(userMessage);
+        intent = await this.geminiService.getLlmIntent(prompt);
 
-      //   addOrganisationToken(intent.id, intent.userMessage);
-      // }
+        addOrganisationToken(intent.id, intent.userMessage);
+      }
 
       return intent;
     } catch (error) {
