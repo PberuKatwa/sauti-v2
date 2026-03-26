@@ -48,7 +48,8 @@ export class PaymentsHandler{
       currentOrder = await this.ordersModel.fetchLatestOrderByClient(client.id)
     }
 
-    await this.whatsappService.sendText(`CREATE_PAYMENT .......`, recipient )
+    // await this.whatsappService.sendText(`CREATE_PAYMENT .......`, recipient)
+    return await this.sendPaymentRequest(currentOrder, recipient);
   }
 
 
@@ -59,4 +60,70 @@ export class PaymentsHandler{
   private async handleGetPayment(userMessage: string, recipient:string) {
     await this.whatsappService.sendText(`WERE AT GET_PAYMENT`, recipient);
   }
+
+  private async sendPaymentRequest(recipient: string, order: any) {
+
+    const itemSummary = order.items
+      .map((item: any) => `• ${item.name} (x${item.quantity})`)
+      .join('\n');
+
+    const payload = {
+      messaging_product: "whatsapp",
+      to: recipient,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        header: {
+          type: "text",
+          text: `Payment Request 💳 | Invoice ${order.invoice_number}`
+        },
+        body: {
+          text:
+            `Hi there! 💜 Your order is ready for payment.\n\n` +
+
+            `*Order Details:*\n${itemSummary}\n\n` +
+
+            `*Summary:*\n` +
+            `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
+            `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
+            `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
+
+            `*How to Pay via M-Pesa:*\n` +
+            `1. Go to *M-Pesa*\n` +
+            `2. Select *Lipa na M-Pesa*\n` +
+            `3. Choose *Paybill*\n` +
+            `4. Enter Business No: *346976*\n` +
+            `5. Account No: *${order.invoice_number}*\n` +
+            `6. Enter Amount: *KES ${Number(order.total).toLocaleString()}*\n` +
+            `7. Enter your PIN & confirm\n\n` +
+
+            `Once payment is complete, we’ll begin processing your order right away 🌸`
+        },
+        footer: {
+          text: "Thank you for choosing Purple Hearts 🌸"
+        },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: {
+                id: `show me your products`,
+                title: "View More 🌷"
+              }
+            },
+            {
+              type: "reply",
+              reply: {
+                id: `view_orders`,
+                title: "View My Orders 📦"
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    await this.whatsappService.callApi(recipient, payload);
+  }
+
 }
