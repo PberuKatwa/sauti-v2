@@ -170,5 +170,38 @@ export class WhatsappConfig{
     }
   }
 
+  async getById(id: number): Promise<CompleteConfig | null> {
+    try {
+
+      this.logger.warn(`Attempting to fetch config using user id ${id}`);
+
+      const query = `
+        SELECT
+          id,
+          user_id,
+          phone_number,
+          phone_number_id,
+          business_account_id,
+          access_token
+        FROM whatsapp_config
+        WHERE id = $1
+        LIMIT 1;
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [id]);
+
+      if (result.rows.length === 0) {
+        return null;
+      }
+
+      this.logger.info(`Successfully fetched by user id`)
+      return result.rows[0] as CompleteConfig;
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
 
 }
