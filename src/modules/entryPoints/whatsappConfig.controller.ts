@@ -1,178 +1,250 @@
-import { Controller, Get, Post, Put, Body, Param, Req, Res } from "@nestjs/common";
+import { Controller, Post, Get, Req, Res } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
-import { ApiResponse } from "../../types/api.types";
-import { WhatsappConfig } from "../whatsapp/whatsapp.config"; // Adjust path as needed
-import { ConfigPayload, UpdateConfigPayload } from "../../types/whatsappConfig.types";
+import type { ApiResponse } from "../../types/api.types";
+import {
+  SingleConfigBaseApiRespose,
+  SingleConfigCompleteApiRespose,
+  FullConfigApiRespose,
+  ConfigPayload,
+  UpdateConfigPayload
+} from "../../types/whatsappConfig.types";
+import { WhatsappConfig } from "../whatsapp/whatsapp.config";
 
-@Controller('whatsapp/config')
+@Controller('whatsapp-config')
 export class WhatsappConfigController {
 
   constructor(
     private readonly logger: AppLogger,
-    private readonly whatsappConfig: WhatsappConfig,
-  ) { };
+    private readonly config: WhatsappConfig
+  ) {}
 
-  @Post()
+  @Post('')
   async createConfig(
-    @Body() payload: ConfigPayload,
+    @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
     try {
-      this.logger.warn(`API request to create config for user: ${payload.user_id}`);
 
-      const config = await this.whatsappConfig.createConfig(payload);
+      const payload: ConfigPayload = req.body;
 
-      return res.status(201).json({
+      if (!payload.user_id || !payload.phone_number || !payload.access_token) {
+        const response: ApiResponse = {
+          success: false,
+          message: "invalid payload"
+        };
+        return res.status(400).json(response);
+      }
+
+      const config = await this.config.createConfig(payload);
+
+      const response: SingleConfigBaseApiRespose = {
         success: true,
-        message: "WhatsApp configuration created successfully",
+        message: "Successfully created config",
         data: config
-      });
+      };
 
-    } catch (error: any) {
-      this.logger.error("Error in createConfig API", {
-        message: error.message,
-        stack: error.stack
-      });
+      return res.status(201).json(response);
 
-      return res.status(500).json({
+    } catch (error) {
+
+      this.logger.error("Error creating config", error);
+
+      const response: ApiResponse = {
         success: false,
-        message: error.message
-      });
+        message: `${error.message}`
+      };
+
+      return res.status(500).json(response);
     }
   }
 
-  @Put()
+
+  @Post('update')
   async updateConfig(
-    @Body() payload: UpdateConfigPayload,
+    @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
     try {
-      this.logger.warn(`API request to update config ID: ${payload.id}`);
 
-      const updatedConfig = await this.whatsappConfig.updateConfig(payload);
+      const payload: UpdateConfigPayload = req.body;
 
-      return res.status(200).json({
-        success: true,
-        message: "WhatsApp configuration updated successfully",
-        data: updatedConfig
-      });
-
-    } catch (error: any) {
-      this.logger.error("Error in updateConfig API", {
-        message: error.message,
-        stack: error.stack
-      });
-
-      return res.status(500).json({
-        success: false,
-        message: error.message
-      });
-    }
-  }
-
-  @Get('user/:userId')
-  async getConfigByUserId(
-    @Param('userId') userId: string,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
-      this.logger.warn(`Fetching config for user ID: ${userId}`);
-
-      const config = await this.whatsappConfig.getByUserId(Number(userId));
-
-      if (!config) {
-        return res.status(404).json({
+      if (!payload.id) {
+        const response: ApiResponse = {
           success: false,
-          message: "Configuration not found for this user"
-        });
+          message: "ID_REQUIRED"
+        };
+        return res.status(400).json(response);
       }
 
-      return res.status(200).json({
+      const updated = await this.config.updateConfig(payload);
+
+      const response: SingleConfigBaseApiRespose = {
         success: true,
-        data: config
-      });
+        message: "Successfully updated config",
+        data: updated
+      };
 
-    } catch (error: any) {
-      this.logger.error("Error fetching config by user ID", {
-        message: error.message,
-        stack: error.stack
-      });
+      return res.status(200).json(response);
 
-      return res.status(500).json({
+    } catch (error) {
+
+      this.logger.error("Error updating config", error);
+
+      const response: ApiResponse = {
         success: false,
-        message: error.message
-      });
+        message: `${error.message}`
+      };
+
+      return res.status(500).json(response);
     }
   }
 
-  @Get('phone/:phoneNumber')
-  async getConfigByPhone(
-    @Param('phoneNumber') phoneNumber: string,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
-      this.logger.warn(`Fetching config for phone: ${phoneNumber}`);
-
-      const config = await this.whatsappConfig.getByPhoneNumber(Number(phoneNumber));
-
-      if (!config) {
-        return res.status(404).json({
-          success: false,
-          message: "Configuration not found for this phone number"
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: config
-      });
-
-    } catch (error: any) {
-      this.logger.error("Error fetching config by phone number", {
-        message: error.message,
-        stack: error.stack
-      });
-
-      return res.status(500).json({
-        success: false,
-        message: error.message
-      });
-    }
-  }
 
   @Get(':id')
-  async getConfigById(
-    @Param('id') id: string,
+  async getById(
+    @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
     try {
-      this.logger.warn(`Fetching config by ID: ${id}`);
 
-      const config = await this.whatsappConfig.getById(Number(id));
+      const idParam = req.params.id;
+      const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
-      if (!config) {
-        return res.status(404).json({
+      const parsedId = Number(id);
+
+      if (Number.isNaN(parsedId)) {
+        const response: ApiResponse = {
           success: false,
-          message: "Configuration not found"
-        });
+          message: "id is invalid"
+        };
+        return res.status(400).json(response);
       }
 
-      return res.status(200).json({
+      const config = await this.config.getById(parsedId);
+
+      if (!config) {
+        const response: ApiResponse = {
+          success: false,
+          message: "config was not found"
+        };
+        return res.status(404).json(response);
+      }
+
+      const response: SingleConfigCompleteApiRespose = {
         success: true,
+        message: "Successfully fetched config",
         data: config
-      });
+      };
 
-    } catch (error: any) {
-      this.logger.error("Error fetching config by ID", {
-        message: error.message,
-        stack: error.stack
-      });
+      return res.status(200).json(response);
 
-      return res.status(500).json({
+    } catch (error) {
+
+      this.logger.error("Error fetching config by id", error);
+
+      const response: ApiResponse = {
         success: false,
-        message: error.message
-      });
+        message: "FAILED_TO_FETCH_CONFIG"
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+  // ✅ GET BY PHONE
+  @Get('phone/:phoneNumber')
+  async getByPhone(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const phoneParam = req.params.phoneNumber;
+      const phone = Array.isArray(phoneParam) ? phoneParam[0] : phoneParam;
+
+      const parsedPhone = Number(phone);
+
+      if (Number.isNaN(parsedPhone)) {
+        const response: ApiResponse = {
+          success: false,
+          message: "INVALID_PHONE_NUMBER"
+        };
+        return res.status(400).json(response);
+      }
+
+      const config = await this.config.getByPhoneNumber(parsedPhone);
+
+      if (!config) {
+        const response: ApiResponse = {
+          success: false,
+          message: "CONFIG_NOT_FOUND"
+        };
+        return res.status(404).json(response);
+      }
+
+      const response: SingleConfigCompleteApiRespose = {
+        success: true,
+        message: "Successfully fetched config",
+        data: config
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error("Error fetching config by phone", error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: "FAILED_TO_FETCH_CONFIG"
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+  // ✅ GET BY USER ID
+  @Get('user/:userId')
+  async getByUserId(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const userParam = req.params.userId;
+      const userId = Array.isArray(userParam) ? userParam[0] : userParam;
+
+      const parsedUserId = Number(userId);
+
+      if (Number.isNaN(parsedUserId)) {
+        const response: ApiResponse = {
+          success: false,
+          message: "INVALID_USER_ID"
+        };
+        return res.status(400).json(response);
+      }
+
+      const configs = await this.config.getByUserId(parsedUserId);
+
+      const response: FullConfigApiRespose = {
+        success: true,
+        message: "Successfully fetched configs",
+        data: configs
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error("Error fetching configs by user", error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: "FAILED_TO_FETCH_CONFIGS"
+      };
+
+      return res.status(500).json(response);
     }
   }
 }

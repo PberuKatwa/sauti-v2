@@ -80,7 +80,7 @@ export class WhatsappConfig{
 
       this.logger.warn(`Attempting to update config with id:${id}`);
       const query = `
-        INSERT INTO whatsapp_config (phone_number, phone_number_id,business_account_id,access_token)
+        UPDATE whatsapp_config (phone_number, phone_number_id,business_account_id,access_token)
         SET
           phone_number = $2,
           phone_number_id = $3,
@@ -104,7 +104,7 @@ export class WhatsappConfig{
     }
   }
 
-  async getByPhoneNumber(phone_number: number): Promise<CompleteConfig[] | null> {
+  async getByPhoneNumber(phone_number: number): Promise<CompleteConfig | null> {
     try {
 
       this.logger.warn(`Attempting to fetch config using phone ${phone_number}`);
@@ -129,7 +129,7 @@ export class WhatsappConfig{
       }
 
       this.logger.info(`Successfully fetched by phone number`)
-      return result.rows[0] as CompleteConfig[];
+      return result.rows[0] as CompleteConfig;
 
     } catch (error) {
       throw error;
@@ -168,7 +168,7 @@ export class WhatsappConfig{
     }
   }
 
-  async getById(id: number): Promise<CompleteConfig[] | null> {
+  async getById(id: number): Promise<CompleteConfig | null> {
     try {
 
       this.logger.warn(`Attempting to fetch config using id ${id}`);
@@ -193,7 +193,7 @@ export class WhatsappConfig{
       }
 
       this.logger.info(`Successfully fetched by id`)
-      return result.rows as CompleteConfig[];
+      return result.rows[0] as CompleteConfig;
 
     } catch (error) {
       throw error;
