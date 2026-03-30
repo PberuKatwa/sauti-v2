@@ -1,3 +1,5 @@
+import { ApiResponse } from "./api.types";
+
 export interface BaseConfig{
   id: number | null;
   phone_number: number;
@@ -19,3 +21,7 @@ export interface CompleteConfig extends BaseConfig {
   user_id: number;
   access_token: string;
 }
+
+export interface SingleConfigBaseApiRespose extends ApiResponse<BaseConfig> { };
+export interface SingleConfigCompleteApiRespose extends ApiResponse<CompleteConfig> { };
+export interface FullConfigApiRespose extends ApiResponse<CompleteConfig[]> { };

@@ -104,7 +104,7 @@ export class WhatsappConfig{
     }
   }
 
-  async getByPhoneNumber(phone_number: number): Promise<CompleteConfig | null> {
+  async getByPhoneNumber(phone_number: number): Promise<CompleteConfig[] | null> {
     try {
 
       this.logger.warn(`Attempting to fetch config using phone ${phone_number}`);
@@ -118,8 +118,7 @@ export class WhatsappConfig{
           business_account_id,
           access_token
         FROM whatsapp_config
-        WHERE phone_number = $1
-        LIMIT 1;
+        WHERE phone_number = $1;
       `;
 
       const pgPool = this.pgConfig.getPool();
@@ -130,14 +129,14 @@ export class WhatsappConfig{
       }
 
       this.logger.info(`Successfully fetched by phone number`)
-      return result.rows[0] as CompleteConfig;
+      return result.rows[0] as CompleteConfig[];
 
     } catch (error) {
       throw error;
     }
   }
 
-  async getByUserId(user_id: number): Promise<CompleteConfig | null> {
+  async getByUserId(user_id: number): Promise<CompleteConfig[] | null> {
     try {
 
       this.logger.warn(`Attempting to fetch config using user id ${user_id}`);
@@ -151,8 +150,7 @@ export class WhatsappConfig{
           business_account_id,
           access_token
         FROM whatsapp_config
-        WHERE user_id = $1
-        LIMIT 1;
+        WHERE user_id = $1;
       `;
 
       const pgPool = this.pgConfig.getPool();
@@ -163,14 +161,14 @@ export class WhatsappConfig{
       }
 
       this.logger.info(`Successfully fetched by user id`)
-      return result.rows[0] as CompleteConfig;
+      return result.rows as CompleteConfig[];
 
     } catch (error) {
       throw error;
     }
   }
 
-  async getById(id: number): Promise<CompleteConfig | null> {
+  async getById(id: number): Promise<CompleteConfig[] | null> {
     try {
 
       this.logger.warn(`Attempting to fetch config using id ${id}`);
@@ -184,8 +182,7 @@ export class WhatsappConfig{
           business_account_id,
           access_token
         FROM whatsapp_config
-        WHERE id = $1
-        LIMIT 1;
+        WHERE id = $1;
       `;
 
       const pgPool = this.pgConfig.getPool();
@@ -196,7 +193,7 @@ export class WhatsappConfig{
       }
 
       this.logger.info(`Successfully fetched by id`)
-      return result.rows[0] as CompleteConfig;
+      return result.rows as CompleteConfig[];
 
     } catch (error) {
       throw error;
