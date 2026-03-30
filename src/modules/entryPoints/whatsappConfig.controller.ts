@@ -145,14 +145,14 @@ export class WhatsappConfigController {
 
       const response: ApiResponse = {
         success: false,
-        message: "FAILED_TO_FETCH_CONFIG"
+        message: `${error.message}`
       };
 
       return res.status(500).json(response);
     }
   }
 
-  // ✅ GET BY PHONE
+
   @Get('phone/:phoneNumber')
   async getByPhone(
     @Req() req: Request,
@@ -168,7 +168,7 @@ export class WhatsappConfigController {
       if (Number.isNaN(parsedPhone)) {
         const response: ApiResponse = {
           success: false,
-          message: "INVALID_PHONE_NUMBER"
+          message: "The phone number was invalid"
         };
         return res.status(400).json(response);
       }
@@ -178,7 +178,7 @@ export class WhatsappConfigController {
       if (!config) {
         const response: ApiResponse = {
           success: false,
-          message: "CONFIG_NOT_FOUND"
+          message: `No config was found`
         };
         return res.status(404).json(response);
       }
@@ -197,14 +197,13 @@ export class WhatsappConfigController {
 
       const response: ApiResponse = {
         success: false,
-        message: "FAILED_TO_FETCH_CONFIG"
+        message: `${error.message}`
       };
 
       return res.status(500).json(response);
     }
   }
 
-  // ✅ GET BY USER ID
   @Get('user/:userId')
   async getByUserId(
     @Req() req: Request,
@@ -220,7 +219,7 @@ export class WhatsappConfigController {
       if (Number.isNaN(parsedUserId)) {
         const response: ApiResponse = {
           success: false,
-          message: "INVALID_USER_ID"
+          message: "user id is invalid"
         };
         return res.status(400).json(response);
       }
@@ -241,7 +240,7 @@ export class WhatsappConfigController {
 
       const response: ApiResponse = {
         success: false,
-        message: "FAILED_TO_FETCH_CONFIGS"
+        message: `${error.message}`
       };
 
       return res.status(500).json(response);
