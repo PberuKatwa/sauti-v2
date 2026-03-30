@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { WhatsappService } from "./whatsapp.service";
 import { AppLogger } from "../../logger/winston.logger";
-import { APP_LOGGER } from "../../logger/logger.provider";
+
 
 @Module({
   providers: [
@@ -14,7 +14,7 @@ import { APP_LOGGER } from "../../logger/logger.provider";
 
         return new WhatsappService(logger, token, phoneNumberId);
       },
-      inject:[APP_LOGGER,ConfigService]
+      inject:[AppLogger,ConfigService]
     }
   ],
   exports:[WhatsappService]
