@@ -129,7 +129,6 @@ export class WhatsappConfig{
       return result.rows[0] as CompleteConfig;
 
     } catch (error) {
-      this.logger.error(`Error fetching config by phone_number: ${phone_number}`);
       throw error;
     }
   }
@@ -163,7 +162,6 @@ export class WhatsappConfig{
       return result.rows[0] as CompleteConfig;
 
     } catch (error) {
-      this.logger.error(`Error fetching config by user_id: ${user_id}`);
       throw error;
     }
   }
