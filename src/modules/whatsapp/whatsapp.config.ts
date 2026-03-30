@@ -1,7 +1,12 @@
+import { Injectable } from "@nestjs/common";
+import { Pool } from "pg";
 import { PostgresConfig } from "../../databases/postgres.config";
 import { AppLogger } from "../../logger/winston.logger";
 
+@Injectable()
 export class WhatsappConfig{
+
+  private readonly pool: Pool | null;
 
   constructor(
     private readonly logger: AppLogger,
@@ -24,18 +29,17 @@ export class WhatsappConfig{
           permanent_token TEXT,
           created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
-          FOREIGN_KEY(user_id)
+          FOREIGN KEY(user_id)
             REFERENCES users(id)
             ON DELETE SET NULL
 
         );
       `
-
       const pgPool = this.pgConfig.getPool();
+      await pgPool.query(query);
 
-      await pgPool.query(query)
+      this.logger.info(`Successfully created whatsapp_config table`);
 
-      this.logger.info(`Successfully created whatsapp config table`)
       return "whatsapp_config"
 
     } catch (error) {

@@ -11,10 +11,11 @@ import { ClientModel } from "../modules/client/client.model";
 import { OrdersModule } from "../modules/orders/orders.module";
 import { OrdersModel } from "../modules/orders/orders.model";
 import { WhatsappConfig } from "../modules/whatsapp/whatsapp.config";
+import { WhatsappModule } from "../modules/whatsapp/whatsapp.module";
 
 @Global()
 @Module({
-  imports: [AppLoggerModule, UsersModule, FilesModule, ClientModule, OrdersModule],
+  imports: [AppLoggerModule, UsersModule, FilesModule, ClientModule, OrdersModule, WhatsappModule],
   providers:[PostgresConfig,PostgresGlobals, FilesModel, ClientModel],
   exports:[PostgresConfig]
 })
