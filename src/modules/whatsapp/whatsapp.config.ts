@@ -97,5 +97,35 @@ export class WhatsappConfig{
     }
   }
 
+  async getByPhoneNumber(phone_number: number): Promise<CompleteConfig | null> {
+    try {
+      const query = `
+        SELECT
+          id,
+          user_id,
+          phone_number,
+          phone_number_id,
+          business_account_id,
+          access_token
+        FROM whatsapp_config
+        WHERE phone_number = $1
+        LIMIT 1;
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [phone_number]);
+
+      if (result.rows.length === 0) {
+        return null;
+      }
+
+      return result.rows[0] as CompleteConfig;
+
+    } catch (error) {
+      this.logger.error(`Error fetching config by phone_number: ${phone_number}`);
+      throw error;
+    }
+  }
+
 
 }
