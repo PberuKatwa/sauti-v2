@@ -5,3 +5,7 @@ export interface ConfigPayload{
   business_account_id: number;
   access_token: string;
 }
+
+export interface BaseConfig{
+  phone_number: number;
+}

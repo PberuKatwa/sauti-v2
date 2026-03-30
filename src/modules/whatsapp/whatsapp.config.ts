@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Pool } from "pg";
 import { PostgresConfig } from "../../databases/postgres.config";
 import { AppLogger } from "../../logger/winston.logger";
+import { BaseConfig, ConfigPayload } from "../../types/whatsappConfig.types";
 
 @Injectable()
 export class WhatsappConfig{
@@ -47,8 +48,28 @@ export class WhatsappConfig{
     }
   }
 
-  async createConfig() {
+  async createConfig(payload:ConfigPayload):Promise<BaseConfig> {
+    try {
 
+      const { user_id, phone_number, phone_number_id, business_account_id, access_token } = payload;
+
+      this.logger.warn(`Attempting to create config for user:${user_id}`);
+
+      const query = `
+        INSERT INTO whatsapp_config(user_id, phone_number, phone_number_id, business_account_id, access_token )
+        VALUES( $1, $2, $3, $4, $5 )
+        RETURNING phone_number;
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [user_id, phone_number, phone_number_id, business_account_id, access_token]);
+      const config: BaseConfig = result.rows[0];
+
+      return config;
+
+    } catch (error) {
+      throw error;
+    }
   }
 
 
