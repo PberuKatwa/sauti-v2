@@ -173,7 +173,7 @@ export class WhatsappConfig{
   async getById(id: number): Promise<CompleteConfig | null> {
     try {
 
-      this.logger.warn(`Attempting to fetch config using user id ${id}`);
+      this.logger.warn(`Attempting to fetch config using id ${id}`);
 
       const query = `
         SELECT
@@ -195,7 +195,7 @@ export class WhatsappConfig{
         return null;
       }
 
-      this.logger.info(`Successfully fetched by user id`)
+      this.logger.info(`Successfully fetched by id`)
       return result.rows[0] as CompleteConfig;
 
     } catch (error) {
