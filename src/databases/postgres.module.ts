@@ -10,6 +10,7 @@ import { ClientModule } from "../modules/client/client.module";
 import { ClientModel } from "../modules/client/client.model";
 import { OrdersModule } from "../modules/orders/orders.module";
 import { OrdersModel } from "../modules/orders/orders.model";
+import { WhatsappConfig } from "../modules/whatsapp/whatsapp.config";
 
 @Global()
 @Module({
@@ -26,7 +27,8 @@ export class PostgresModule implements OnModuleInit {
     private readonly files: FilesModel,
     private readonly clients: ClientModel,
     private readonly orders:OrdersModel,
-    private readonly pgGlobals:PostgresGlobals
+    private readonly pgGlobals: PostgresGlobals,
+    private readonly whatsappConfig:WhatsappConfig
   ) { };
 
   async onModuleInit() {
@@ -38,6 +40,7 @@ export class PostgresModule implements OnModuleInit {
     await this.files.createTable()
     await this.clients.createTable()
     await this.orders.createTable()
+    await this.whatsappConfig.createTable()
   }
 
 }
