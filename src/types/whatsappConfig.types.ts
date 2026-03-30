@@ -14,3 +14,8 @@ export interface UpdateConfigPayload extends BaseConfig{
   id: number;
   access_token: string;
 }
+
+export interface CompleteConfig extends BaseConfig {
+  user_id: number;
+  access_token: string;
+}

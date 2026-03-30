@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Pool } from "pg";
 import { PostgresConfig } from "../../databases/postgres.config";
 import { AppLogger } from "../../logger/winston.logger";
-import { BaseConfig, ConfigPayload,UpdateConfigPayload } from "../../types/whatsappConfig.types";
+import { BaseConfig, ConfigPayload,UpdateConfigPayload,CompleteConfig } from "../../types/whatsappConfig.types";
 
 @Injectable()
 export class WhatsappConfig{
