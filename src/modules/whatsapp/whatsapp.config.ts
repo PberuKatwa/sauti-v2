@@ -47,5 +47,9 @@ export class WhatsappConfig{
     }
   }
 
+  async createConfig() {
+
+  }
+
 
 }
