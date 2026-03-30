@@ -1,13 +1,12 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PostgresConfig } from "../../databases/postgres.config";
-import { APP_LOGGER } from "../../logger/logger.provider";
 import type { AppLogger } from "../../logger/winston.logger";
 import { File } from "../../types/file.types";
 
 @Injectable()
 export class FilesModel {
   constructor(
-    @Inject(APP_LOGGER) private readonly logger: AppLogger,
+    private readonly logger: AppLogger,
     private readonly pgConfig: PostgresConfig,
   ) {}
 

@@ -1,6 +1,5 @@
 import { Controller, Inject, Post, Get, Req, Res } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { APP_LOGGER } from "../../logger/logger.provider";
 import type { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
 import type { SingleClientApiResponse } from "../../types/client.types";
@@ -15,7 +14,7 @@ import type {
 export class ClientsController {
 
   constructor(
-    @Inject(APP_LOGGER) private readonly logger: AppLogger,
+    private readonly logger: AppLogger,
     private readonly clients: ClientModel
   ) { }
 

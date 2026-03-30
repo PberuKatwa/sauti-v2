@@ -1,7 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Pool } from "pg";
 import { PostgresConfig } from "../../databases/postgres.config";
-import { APP_LOGGER } from "../../logger/logger.provider";
 import type { AppLogger } from "../../logger/winston.logger";
 
 import type {
@@ -16,7 +15,7 @@ export class ClientModel {
   private readonly pool: Pool | null;
 
   constructor(
-    @Inject(APP_LOGGER) private readonly logger: AppLogger,
+    private readonly logger: AppLogger,
     private readonly pgConfig: PostgresConfig,
   ) { }
 

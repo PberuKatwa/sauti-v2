@@ -2,7 +2,6 @@ import { Injectable, Logger, InternalServerErrorException, Inject } from '@nestj
 import { GoogleGenAI } from '@google/genai';
 import { BestIntent } from '../../types/intent.types';
 import { BestIntentSchema } from '../../validators/bestIntent.schema';
-import { APP_LOGGER } from '../../logger/logger.provider';
 import { AppLogger } from '../../logger/winston.logger';
 
 @Injectable()
@@ -10,7 +9,7 @@ export class IntentGeminiService {
   private readonly client: GoogleGenAI;
 
   constructor(
-    @Inject(APP_LOGGER) private readonly logger: AppLogger,
+    private readonly logger: AppLogger,
     apiKey: string
   ) {
     this.client = new GoogleGenAI({ apiKey });

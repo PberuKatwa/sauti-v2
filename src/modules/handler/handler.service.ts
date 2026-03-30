@@ -1,5 +1,4 @@
 import { Inject } from "@nestjs/common";
-import { APP_LOGGER } from "../../logger/logger.provider";
 import { AppLogger } from "../../logger/winston.logger";
 import { IncomingMessages, StatusesValue, WebhookType, WhatsappWebhook } from "../../types/whatsapp.webhook";
 import { WhatsappWebhookSchema } from "../../validators/webhook.schema";
@@ -22,7 +21,7 @@ const STOP_WORDS = new Set([
 export class HandlerService{
 
   constructor(
-    @Inject(APP_LOGGER) private readonly logger: AppLogger,
+    private readonly logger: AppLogger,
     private readonly intentDetector: IntentDetectorService,
     private readonly productsHandler: ProductsHandler,
     private readonly ordersHandler: OrdersHandler,

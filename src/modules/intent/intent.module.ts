@@ -5,7 +5,6 @@ import { loadIntentsFromFile } from '../../utils/intentLoader';
 import { IntentGeminiService } from "./intent.gemini";
 import { AppLogger } from "../../logger/winston.logger";
 import { ConfigService } from "@nestjs/config";
-import { APP_LOGGER } from "../../logger/logger.provider";
 
 @Module({
   providers: [
@@ -20,7 +19,7 @@ import { APP_LOGGER } from "../../logger/logger.provider";
 
         return new IntentGeminiService(logger, apiKey);
       },
-      inject: [APP_LOGGER, ConfigService],
+      inject: [AppLogger, ConfigService],
     }
   ],
   exports:[IntentDetectorService]

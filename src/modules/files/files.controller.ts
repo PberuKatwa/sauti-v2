@@ -5,7 +5,6 @@ import { Readable } from 'stream';
 import { PassThrough } from 'stream';
 import { GarageService } from "../garage/garage.service";
 import type { Response, Request } from "express";
-import { APP_LOGGER } from "../../logger/logger.provider";
 import type { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
 import { FilesModel } from "./files.model";
@@ -18,7 +17,7 @@ export class FilesController{
 
   constructor(
     private readonly garageService: GarageService,
-    @Inject(APP_LOGGER) private readonly logger: AppLogger,
+    private readonly logger: AppLogger,
     private readonly files:FilesModel
   ) { }
 

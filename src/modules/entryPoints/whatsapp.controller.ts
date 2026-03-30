@@ -1,6 +1,5 @@
 import { Controller, Get, Inject, Req, Res, Post } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { APP_LOGGER } from "../../logger/logger.provider";
 import { AppLogger } from "../../logger/winston.logger";
 import { ConfigService } from "@nestjs/config";
 import { ApiResponse } from "../../types/api.types";
@@ -11,7 +10,7 @@ import { HandlerService } from "../handler/handler.service";
 export class WhatsappController{
 
   constructor(
-    @Inject(APP_LOGGER) private readonly logger: AppLogger,
+    private readonly logger: AppLogger,
     private readonly configService: ConfigService,
     private readonly handlerService: HandlerService,
   ) { };

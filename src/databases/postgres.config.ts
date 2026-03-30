@@ -1,6 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Pool, PoolConfig } from "pg";
-import { APP_LOGGER } from '../logger/logger.provider';
 import type { AppLogger } from '../logger/winston.logger';
 import { ConfigService } from "@nestjs/config";
 
@@ -11,7 +10,7 @@ export class PostgresConfig {
 
   constructor(
     private readonly configService: ConfigService,
-    @Inject(APP_LOGGER) private readonly logger: AppLogger
+    private readonly logger: AppLogger
   ) { }
 
   async connect(): Promise<Pool> {

@@ -14,7 +14,6 @@ import { Readable } from 'stream';
 import { ConfigService } from '@nestjs/config';
 import path from 'path';
 import { S3_CLIENT } from './garage.storage';
-import { APP_LOGGER } from '../../logger/logger.provider';
 import type { AppLogger } from '../../logger/winston.logger';
 import type { listFilesRes, keyFileFetchRes } from '../../types/storage.types';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -27,7 +26,7 @@ export class GarageService {
     @Inject(S3_CLIENT) private readonly s3: S3Client,
     private readonly configService: ConfigService,
 
-    @Inject(APP_LOGGER) private readonly logger:AppLogger
+    private readonly logger:AppLogger
 
   ) {
     const bucket = this.configService.get<string>('s3Bucket');
