@@ -81,8 +81,12 @@ export class WhatsappConfig{
       this.logger.warn(`Attempting to update config with id:${id}`);
       const query = `
         INSERT INTO whatsapp_config (phone_number, phone_number_id,business_account_id,access_token)
+        SET
+          phone_number = $2,
+          phone_number_id = $3,
+          business_account_id = $4,
+          access_token = $5
         WHERE id=$1
-        VALUES ($2,$3,$4,$5)
         RETURNING id,phone_number,phone_number_id,business_account_id;
       `
 
