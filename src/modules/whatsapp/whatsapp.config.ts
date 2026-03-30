@@ -65,6 +65,7 @@ export class WhatsappConfig{
       const result = await pgPool.query(query, [user_id, phone_number, phone_number_id, business_account_id, access_token]);
       const config: BaseConfig = result.rows[0];
 
+      this.logger.info(`Successfully created config for user:${user_id}`);
       return config;
 
     } catch (error) {
@@ -77,6 +78,7 @@ export class WhatsappConfig{
 
       const { id, phone_number, phone_number_id, business_account_id, access_token } = payload;
 
+      this.logger.warn(`Attempting to update config with id:${id}`);
       const query = `
         INSERT INTO whatsapp_config (phone_number, phone_number_id,business_account_id,access_token)
         WHERE id=$1
@@ -90,6 +92,7 @@ export class WhatsappConfig{
 
       const config: BaseConfig = result.rows[0];
 
+      this.logger.info(`Successfully updated config `)
       return config;
 
     } catch (error) {
@@ -99,6 +102,9 @@ export class WhatsappConfig{
 
   async getByPhoneNumber(phone_number: number): Promise<CompleteConfig | null> {
     try {
+
+      this.logger.warn(`Attempting to fetch config using phone ${phone_number}`);
+
       const query = `
         SELECT
           id,
@@ -119,10 +125,45 @@ export class WhatsappConfig{
         return null;
       }
 
+      this.logger.info(`Successfully fetched by phone number`)
       return result.rows[0] as CompleteConfig;
 
     } catch (error) {
       this.logger.error(`Error fetching config by phone_number: ${phone_number}`);
+      throw error;
+    }
+  }
+
+  async getByUserId(user_id: number): Promise<CompleteConfig | null> {
+    try {
+
+      this.logger.warn(`Attempting to fetch config using user id ${user_id}`);
+
+      const query = `
+        SELECT
+          id,
+          user_id,
+          phone_number,
+          phone_number_id,
+          business_account_id,
+          access_token
+        FROM whatsapp_config
+        WHERE user_id = $1
+        LIMIT 1;
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [user_id]);
+
+      if (result.rows.length === 0) {
+        return null;
+      }
+
+      this.logger.info(`Successfully fetched by user id`)
+      return result.rows[0] as CompleteConfig;
+
+    } catch (error) {
+      this.logger.error(`Error fetching config by user_id: ${user_id}`);
       throw error;
     }
   }
