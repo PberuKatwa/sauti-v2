@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Pool } from "pg";
 import { PostgresConfig } from "../../databases/postgres.config";
-import type { AppLogger } from "../../logger/winston.logger";
+import { AppLogger } from "../../logger/winston.logger";
 import { ConfigService } from "@nestjs/config";
 import type {
   UserProfile,

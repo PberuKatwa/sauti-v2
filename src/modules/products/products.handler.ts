@@ -1,7 +1,7 @@
 import { Inject } from "@nestjs/common";
 import { BestIntent, IntentDefinition } from "../../types/intent.types";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
-import type { AppLogger } from "../../logger/winston.logger";
+import { AppLogger } from "../../logger/winston.logger";
 import { OrderItem } from "../../types/orders.types";
 
 import { getMap, getProductIdsFromMessage } from "../../utils/flowerMap.util";

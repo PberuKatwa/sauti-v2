@@ -1,6 +1,6 @@
 import { Controller, Inject, Post, Get, Req, Res } from "@nestjs/common";
 import type { Request, Response } from "express";
-import type { AppLogger } from "../../logger/winston.logger";
+import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
 import { OrdersModel } from "./orders.model";
 import type {

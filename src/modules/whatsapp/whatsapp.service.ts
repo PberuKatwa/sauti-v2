@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { Inject, Injectable } from "@nestjs/common";
-import type { AppLogger } from "../../logger/winston.logger";
+import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappTemplate, WhatsappText, WhatsappUnionMessage } from "../../types/whatsapp.base";
 import { OrdersModel } from "../orders/orders.model";
 import { ClientModel } from "../client/client.model";

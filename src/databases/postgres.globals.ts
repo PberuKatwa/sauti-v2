@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PostgresConfig } from "./postgres.config";
-import type { AppLogger } from "../logger/winston.logger";
+import { AppLogger } from "../logger/winston.logger";
 
 @Injectable()
 export class PostgresGlobals{

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Pool, PoolConfig } from "pg";
-import type { AppLogger } from '../logger/winston.logger';
+import { AppLogger } from '../logger/winston.logger';
 import { ConfigService } from "@nestjs/config";
 
 @Injectable()

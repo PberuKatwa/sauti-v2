@@ -25,7 +25,7 @@ import { EntryPointModule } from './modules/entryPoints/entry.module';
     GarageModule,
     FilesModule,
     PostgresModule,
-    UsersModule,
+    // UsersModule,
     ClientModule,
     WhatsappModule,
     CustomerCareModule,

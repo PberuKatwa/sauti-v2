@@ -5,7 +5,7 @@ import { Readable } from 'stream';
 import { PassThrough } from 'stream';
 import { GarageService } from "../garage/garage.service";
 import type { Response, Request } from "express";
-import type { AppLogger } from "../../logger/winston.logger";
+import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
 import { FilesModel } from "./files.model";
 import { CurrentUser } from "../users/decorators/user.decorator";
