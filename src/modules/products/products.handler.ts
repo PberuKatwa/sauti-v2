@@ -1,7 +1,6 @@
 import { Inject } from "@nestjs/common";
 import { BestIntent, IntentDefinition } from "../../types/intent.types";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
-import { APP_LOGGER } from "../../logger/logger.provider";
 import type { AppLogger } from "../../logger/winston.logger";
 import { OrderItem } from "../../types/orders.types";
 
@@ -100,7 +99,7 @@ export class ProductsHandler{
 
   constructor(
     private readonly whatsappService: WhatsappService,
-    @Inject(APP_LOGGER) private readonly logger:AppLogger
+     private readonly logger:AppLogger
   ) { };
 
   private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
