@@ -58,7 +58,7 @@ export class WhatsappConfig{
       const query = `
         INSERT INTO whatsapp_config(user_id, phone_number, phone_number_id, business_account_id, access_token )
         VALUES( $1, $2, $3, $4, $5 )
-        RETURNING phone_number, phone_number_id, business_account_id;
+        RETURNING id, phone_number, phone_number_id, business_account_id;
       `;
 
       const pgPool = this.pgConfig.getPool();
@@ -72,7 +72,7 @@ export class WhatsappConfig{
     }
   }
 
-  async update
+  async updateConfig()
 
 
 }
