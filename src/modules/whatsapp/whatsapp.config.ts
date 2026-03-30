@@ -1,8 +1,10 @@
-// import { Inject } from "@nestjs/common";
+import { AppLogger } from "../../logger/winston.logger";
 
-// export class WhatsappConfig{
+export class WhatsappConfig{
 
-//   constructor(
-//   )
+  constructor(
+    private readonly logger:AppLogger
+  ){}
 
-// }
+
+}
