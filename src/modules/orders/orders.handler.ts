@@ -83,6 +83,10 @@ export class OrdersHandler{
 
           const data = await this.catalogService.getBaseProductByRetailerId(this.catalogId, item.product_retailer_id);
 
+          console.log("dataaaa", data)
+          console.log("dataaaa", data)
+
+
           return {
             name: data.name,
             catalogId: item.product_retailer_id,

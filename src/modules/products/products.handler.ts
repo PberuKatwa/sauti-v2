@@ -134,7 +134,7 @@ export class ProductsHandler{
   };
 
   private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
-    'GET_ALL_PRODUCTS': (msg,recipient) => this.handleGetAllProducts(msg,recipient),
+    'GET_ALL_PRODUCTS': (msg,recipient) => this.handleGetAllProductsCatalog(msg,recipient),
     'GET_PRODUCT': (msg,recipient) => this.handleGetProduct(msg,recipient)
   };
 
@@ -170,15 +170,16 @@ export class ProductsHandler{
       sections: [
         {
           title: "🌹 Featured Bouquets",
-          productIds: ["sdfasd","sadfsd","fasfsadfsd"],
+          productIds: ["nyamfilrp4","fjetiqjb8q"],
         },
         {
           title: "🌼 More Beautiful Picks",
-          productIds: ["sdfasd","sadfsd","fasfsadfsd"],
+          productIds: ["mrkpzxgy3p","1vnmye9ym7"],
         }
       ]
     };
 
+    await this.sendMultiProductMessage(options);
 
   }
 
