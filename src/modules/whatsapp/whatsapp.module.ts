@@ -3,9 +3,11 @@ import { ConfigService } from "@nestjs/config";
 import { WhatsappService } from "./whatsapp.service";
 import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappConfig } from "./whatsapp.config";
+import { WhatsappConfigController } from "./whatsappConfig.controller";
 
 
 @Module({
+  controllers:[WhatsappConfigController],
   providers: [
     {
       provide: WhatsappService,

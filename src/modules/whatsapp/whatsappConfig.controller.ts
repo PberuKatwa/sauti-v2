@@ -11,7 +11,7 @@ import {
 } from "../../types/whatsappConfig.types";
 import { WhatsappConfig } from "./whatsapp.config";
 
-@Controller('whatsapp-config')
+@Controller('whatsapp/config')
 export class WhatsappConfigController {
 
   constructor(
