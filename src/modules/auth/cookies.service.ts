@@ -71,7 +71,6 @@ export class CookieService {
       this.logger.warn(`Attempting to get auth session ID from cookie`);
 
       const authSessionId = req.cookies?.[this.cookieConfig.name];
-
       if (!authSessionId) {
         throw new Error(`No session cookie was found`);
       }
