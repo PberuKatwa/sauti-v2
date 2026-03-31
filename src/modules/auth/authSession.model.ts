@@ -1,6 +1,8 @@
+import { Injectable } from "@nestjs/common";
 import { PostgresConfig } from "../../databases/postgres.config";
 import { AppLogger } from "../../logger/winston.logger";
 
+@Injectable()
 export class AuthSessionModel{
 
 
@@ -11,7 +13,7 @@ export class AuthSessionModel{
 
   async createTable() {
     try {
-      const pgPool = this.pgConfig.getPool()
+      const pgPool = this.pgConfig.getPool();
 
       const query = `
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
