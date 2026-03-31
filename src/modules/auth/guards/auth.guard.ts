@@ -29,10 +29,7 @@ export class AuthGuard implements CanActivate{
       this.logger.warn(`Attempting to validate session`);
 
       const sessionId = this.cookieService.getAuthSessionId(request);
-      if (!sessionId) throw new UnauthorizedException('No session was found');
-
       const authSession = await this.authSession.getAuthSession(sessionId);
-      if (!authSession) throw new UnauthorizedException('No session was found');
 
       request['user'] = {
         userId: authSession.user_id,
