@@ -30,7 +30,7 @@ export class CustomerCareHandler{
   }
 
   private async handleGreeting(userMessage: string, recipient: string) {
-    await this.whatsappService.sendTemplate("welcome_actions", "en", recipient);
+    return await this.sendGreeting(recipient);
   }
 
   private async handleComplaint(userMessage: string, recipient: string) {
