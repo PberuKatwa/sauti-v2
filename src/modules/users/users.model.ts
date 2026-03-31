@@ -23,6 +23,20 @@ export class UsersModel {
     try {
       this.logger.warn(`Attempting to create users table`);
 
+      const query2 = `
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          first_name TEXT NOT NULL,
+          last_name TEXT NOT NULL,
+          email TEXT NOT NULL UNIQUE,
+          password VARCHAR NOT NULL,
+          status row_status DEFAULT 'active',
+          role user_role DEFAULT 'demo',
+          created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+
       const query = `
         CREATE TABLE IF NOT EXISTS users(
           id SERIAL PRIMARY KEY,
