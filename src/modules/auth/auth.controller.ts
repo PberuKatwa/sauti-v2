@@ -5,6 +5,7 @@ import type { ApiResponse } from "../../types/api.types";
 import type { AuthUserApiResponse, ProfileApiResponse, CreateUserPayload, UserProfile, AuthUser  } from "../../types/user.types";
 import { UsersModel } from "../users/users.model";
 import { AuthSessionModel } from "./authSession.model";
+import { CookieService } from "./cookies.service";
 
 @Controller('auth')
 export class AuthController {
@@ -12,7 +13,8 @@ export class AuthController {
   constructor(
     private readonly logger: AppLogger,
     private readonly users: UsersModel,
-    private readonly authSession:AuthSessionModel
+    private readonly authSession: AuthSessionModel,
+    private readonly cookieService:CookieService
   ) { }
 
   @Post('register')
@@ -61,12 +63,7 @@ export class AuthController {
 
       const user: AuthUser = await this.users.validatePassword(email, password);
       const authSession = await this.authSession.createAuthSession(user.id);
-
-      // const response: AuthUserApiResponse = {
-      //   success: true,
-      //   message: "Successfully logged in user",
-      //   data:user
-      // }
+      this.cookieService.setAuthCookie(res,authSession.id)
 
       const response: AuthUserApiResponse = {
         success: true,
@@ -84,6 +81,33 @@ export class AuthController {
       };
 
       return res.status(401).json(response);
+    }
+  }
+
+  @Post('logout')
+  async logout(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+      const sessionId = this.cookieService.clearAuthCookie(req, res);
+      await this.authSession.trashAuthSession(sessionId);
+
+      const response: ApiResponse = {
+        success: true,
+        message: `Successfully logged out`
+      };
+
+      return res.status(200).json(response);
+    } catch (error) {
+      this.logger.error(`Error logging out user`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
     }
   }
 

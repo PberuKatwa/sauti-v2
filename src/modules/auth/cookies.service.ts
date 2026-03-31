@@ -24,15 +24,15 @@ export class CookieService {
     private readonly logger: AppLogger,
     private readonly configService: ConfigService
   ) {
-    const environment = this.configService.get<string>("NODE_ENV") || "development";
+    const environment = this.configService.get<string>("environment");
 
     this.cookieConfig = {
-      name: this.configService.get<string>("COOKIE_NAME") || "auth_session",
+      name: this.configService.get<string>("cookieIdName"),
       secure: environment === "production",
       httpOnly: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 86400 // 1 day in seconds
+      maxAge: 86400
     };
   }
 
