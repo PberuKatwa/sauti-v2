@@ -4,13 +4,15 @@ import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
 import type { AuthUserApiResponse, ProfileApiResponse, CreateUserPayload, UserProfile, AuthUser  } from "../../types/user.types";
 import { UsersModel } from "../users/users.model";
+import { AuthSessionModel } from "./authSession.model";
 
 @Controller('auth')
 export class AuthController {
 
   constructor(
     private readonly logger: AppLogger,
-    private readonly users: UsersModel
+    private readonly users: UsersModel,
+    private readonly authSession:AuthSessionModel
   ) { }
 
   @Post('register')
@@ -58,6 +60,13 @@ export class AuthController {
       const { email, password } = req.body;
 
       const user: AuthUser = await this.users.validatePassword(email, password);
+      const authSession = await this.authSession.createAuthSession(user.id);
+
+      // const response: AuthUserApiResponse = {
+      //   success: true,
+      //   message: "Successfully logged in user",
+      //   data:user
+      // }
 
       const response: AuthUserApiResponse = {
         success: true,
