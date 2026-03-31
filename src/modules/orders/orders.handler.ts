@@ -1,4 +1,4 @@
-import { Inject } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { OrdersModel } from "./orders.model";
@@ -8,6 +8,7 @@ import { ProductsHandler, catalog } from "../products/products.handler";
 import { OrderItem, OrderProfile } from "../../types/orders.types";
 import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
 
+@Injectable()
 export class OrdersHandler{
 
   constructor(

@@ -1,8 +1,9 @@
-import { Inject } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { BestIntent } from "../../validators/bestIntent.schema";
 
+@Injectable()
 export class CustomerCareHandler{
 
   constructor(

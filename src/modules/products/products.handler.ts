@@ -1,4 +1,4 @@
-import { Inject } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { BestIntent, IntentDefinition } from "../../types/intent.types";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { AppLogger } from "../../logger/winston.logger";
@@ -15,6 +15,7 @@ export interface CatalogItem extends OrderItem {
 export const catalog: CatalogItem[] = [
   {
     productId: 1,
+    catalogId:"1",
     name: "Red Rose Bouquet",
     quantity: 1,
     unitPrice: 3500,
@@ -23,6 +24,7 @@ export const catalog: CatalogItem[] = [
   },
   {
     productId: 2,
+    catalogId:"2",
     name: "White Lily Arrangement",
     quantity: 1,
     unitPrice: 5200,
@@ -31,6 +33,7 @@ export const catalog: CatalogItem[] = [
   },
   {
     productId: 3,
+    catalogId:"3",
     name: "Pink Tulip Bouquet",
     quantity: 1,
     unitPrice: 2800,
@@ -39,6 +42,7 @@ export const catalog: CatalogItem[] = [
   },
   {
     productId: 4,
+    catalogId:"4",
     name: "Sunflower Bunch",
     quantity: 1,
     unitPrice: 2500,
@@ -47,6 +51,7 @@ export const catalog: CatalogItem[] = [
   },
   {
     productId: 5,
+    catalogId:"5",
     name: "Mixed Rose Bouquet",
     quantity: 1,
     unitPrice: 4000,
@@ -55,6 +60,7 @@ export const catalog: CatalogItem[] = [
   },
   {
     productId: 6,
+    catalogId:"6",
     name: "Orchid Arrangement",
     quantity: 1,
     unitPrice: 6000,
@@ -63,6 +69,7 @@ export const catalog: CatalogItem[] = [
   },
   {
     productId: 7,
+    catalogId:"7",
     name: "Carnation Bouquet",
     quantity: 1,
     unitPrice: 2200,
@@ -71,6 +78,7 @@ export const catalog: CatalogItem[] = [
   },
   {
     productId: 8,
+    catalogId:"8",
     name: "Gerbera Daisy Bouquet",
     quantity: 1,
     unitPrice: 2700,
@@ -79,6 +87,7 @@ export const catalog: CatalogItem[] = [
   },
   {
     productId: 9,
+    catalogId:"9",
     name: "Baby’s Breath Bouquet",
     quantity: 1,
     unitPrice: 1800,
@@ -87,6 +96,7 @@ export const catalog: CatalogItem[] = [
   },
   {
     productId: 10,
+    catalogId:"10",
     name: "Mixed Seasonal Flowers",
     quantity: 1,
     unitPrice: 4500,
@@ -95,6 +105,7 @@ export const catalog: CatalogItem[] = [
   }
 ];
 
+@Injectable()
 export class ProductsHandler{
 
   constructor(
