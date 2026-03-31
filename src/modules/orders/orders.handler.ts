@@ -81,14 +81,10 @@ export class OrdersHandler{
       catalogMessage.product_items.map(
         async (item): Promise<OrderItem> => {
 
-          const pName = await this.catalogService.getProductByRetailerId(this.catalogId, item.product_retailer_id);
-
-          console.log(`Pnameeeee`, pName)
-          console.log(`Pnameeeee`, pName)
-          console.log(`Pnameeeee`, pName)
+          const data = await this.catalogService.getBaseProductByRetailerId(this.catalogId, item.product_retailer_id);
 
           return {
-            name: `nameeeee`,
+            name: data.name,
             catalogId: item.product_retailer_id,
             quantity: item.quantity,
             unitPrice:item.item_price
