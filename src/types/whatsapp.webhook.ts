@@ -39,7 +39,7 @@ export interface ContactsValue{
   wa_id:string;
 }
 
-export interface CatalogOrder{
+export interface CatalogOrderMessage{
   catalog_id: string;
   text: string;
   product_items:ProductCatalogItem[]
@@ -60,7 +60,7 @@ export interface IncomingMessages {
 
   type: "text" | "interactive" | "button" | "order";
 
-  order?:CatalogOrder
+  order?:CatalogOrderMessage
 
   text?: {
     body: string;

@@ -5,7 +5,8 @@ import { OrdersModel } from "./orders.model";
 import { BestIntent } from "../../validators/bestIntent.schema";
 import { ClientModel } from "../client/client.model";
 import { ProductsHandler, catalog } from "../products/products.handler";
-import { OrderProfile } from "../../types/orders.types";
+import { OrderItem, OrderProfile } from "../../types/orders.types";
+import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
 
 export class OrdersHandler{
 
@@ -47,10 +48,11 @@ export class OrdersHandler{
     if (!productId) return this.productsHandler.sendFlowerCatalog(recipient);
 
     const product = catalog.find(item => item.productId === productId);
-    const items = product
+    const items:OrderItem[] | [] = product
       ? [
           {
             name: product.name,
+            catalogId:`${product.productId}`,
             quantity: product.quantity,
             unitPrice: product.unitPrice
           }
@@ -58,6 +60,25 @@ export class OrdersHandler{
       : [];
 
     const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: items })
+    await this.sendOrderInvoice(recipient, orderCreated)
+  }
+
+  public async handleCatalogueCreateOrder(catalogMessage:CatalogOrderMessage, recipient:string) {
+
+    const client = await this.clientsModel.createClient({ phoneNumber: parseInt(recipient) });
+
+    const catalogueItems:OrderItem[] = catalogMessage.product_items.map(
+      function (item):OrderItem {
+        return {
+          name: `nameeeee`,
+          catalogId: item.product_retailer_id,
+          quantity: item.quantity,
+          unitPrice:item.item_price
+        }
+      }
+    )
+
+    const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: catalogueItems })
     await this.sendOrderInvoice(recipient, orderCreated)
   }
 
