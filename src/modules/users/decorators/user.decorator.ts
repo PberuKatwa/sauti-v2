@@ -4,7 +4,8 @@ export const CurrentUser = createParamDecorator(
   function (data: string, ctx: ExecutionContext) {
     try {
 
-      const user = 1;
+      const request = ctx.switchToHttp().getRequest();
+      const user = request.user;
 
       if (!user) {
         throw new Error(`No user was found`)
