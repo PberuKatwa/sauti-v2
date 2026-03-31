@@ -1,42 +1,39 @@
 import type { ApiResponse } from "./api.types";
 
-export interface UserProfile {
-  id: number;
+export interface BaseUser {
   first_name: string;
-  last_name: string;
-  phone_number: number;
-  phone_number_id: number;
-  business_account_id: number;
-  status: "active" | "inactive" | "trash";
 }
 
 export interface CreateUserPayload {
   firstName: string;
   lastName: string;
-  phoneNumber: number;
-  phoneNumberId: number;
-  businessAccountId: number;
-  whatsappAccessToken: string;
+  email: string;
+  password: string;
 }
 
-export interface UpdateUserPayload {
+export interface UpdateUserPayload{
   id: number;
-  whatsappAccessToken: string;
-  whatsappPermanentToken: string;
+  firstName: string;
+  lastName: string;
 }
 
-export interface SingleUserApiResponse extends ApiResponse {
-  data: UserProfile;
+export interface AuthUser extends BaseUser {
+  id: number;
+  email: string;
+};
+
+export interface LoginUser extends AuthUser {
+  password: string;
 }
 
-export interface AllUsersApiResponse extends ApiResponse {
-  data: {
-    users: UserProfile[];
-    pagination: {
-      page: number;
-      limit: number;
-      totalCount: number;
-      totalPages: number;
-    };
-  };
+export interface UserProfile extends BaseUser {
+  id: number;
+  last_name: string;
+  email: string;
+  role: string;
+  created_at: Date;
 }
+
+export interface UserApiResponse extends ApiResponse<BaseUser> { };
+export interface AuthUserApiResponse extends ApiResponse<AuthUser> { };
+export interface ProfileApiResponse extends ApiResponse<UserProfile> { };

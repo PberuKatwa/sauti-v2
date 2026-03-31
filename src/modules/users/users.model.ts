@@ -1,12 +1,15 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Pool } from "pg";
+import * as bcrypt from 'bcrypt';
 import { PostgresConfig } from "../../databases/postgres.config";
 import { AppLogger } from "../../logger/winston.logger";
 import { ConfigService } from "@nestjs/config";
 import type {
   UserProfile,
   CreateUserPayload,
-  UpdateUserPayload
+  UpdateUserPayload,
+  AuthUser,
+  LoginUser
 } from "../../types/user.types";
 
 @Injectable()
@@ -23,7 +26,7 @@ export class UsersModel {
     try {
       this.logger.warn(`Attempting to create users table`);
 
-      const query2 = `
+      const query = `
         CREATE TABLE IF NOT EXISTS users (
           id SERIAL PRIMARY KEY,
           first_name TEXT NOT NULL,
@@ -35,22 +38,6 @@ export class UsersModel {
           created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
-      `;
-
-      const query = `
-        CREATE TABLE IF NOT EXISTS users(
-          id SERIAL PRIMARY KEY,
-          first_name TEXT NOT NULL,
-          last_name TEXT NOT NULL,
-          phone_number BIGINT NOT NULL UNIQUE,
-          phone_number_id BIGINT NOT NULL UNIQUE,
-          business_account_id BIGINT NOT NULL UNIQUE,
-          whatsapp_access_token TEXT NOT NULL UNIQUE,
-          whatsapp_permanent_token TEXT,
-          status TEXT DEFAULT 'active',
-          created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-        );
 
         DROP TRIGGER IF EXISTS update_users_timestamp ON users;
 
@@ -58,6 +45,7 @@ export class UsersModel {
         BEFORE UPDATE ON users
         FOR EACH ROW
         EXECUTE FUNCTION set_timestamp();
+
       `;
 
       const pgPool = this.pgConfig.getPool();
@@ -70,117 +58,112 @@ export class UsersModel {
     }
   }
 
-  async createUser(payload: CreateUserPayload): Promise<UserProfile> {
+  async createUserWithPassword(payload: CreateUserPayload): Promise<UserProfile> {
     try {
-      const { firstName, lastName, phoneNumber, phoneNumberId, businessAccountId, whatsappAccessToken } = payload;
+      const { firstName, lastName, email, password } = payload;
 
-      if (!phoneNumber) throw new Error(`Please provide a phone number`);
-      if (!firstName || !lastName) throw new Error(`Please provide first and last name`);
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
-      this.logger.warn(`Attempting to create WhatsApp user: ${firstName} ${lastName}`);
+      if (!passwordRegex.test(password)) {
+        throw new Error("Password is too weak. It must be at least 8 characters and include uppercase, lowercase, and numbers.");
+      }
+
+      this.logger.warn(`Attempting to create user with name: ${firstName}`);
+
+      const hashedPassword = await bcrypt.hash(password, 10);
 
       const query = `
-        INSERT INTO users (
-          first_name, last_name, phone_number, phone_number_id, business_account_id, whatsapp_access_token
-        )
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, first_name, last_name, phone_number;
+        INSERT INTO users (first_name, last_name, email, password)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, first_name, last_name, email, role, created_at
       `;
 
       const pgPool = this.pgConfig.getPool();
       const result = await pgPool.query(query, [
         firstName,
         lastName,
-        phoneNumber,
-        phoneNumberId,
-        businessAccountId,
-        whatsappAccessToken
+        email,
+        hashedPassword
       ]);
 
       const user: UserProfile = result.rows[0];
-      this.logger.info(`Successfully created WhatsApp user: ${firstName}`);
+      this.logger.info(`Successfully created user`);
+
       return user;
     } catch (error) {
       throw error;
     }
   }
 
-  async updateUser(payload: UpdateUserPayload): Promise<void> {
-     try {
-       const { id, whatsappAccessToken, whatsappPermanentToken } = payload;
+  async findUserByEmail(email: string): Promise<UserProfile> {
+    try {
+      this.logger.warn(`Attempting to find user by email: ${email}`);
 
-       this.logger.warn(`Attempting to update user id: ${id}`);
+      const query = `
+        SELECT id, first_name, last_name, email, role, created_at
+        FROM users
+        WHERE email = $1 AND status != 'trash'
+      `;
 
-       const query = `
-         UPDATE users
-         SET whatsapp_access_token=$1, whatsapp_permanent_token=$2
-         WHERE id=$3
-       `;
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [email]);
 
-       const pgPool = this.pgConfig.getPool();
-       await pgPool.query(query, [whatsappAccessToken, whatsappPermanentToken, id]);
+      const user: UserProfile = result.rows[0];
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
 
-       this.logger.info(`Successfully updated user id: ${id}`);
-     } catch (error) {
-       throw error;
-     }
-   }
+  async findUserById(id: number): Promise<UserProfile> {
+    try {
+      this.logger.warn(`Attempting to find user by id: ${id}`);
 
-   async fetchUser(id: number): Promise<UserProfile> {
-     try {
-       this.logger.warn(`Attempting to fetch WhatsApp user id: ${id}`);
+      const query = `
+        SELECT id, first_name, last_name, email, role, created_at
+        FROM users
+        WHERE id = $1 AND status != 'trash'
+      `;
 
-       const query = `
-         SELECT
-           id,
-           first_name,
-           last_name,
-           phone_number,
-           phone_number_id,
-           business_account_id,
-           status
-         FROM users
-         WHERE id=$1 AND status != 'trash'
-       `;
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [id]);
 
-       const pgPool = this.pgConfig.getPool();
-       const result = await pgPool.query(query, [id]);
+      const user: UserProfile = result.rows[0];
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
 
-       const user: UserProfile = result.rows[0];
-       return user;
-     } catch (error) {
-       throw error;
-     }
-   }
+  async validatePassword(email: string, password: string): Promise<AuthUser> {
+    try {
+      this.logger.warn(`Attempting to login user`);
 
-   async fetchUserByPhone(phoneNumber: number): Promise<UserProfile> {
-     try {
-       this.logger.warn(`Attempting to fetch WhatsApp user by phone: ${phoneNumber}`);
+      const query = `
+        SELECT id, first_name, email, password
+        FROM users
+        WHERE email = $1 AND status != 'trash'
+      `;
 
-       const query = `
-         SELECT
-           id,
-           first_name,
-           last_name,
-           phone_number,
-           phone_number_id,
-           business_account_id,
-           status
-         FROM users
-         WHERE phone_number=$1 AND status != 'trash'
-       `;
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [email]);
 
-       const pgPool = this.pgConfig.getPool();
-       const result = await pgPool.query(query, [phoneNumber]);
+      if (result.rowCount === 0) throw new Error(`Invalid email or password`);
 
-       if (result.rowCount === 0) throw new Error(`No user found with this phone number`);
+      const user: LoginUser = result.rows[0];
+      const isValid = await bcrypt.compare(password, user.password);
 
-       const user: UserProfile = result.rows[0];
-       return user;
-     } catch (error) {
-       throw error;
-     }
-   }
+      if (!isValid) throw new Error(`Email or password provided is invalid`);
 
+      this.logger.info(`Successfully logged in`);
 
+      return {
+        id: user.id,
+        first_name: user.first_name,
+        email: user.email
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
