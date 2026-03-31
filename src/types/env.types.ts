@@ -24,6 +24,8 @@ export interface WhatsappConfig{
   whatsappAccessToken: string;
   phoneNumberId: string;
   metaVerifyToken: string;
+  businessAccountId: string;
+  catalogId: string;
 }
 
 export interface LlmConfig {

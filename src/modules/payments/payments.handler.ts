@@ -1,10 +1,11 @@
-import { Inject } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { BestIntent } from "../../validators/bestIntent.schema";
 import { OrdersModel } from "../orders/orders.model";
 import { ClientModel } from "../client/client.model";
 
+@Injectable()
 export class PaymentsHandler{
 
   constructor(

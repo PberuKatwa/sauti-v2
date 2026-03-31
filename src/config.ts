@@ -63,7 +63,9 @@ export const globalConfig = (): GlobalEnvironment => ({
 export const whatsappConfig = (): WhatsappConfig => ({
   whatsappAccessToken: getEnv(getGlobalEnvironment, "WHATSAPP_TOKEN"),
   phoneNumberId: getEnv(getGlobalEnvironment, "PHONE_NUMBER_ID"),
-  metaVerifyToken: getEnv(getGlobalEnvironment, "META_VERIFY_TOKEN")
+  metaVerifyToken: getEnv(getGlobalEnvironment, "META_VERIFY_TOKEN"),
+  businessAccountId: getEnv(getGlobalEnvironment, "BUSINESS_ACCOUNT_ID"),
+  catalogId: getEnv(getGlobalEnvironment, "CATALOG_ID")
 });
 
 export const llmConfig = (): LlmConfig =>({
