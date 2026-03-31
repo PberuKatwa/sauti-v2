@@ -9,7 +9,7 @@ import {
   ConfigPayload,
   UpdateConfigPayload
 } from "../../types/whatsappConfig.types";
-import { WhatsappConfig } from "../whatsapp/whatsapp.config";
+import { WhatsappConfig } from "./whatsapp.config";
 
 @Controller('whatsapp-config')
 export class WhatsappConfigController {
