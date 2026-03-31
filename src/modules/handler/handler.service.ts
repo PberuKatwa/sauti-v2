@@ -1,4 +1,4 @@
-import { Inject } from "@nestjs/common";
+import { Inject,Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { CatalogOrderMessage, IncomingMessages, StatusesValue, WebhookType, WhatsappWebhook } from "../../types/whatsapp.webhook";
 import { WhatsappWebhookSchema } from "../../validators/webhook.schema";
@@ -18,6 +18,7 @@ const STOP_WORDS = new Set([
   'my'
 ]);
 
+@Injectable()
 export class HandlerService{
 
   constructor(
@@ -108,6 +109,7 @@ export class HandlerService{
   private async processCatalogOrder(catalogOrder: CatalogOrderMessage, recipient:string) {
     try {
 
+      this.logger.warn(`Attempting to create order form catalogue items`);
       return await this.ordersHandler.handleCatalogueCreateOrder(catalogOrder, recipient);
     } catch (error) {
       throw error;

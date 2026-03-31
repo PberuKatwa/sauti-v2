@@ -43,6 +43,62 @@ export class CustomerCareHandler{
     await this.sendHelpMenu(recipient);
   }
 
+  async sendGreeting(recipient: string) {
+    const payload = {
+      messaging_product: "whatsapp",
+      to: recipient,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        header: {
+          type: "text",
+          text: "Welcome to Purple Hearts 💜"
+        },
+        body: {
+          text:
+            `Hi there! 🌸\n\n` +
+            `Welcome to *Purple Hearts* — we're so glad you're here!\n\n` +
+            `I'm your personal floral assistant, ready to help you find the perfect blooms or manage your orders with ease.\n\n` +
+            `Here’s what you can do:\n\n` +
+            `• *Browse Catalog:* Discover our beautiful bouquets.\n` +
+            `• *Track Order:* Stay updated on your delivery.\n` +
+            `• *Past Orders:* Review your previous purchases.\n\n` +
+            `Just tap one of the options below to get started ✨`
+        },
+        footer: {
+          text: "Purple Hearts - Spreading Love, One Bloom at a Time."
+        },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: {
+                id: "View Flowers",
+                title: "View Flowers 💐"
+              }
+            },
+            {
+              type: "reply",
+              reply: {
+                id: "where is my delivery",
+                title: "Track Delivery 🚚"
+              }
+            },
+            {
+              type: "reply",
+              reply: {
+                id: "Can I see all my invoices",
+                title: "My Orders 📝"
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    await this.whatsappService.callApi(recipient, payload);
+  }
+
   async sendHelpMenu(recipient: string) {
     const payload = {
       messaging_product: "whatsapp",
