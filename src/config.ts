@@ -57,6 +57,7 @@ export const postgresEnv = (): PostgresEnv => ({
 export const globalConfig = (): GlobalEnvironment => ({
   environment: getGlobalEnvironment(),
   port: getEnv(getGlobalEnvironment, "PORT"),
+  cookieIdName:getEnv(getGlobalEnvironment,"COOKIE_ID_NAME")
 });
 
 export const whatsappConfig = (): WhatsappConfig => ({
