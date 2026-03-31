@@ -31,12 +31,15 @@ export class AuthGuard implements CanActivate{
       const sessionId = this.cookieService.getAuthSessionId(request);
       if (!sessionId) throw new UnauthorizedException('No session was found');
 
-      const session = await this.authSession.getAuthSession(sessionId);
-      if (!session) throw new UnauthorizedException('No session was found');
+      const authSession = await this.authSession.getAuthSession(sessionId);
+      if (!authSession) throw new UnauthorizedException('No session was found');
 
+      request['user'] = {
+        userId: authSession.user_id,
+        sessionId: authSession.id
+      };
 
       return true
-
     } catch (error) {
       this.logger.error("error in validating token", error)
       throw new ForbiddenException('Session is unauthorization, please login again')

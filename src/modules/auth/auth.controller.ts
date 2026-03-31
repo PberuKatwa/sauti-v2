@@ -1,4 +1,4 @@
-import { Controller, Inject, Post, Get, Req, Res } from "@nestjs/common";
+import { Controller, Inject, Post, Get, Req, Res, UseGuards } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
@@ -6,6 +6,7 @@ import type { AuthUserApiResponse, ProfileApiResponse, CreateUserPayload, UserPr
 import { UsersModel } from "../users/users.model";
 import { AuthSessionModel } from "./authSession.model";
 import { CookieService } from "./cookies.service";
+import { AuthGuard } from "./guards/auth.guard";
 
 @Controller('auth')
 export class AuthController {
@@ -112,6 +113,7 @@ export class AuthController {
   }
 
   @Get('profile/:id')
+  @UseGuards(AuthGuard)
   async getProfile(
     @Req() req: Request,
     @Res() res: Response
@@ -141,6 +143,7 @@ export class AuthController {
   }
 
   @Get('profile/email/:email')
+  @UseGuards(AuthGuard)
   async getProfileByEmail(
     @Req() req: Request,
     @Res() res: Response
