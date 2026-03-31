@@ -1,6 +1,6 @@
 import { Inject } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
-import { IncomingMessages, StatusesValue, WebhookType, WhatsappWebhook } from "../../types/whatsapp.webhook";
+import { CatalogOrderMessage, IncomingMessages, StatusesValue, WebhookType, WhatsappWebhook } from "../../types/whatsapp.webhook";
 import { WhatsappWebhookSchema } from "../../validators/webhook.schema";
 import { WhatsappReply } from "../../types/reply.types";
 import { IntentDetectorService } from "../intent/intent.detector";
@@ -105,6 +105,16 @@ export class HandlerService{
     'CustomerCare': (intent, recipient) => this.customerCareHandler.handleIntent(intent,recipient)
   };
 
+  private async processCatalogOrder(catalogOrder: CatalogOrderMessage, recipient:string) {
+    try {
+
+      return await this.ordersHandler.handleCatalogueCreateOrder(catalogOrder, recipient);
+    } catch (error) {
+      throw error;
+    }
+
+  }
+
   private async processMessage(messages: IncomingMessages[]):Promise< {
     userMessage:string,
     intent: BestIntent,
@@ -171,6 +181,13 @@ export class HandlerService{
       if (type === "MESSAGE") {
 
         const messages = data.entry?.[0]?.changes?.[0]?.value.messages;
+
+        const msg = messages[0];
+        if (msg.type === "order") {
+          await this.processCatalogOrder(msg.order, msg.from);
+          return result
+        }
+
         const { intent, recipient, userMessage } = await this.processMessage(messages);
 
         result.intent = intent;
