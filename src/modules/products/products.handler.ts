@@ -5,6 +5,21 @@ import { AppLogger } from "../../logger/winston.logger";
 import { OrderItem } from "../../types/orders.types";
 
 import { getMap, getProductIdsFromMessage } from "../../utils/flowerMap.util";
+import { ConfigService } from "@nestjs/config";
+
+export interface ProductSection {
+  title: string;
+  productIds: string[]; // retailer_ids
+}
+
+export interface MultiProductMessageOptions {
+  recipient: string;
+  catalogId: string;
+  bodyText: string;
+  headerText?: string;
+  footerText?: string;
+  sections: ProductSection[];
+}
 
 export interface CatalogItem extends OrderItem {
   imageUrl: string;
@@ -108,10 +123,15 @@ export const catalog: CatalogItem[] = [
 @Injectable()
 export class ProductsHandler{
 
+  private readonly catalogId: string;
+
   constructor(
     private readonly whatsappService: WhatsappService,
-     private readonly logger:AppLogger
-  ) { };
+    private readonly logger: AppLogger,
+    private readonly configService:ConfigService
+  ) {
+    this.catalogId = this.configService.get<string>("catalogId");
+  };
 
   private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
     'GET_ALL_PRODUCTS': (msg,recipient) => this.handleGetAllProducts(msg,recipient),
@@ -129,6 +149,37 @@ export class ProductsHandler{
     } catch (error) {
       throw error;
     }
+  }
+
+  private async handleGetAllProductsCatalog(userMessage: string, recipient: string) {
+
+    const options: MultiProductMessageOptions = {
+      recipient,
+      catalogId: this.catalogId,
+
+      headerText: "Our Beautiful Flower Collection 💐",
+
+      bodyText:
+        `Hi there! 🌸\n\n` +
+        `Welcome to *Purple Hearts* — here are some of our most loved arrangements, carefully crafted to brighten any moment.\n\n` +
+        `✨ Browse through the collection below and tap on any bouquet to view details or place your order.\n\n` +
+        `We’re here to help you make someone’s day special 💜`,
+
+      footerText: "Purple Hearts 💜 - Spreading Love, One Bloom at a Time.",
+
+      sections: [
+        {
+          title: "🌹 Featured Bouquets",
+          productIds: ["sdfasd","sadfsd","fasfsadfsd"],
+        },
+        {
+          title: "🌼 More Beautiful Picks",
+          productIds: ["sdfasd","sadfsd","fasfsadfsd"],
+        }
+      ]
+    };
+
+
   }
 
   private async handleGetAllProducts(userMessage: string, recipient:string) {
@@ -197,5 +248,60 @@ export class ProductsHandler{
       await this.whatsappService.callApi(recipient, payload);
     }
   }
+
+  /**
+    * Send Multi-Product Message (up to 30 products in sections)
+    * Users can browse, filter by section, add to cart, and send order
+    */
+   async sendMultiProductMessage(options: MultiProductMessageOptions): Promise<void> {
+     const { recipient, catalogId, bodyText, headerText, footerText, sections } = options;
+
+     // Validate: max 30 products total across all sections
+     const totalProducts = sections.reduce((sum, s) => sum + s.productIds.length, 0);
+     if (totalProducts > 30) {
+       throw new Error('Multi-product messages support maximum 30 products total');
+     }
+
+     // Validate: max 10 sections
+     if (sections.length > 10) {
+       throw new Error('Multi-product messages support maximum 10 sections');
+     }
+
+     const payload = {
+       messaging_product: 'whatsapp',
+       recipient_type: 'individual',
+       to: recipient,
+       type: 'interactive',
+       interactive: {
+         type: 'product_list',
+         ...(headerText && {
+           header: {
+             type: 'text',
+             text: headerText,
+           },
+         }),
+         body: {
+           text: bodyText,
+         },
+         ...(footerText && {
+           footer: {
+             text: footerText,
+           },
+         }),
+         action: {
+           catalog_id: catalogId,
+           sections: sections.map(section => ({
+             title: section.title,
+             product_items: section.productIds.map(id => ({
+               product_retailer_id: id,
+             })),
+           })),
+         },
+       },
+     };
+
+     await this.whatsappService.callApi(recipient, payload);;
+   }
+
 
 };
