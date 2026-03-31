@@ -189,7 +189,10 @@ export class CatalogService {
         }),
       );
 
-      return response.data.data[0] || null;
+      const data: BaseCatalogProduct = response.data.data[0]
+      if (!data) throw new Error(`No product details were found for ${catalogId} and ${retailerId}`);
+
+      return data;
     } catch (error) {
       throw error;
     }
