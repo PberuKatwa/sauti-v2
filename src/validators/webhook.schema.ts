@@ -14,8 +14,20 @@ const ContactsValueSchema = z.object({
   wa_id: z.string(),
 });
 
+const ProductCatalogItemSchema = z.object({
+  product_retailer_id: z.string(),
+  quantity: z.number(),
+  item_price: z.number(),
+  currency: z.string(),
+});
+
+const CatalogOrderMessageSchema = z.object({
+  catalog_id: z.string(),
+  text: z.string(),
+  product_items: z.array(ProductCatalogItemSchema),
+});
+
 const InteractiveSchema = z.object({
-  type: z.enum(["button_reply", "list_reply"]).optional(),
   button_reply: z.object({
     id: z.string(),
     title: z.string(),
@@ -32,7 +44,9 @@ const IncomingMessagesSchema = z.object({
   id: z.string(),
   timestamp: z.string(),
 
-  type: z.enum(["text", "interactive", "button"]),
+  type: z.enum(["text", "interactive", "button", "order"]),
+
+  order: CatalogOrderMessageSchema.optional(),
 
   text: z.object({
     body: z.string(),
