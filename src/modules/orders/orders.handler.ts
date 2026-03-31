@@ -7,17 +7,25 @@ import { ClientModel } from "../client/client.model";
 import { ProductsHandler, catalog } from "../products/products.handler";
 import { OrderItem, OrderProfile } from "../../types/orders.types";
 import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
+import { CatalogService } from "../products/catalog.service";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class OrdersHandler{
+
+  private readonly catalogId: string;
 
   constructor(
     private readonly logger: AppLogger,
     private readonly whatsappService: WhatsappService,
     private readonly ordersModel: OrdersModel,
     private readonly clientsModel: ClientModel,
-    private readonly productsHandler:ProductsHandler
-  ) { };
+    private readonly productsHandler: ProductsHandler,
+    private readonly catalogService: CatalogService,
+    private readonly configService:ConfigService
+  ) {
+    this.catalogId = this.configService.get<string>("catalogId");
+  };
 
   private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
     'CREATE_ORDER': (msg,recipient) => this.handleCreateOrder(msg,recipient),
@@ -68,16 +76,29 @@ export class OrdersHandler{
 
     const client = await this.clientsModel.createClient({ phoneNumber: parseInt(recipient) });
 
-    const catalogueItems:OrderItem[] = catalogMessage.product_items.map(
-      function (item):OrderItem {
-        return {
-          name: `nameeeee`,
-          catalogId: item.product_retailer_id,
-          quantity: item.quantity,
-          unitPrice:item.item_price
+    const catalogueItems: OrderItem[] = await Promise.all(
+
+      catalogMessage.product_items.map(
+        async (item): Promise<OrderItem> => {
+
+          const pName = await this.catalogService.getProductByRetailerId(this.catalogId, item.product_retailer_id);
+
+          console.log(`Pnameeeee`, pName)
+          console.log(`Pnameeeee`, pName)
+          console.log(`Pnameeeee`, pName)
+
+          return {
+            name: `nameeeee`,
+            catalogId: item.product_retailer_id,
+            quantity: item.quantity,
+            unitPrice:item.item_price
+          }
         }
-      }
+      )
     )
+
+
+
 
     const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: catalogueItems })
     await this.sendOrderInvoice(recipient, orderCreated)

@@ -11,6 +11,7 @@ import {
   CatalogFilters,
 } from './dto/catalog.dto';
 import { AppLogger } from '../../logger/winston.logger';
+import { BASE_CATALOG_FIELDS, BaseCatalogProduct, WHATSAPP_PRODUCT_FIELDS } from '../../types/catalog.types';
 
 @Injectable()
 export class CatalogService {
@@ -174,7 +175,7 @@ export class CatalogService {
   /**
    * Get single product by retailer ID
    */
-  async getProductByRetailerId(catalogId: string, retailerId: string): Promise<any> {
+  async getBaseProductByRetailerId(catalogId: string, retailerId: string): Promise<BaseCatalogProduct> {
     try {
       const url = `${this.graphApiBaseUrl}/${catalogId}/products`;
 
@@ -183,14 +184,14 @@ export class CatalogService {
           params: {
             access_token: this.accessToken,
             filter: JSON.stringify({ retailer_id: { eq: retailerId } }),
-            fields: 'id,name,description,price,currency,availability,condition,image_url,url,brand,category,inventory,sale_price,sale_price_start_date,sale_price_end_date,additional_image_urls,google_product_category,item_group_id,color,size,material,pattern,shipping',
+            fields: BASE_CATALOG_FIELDS,
           },
         }),
       );
 
       return response.data.data[0] || null;
     } catch (error) {
-      this.handleError(error, `Failed to get product ${retailerId}`);
+      throw error;
     }
   }
 
@@ -222,7 +223,7 @@ export class CatalogService {
   async updateProduct(catalogId: string, product: UpdateProductDto): Promise<any> {
     try {
       // First get the Meta product ID from retailer ID
-      const existingProduct = await this.getProductByRetailerId(catalogId, product.retailerId);
+      const existingProduct = await this.getBaseProductByRetailerId(catalogId, product.retailerId);
 
       if (!existingProduct) {
         throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
@@ -256,7 +257,7 @@ export class CatalogService {
    */
   async deleteProduct(catalogId: string, retailerId: string): Promise<void> {
     try {
-      const existingProduct = await this.getProductByRetailerId(catalogId, retailerId);
+      const existingProduct = await this.getBaseProductByRetailerId(catalogId, retailerId);
 
       if (!existingProduct) {
         throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
