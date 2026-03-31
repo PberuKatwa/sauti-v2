@@ -39,12 +39,28 @@ export interface ContactsValue{
   wa_id:string;
 }
 
+export interface CatalogOrder{
+  catalog_id: string;
+  text: string;
+  product_items:ProductCatalogItem[]
+}
+
+export interface ProductCatalogItem{
+  product_retailer_id: string;
+  quantity: number;
+  item_price: number;
+  currency: string;
+}
+
+
 export interface IncomingMessages {
   from: string;
   id: string;
   timestamp: string;
 
-  type: "text" | "interactive" | "button";
+  type: "text" | "interactive" | "button" | "order";
+
+  order?:CatalogOrder
 
   text?: {
     body: string;
