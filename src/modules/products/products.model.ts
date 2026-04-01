@@ -10,20 +10,9 @@ export class ProductModel{
     private readonly pgConfig:PostgresConfig
   ) { };
 
-  // export interface CreateProductDto {
-  //   retailerId: string;
-  //   name: string;
-  //   description?: string;
-  //   price: number;
-  //   currency: string;
-  //   availability?: 'in stock' | 'out of stock' | 'preorder' | 'available for order' | 'discontinued' | 'pending';
-  //   brand?: string;
-  //   category?: string;
-  //   imageUrl?: string;
-  //   inventory?: number;
-  // }
 
-  createTable() {
+
+  async createTable() {
     try {
 
       const query = `
@@ -41,15 +30,36 @@ export class ProductModel{
         CREATE TABLE IF NOT EXISTS products(
 
           id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL,
+          status row_status DEFAULT 'active',
           retailer_id UUID DEFAULT uuid_generate_v4(),
           name VARCHAR(100) NOT NULL,
           description VARCHAR(240) NOT NULL,
           price NUMERIC(10,2) NOT NULL,
           currency VARCHAR(30),
+          availability product_availability_status DEFAULT 'in stock',
+          brand VARCHAR(100),
+          category VARCAHAR(100),
+          file_id INTEGER,
+          file_url TEXT,
+          inventory INTEGER NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+          FOREIGN KEY (user_id)
+            REFERENCES users(id)
+            ON DELETE SET NULL
+
+          FOREIGN KEY(file_id)
+            REFERENCES files(id)
+            ON DELETE SET NULL
 
         );
-
       `
+
+      const pgPool = this.pgConfig.getPool();
+      await pgPool.query(query)
+
+      this.logger.info(`Successfully created products table`)
 
     } catch (error) {
       throw error;
