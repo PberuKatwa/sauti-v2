@@ -31,15 +31,15 @@ export class CatalogSync{
       const fullProduct = await this.productModel.getProduct(productCreate.id);
 
       const catalogPayload: CreateCatalogProduct = {
-        retailerId: fullProduct.retailer_id,
+        retailer_id: fullProduct.retailer_id,
         name: fullProduct.name,
         description: fullProduct.description,
-        price: fullProduct.price,
-        currency: fullProduct.currency,
-        availability: fullProduct.availability,
+        price: `${Math.round(Number(fullProduct.price) * 100)} ${fullProduct.currency}`,
+        availability: fullProduct.availability.replace(" ", "_"),
         brand: fullProduct.brand,
         category: fullProduct.category,
-        imageUrl: `${this.baseS3Url}/${fullProduct.file_url}`,
+        image_url: `${this.baseS3Url}/${fullProduct.file_url.trim()}`,
+        url: `${this.baseS3Url}/${fullProduct.file_url.trim()}`,
         inventory:fullProduct.inventory
       }
 

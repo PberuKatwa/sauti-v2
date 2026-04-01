@@ -147,34 +147,35 @@ export class CatalogService {
   /**
    * Create a single product (with upsert support)
    */
-  async createProduct(catalogId: string, product: CreateCatalogProduct, allowUpsert = false): Promise<BaseCatalogProduct> {
-    try {
-      const url = `${this.graphApiBaseUrl}/${catalogId}/products`;
-
-      const productData = this.mapProductToApiFormat(product);
-
-      const response = await firstValueFrom(
-        this.httpService.post(url, {
-          ...productData,
-          access_token: this.accessToken,
-          allow_upsert: allowUpsert, // Update if exists
-        }),
-      );
-
-      this.logger.info(`Created/Updated product: ${product.retailerId} in catalog ${catalogId}`);
+   async createProduct(catalogId: string, product: CreateCatalogProduct, allowUpsert = false): Promise<BaseCatalogProduct> {
+     try {
+       const url = `${this.graphApiBaseUrl}/${catalogId}/products`;
+       console.log("product", product)
 
 
-      return {
-        id: response.data.id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        retailer_id:product.retailerId
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
+       const response = await firstValueFrom(
+         this.httpService.post(url, {
+           ...product,
+           access_token: this.accessToken,
+           allow_upsert: allowUpsert,
+         }),
+       );
+
+       return {
+         id: response.data.id,
+         name: product.name,
+         description: product.description,
+         price: parseFloat(product.price),
+         retailer_id: product.retailer_id,
+       };
+
+     } catch (error) {
+       console.error("META ERROR:", error.response?.data || error.message);
+       throw new Error(
+         `Failed to create catalog product: ${JSON.stringify(error.response?.data)}`
+       );
+     }
+   }
 
   /**
    * Get single product by retailer ID

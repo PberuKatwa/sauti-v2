@@ -43,17 +43,16 @@ export const BASE_CATALOG_FIELDS = [
 ].join(',');
 
 export interface CreateCatalogProduct {
-  retailerId: string;
+  retailer_id: string;
   name: string;
   description: string;
-  price: number;
-  currency: string;
-  availability: availabilityStatus;
+  price: string;
+  availability: string;
   brand: string;
   category: string;
-  imageUrl: string;
+  image_url: string;
+  url: string;
   inventory: number;
 }
-
 
 export interface MinimalCatalogResponse extends ApiResponse<BaseCatalogProduct> { };

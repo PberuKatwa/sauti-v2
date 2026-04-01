@@ -194,7 +194,6 @@ export class ProductsModel{
       );
 
       const product: FullProduct = result.rows[0];
-
       if (!product || product === undefined) throw new Error(`No product was found`);
 
       this.logger.info(`Successfully fetched individual product`);
