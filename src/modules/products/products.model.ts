@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
+import { CreateProductPayload } from "../../types/products.types";
 
 @Injectable()
 export class ProductsModel{
@@ -62,6 +63,14 @@ export class ProductsModel{
 
       this.logger.info(`Successfully created products table`)
       return "products"
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async createProduct(payload: CreateProductPayload) {
+    try {
+
     } catch (error) {
       throw error;
     }
