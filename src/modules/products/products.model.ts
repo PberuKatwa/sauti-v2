@@ -39,7 +39,7 @@ export class ProductsModel{
           currency VARCHAR(30),
           availability product_availability_status DEFAULT 'in stock',
           brand VARCHAR(100),
-          category VARCAHAR(100),
+          category VARCHAR(100),
           file_id INTEGER,
           file_url TEXT,
           inventory INTEGER NOT NULL,
@@ -47,9 +47,9 @@ export class ProductsModel{
 
           FOREIGN KEY (user_id)
             REFERENCES users(id)
-            ON DELETE SET NULL
+            ON DELETE CASCADE,
 
-          FOREIGN KEY(file_id)
+          FOREIGN KEY (file_id)
             REFERENCES files(id)
             ON DELETE SET NULL
 

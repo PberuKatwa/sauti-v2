@@ -20,7 +20,7 @@ import { ProductsModel } from "../modules/products/products.model";
 @Global()
 @Module({
   imports: [AppLoggerModule, UsersModule, FilesModule, ClientModule, OrdersModule, WhatsappModule, AuthModule, ProductsModule],
-  providers: [PostgresConfig, PostgresGlobals],
+  providers:[PostgresConfig,PostgresGlobals, FilesModel, ClientModel],
   exports:[PostgresConfig]
 })
 
@@ -49,6 +49,7 @@ export class PostgresModule implements OnModuleInit {
     await this.orders.createTable()
     await this.whatsappConfig.createTable()
     await this.authSession.createTable()
+    await this.products.createTable()
   }
 
 }
