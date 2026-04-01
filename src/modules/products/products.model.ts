@@ -7,10 +7,7 @@ import {
   CreateProductPayload,
   FullProduct,
   UpdateProductPayload,
-  AllProducts,
-  AllProductsApiResponse,
-  SingleProductApiResponse,
-  SingleProductMinimalApiResponse
+  AllProducts
 } from "../../types/products.types";
 
 @Injectable()
