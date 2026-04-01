@@ -83,22 +83,27 @@ export class GarageService {
       if (!response.Contents || response.Contents.length === 0) throw new Error(`No files found in the bucket:${this.bucket}.`)
 
       const files = response.Contents.map(
-        function (file) {
+         (file):listFilesRes => {
+          try {
 
-          if (!file.Key) throw new Error(`No file  key was found`)
-          if (!file.LastModified) throw new Error(`No file LastModified was found`)
-          if (!file.ETag) throw new Error(`No file ETag was found`)
-          if (!file.Size) throw new Error(`No file Size was found`)
-          if (!file.StorageClass) throw new Error(`No file StorageClass was found`)
+            if (!file.Key) throw new Error(`No file  key was found`)
+            if (!file.LastModified) throw new Error(`No file LastModified was found`)
+            if (!file.ETag) throw new Error(`No file ETag was found`)
+            if (!file.Size) throw new Error(`No file Size was found`)
+            if (!file.StorageClass) throw new Error(`No file StorageClass was found`)
 
-          const fileData: listFilesRes = {
-            key: file.Key,
-            lastModified: file.LastModified,
-            etag: file.ETag,
-            size: file.Size,
-            storageClass:file.StorageClass
+            const fileData: listFilesRes = {
+              key: file.Key,
+              lastModified: file.LastModified,
+              etag: file.ETag,
+              size: file.Size,
+              storageClass:file.StorageClass
+            }
+            return fileData
+
+          } catch (error) {
+            this.logger.error(`Error in listing file ${error}`)
           }
-          return fileData
 
         }
       )
