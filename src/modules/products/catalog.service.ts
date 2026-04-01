@@ -165,7 +165,7 @@ export class CatalogService {
          id: response.data.id,
          name: product.name,
          description: product.description,
-         price: parseFloat(product.price),
+         price: product.price,
          retailer_id: product.retailer_id,
        };
 

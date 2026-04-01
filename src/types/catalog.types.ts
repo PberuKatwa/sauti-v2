@@ -46,7 +46,8 @@ export interface CreateCatalogProduct {
   retailer_id: string;
   name: string;
   description: string;
-  price: string;
+  price: number;
+  currency: string;
   availability: string;
   brand: string;
   category: string;

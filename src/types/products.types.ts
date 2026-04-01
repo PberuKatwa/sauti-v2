@@ -7,7 +7,7 @@ export interface BaseProduct {
   retailer_id: string;
   name: string;
   description: string;
-  price: number;
+  price: string;
 }
 
 export interface FullProduct extends BaseProduct {
