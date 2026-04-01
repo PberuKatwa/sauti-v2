@@ -150,8 +150,6 @@ export class CatalogService {
    async createProduct(catalogId: string, product: CreateCatalogProduct, allowUpsert = false): Promise<BaseCatalogProduct> {
      try {
        const url = `${this.graphApiBaseUrl}/${catalogId}/products`;
-       console.log("product", product)
-
 
        const response = await firstValueFrom(
          this.httpService.post(url, {
