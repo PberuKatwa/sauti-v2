@@ -60,7 +60,7 @@ export class ProductModel{
       await pgPool.query(query)
 
       this.logger.info(`Successfully created products table`)
-
+      return "products"
     } catch (error) {
       throw error;
     }
