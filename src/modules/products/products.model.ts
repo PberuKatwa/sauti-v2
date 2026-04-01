@@ -1,21 +1,30 @@
-import { Injectable } from "@nestjs/common";
-import { AppLogger } from "../../logger/winston.logger";
+import { Injectable, Inject } from "@nestjs/common";
+import { Pool } from "pg";
 import { PostgresConfig } from "../../databases/postgres.config";
-import { BaseProduct, CreateProductPayload } from "../../types/products.types";
+import type { AppLogger } from "../../logger/winston.logger";
+import {
+  BaseProduct,
+  CreateProductPayload,
+  FullProduct,
+  UpdateProductPayload,
+  AllProducts,
+  AllProductsApiResponse,
+  SingleProductApiResponse,
+  SingleProductMinimalApiResponse
+} from "../../types/products.types";
 
 @Injectable()
 export class ProductsModel{
 
   constructor(
     private readonly logger: AppLogger,
-    private readonly pgConfig:PostgresConfig
-  ) { };
-
-
+    private readonly pgConfig: PostgresConfig
+  ) {}
 
   async createTable() {
     try {
 
+      this.logger.warn(`Attempting to create products table`);
       const query = `
 
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -59,16 +68,17 @@ export class ProductsModel{
       `
 
       const pgPool = this.pgConfig.getPool();
-      await pgPool.query(query)
+      await pgPool.query(query);
 
-      this.logger.info(`Successfully created products table`)
-      return "products"
+      this.logger.info(`Successfully created products table`);
+      return "products";
+
     } catch (error) {
       throw error;
     }
   }
 
-  async createProduct(payload: CreateProductPayload):Promise<BaseProduct> {
+  async createProduct(payload: CreateProductPayload): Promise<BaseProduct> {
     try {
 
       this.logger.warn(`Attempting to create product ${payload.name}`);
@@ -83,14 +93,168 @@ export class ProductsModel{
 
       const pgPool = this.pgConfig.getPool();
       const result = await pgPool.query(query, [user_id, retailer_id, name, description, price, currency, availability, brand, category, file_id, inventory]);
-      const product:BaseProduct = result.rows[0];
+      const product: BaseProduct = result.rows[0];
+
+      this.logger.info(`Successfully created product`);
 
       return product;
+
     } catch (error) {
       throw error;
     }
   }
 
+  async getAllProducts(pageInput: number, limitInput: number): Promise<AllProducts> {
+    try {
 
+      this.logger.warn(`Attempting to fetch products from page:${pageInput} and limit:${limitInput}`);
 
+      const page = pageInput ? pageInput : 1;
+      const limit = limitInput ? limitInput : 10;
+      const offset = (page - 1) * limit;
+
+      const dataQuery = `
+        SELECT
+          p.id,
+          p.user_id,
+          p.retailer_id,
+          p.name,
+          p.description,
+          p.price,
+          p.currency,
+          p.availability,
+          p.brand,
+          p.category,
+          p.file_id,
+          p.inventory,
+          p.created_at,
+          p.metadata,
+          f.file_url as file_url
+        FROM products p
+        LEFT JOIN files f ON p.file_id = f.id
+        WHERE p.status != 'trash'
+        ORDER BY p.created_at DESC
+        LIMIT $1 OFFSET $2;
+      `;
+
+      const countQuery = `
+        SELECT COUNT(*)
+        FROM products
+        WHERE status != 'trash';
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const [dataResult, paginationResult] = await Promise.all([
+        pgPool.query(dataQuery, [limit, offset]),
+        pgPool.query(countQuery)
+      ]);
+
+      const totalCount = parseInt(paginationResult.rows[0].count);
+
+      this.logger.info(`Successfully fetched ${totalCount} products`);
+
+      return {
+        products: dataResult.rows,
+        pagination: {
+          totalCount: totalCount,
+          currentPage: page,
+          totalPages: Math.ceil(totalCount / limit)
+        }
+      };
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getProduct(productId: number): Promise<FullProduct> {
+    try {
+
+      this.logger.warn(`Attempting to fetch product with id:${productId}`);
+
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(`
+        SELECT
+          p.id,
+          p.user_id,
+          p.retailer_id,
+          p.name,
+          p.description,
+          p.price,
+          p.currency,
+          p.availability,
+          p.brand,
+          p.category,
+          p.file_id,
+          p.inventory,
+          p.created_at,
+          p.metadata,
+          f.file_url as file_url
+        FROM products p
+        LEFT JOIN files f ON p.file_id = f.id
+        WHERE p.id = $1 AND p.status != 'trash';`,
+        [productId]
+      );
+
+      const product: FullProduct = result.rows[0];
+
+      if (!product || product === undefined) throw new Error(`No product was found`);
+
+      this.logger.info(`Successfully fetched individual product`);
+
+      return product;
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateProduct(payload: UpdateProductPayload): Promise<void> {
+    try {
+
+      this.logger.warn(`Attempting to update product`);
+
+      const { id, name, description, price, currency, availability, brand, category, file_id, inventory, metadata } = payload;
+
+      const pgPool = this.pgConfig.getPool();
+      const query = `
+        UPDATE products
+        SET name = $1,
+            description = $2,
+            price = $3,
+            currency = $4,
+            availability = $5,
+            brand = $6,
+            category = $7,
+            file_id = $8,
+            inventory = $9,
+            metadata = $10
+        WHERE id = $11;
+      `;
+
+      await pgPool.query(query, [name, description, price, currency, availability, brand, category, file_id, inventory, metadata, id]);
+
+      this.logger.info(`Successfully updated product`);
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async trashProduct(id: number): Promise<void> {
+    try {
+
+      this.logger.warn(`Attempting to trash product with id:${id}`);
+
+      const pool = this.pgConfig.getPool();
+      const query = `UPDATE products SET status = $1 WHERE id = $2;`;
+
+      await pool.query(query, ['trash', id]);
+
+      this.logger.info(`Successfully trashed product`);
+
+    } catch (error) {
+      throw error;
+    }
+  }
 }
