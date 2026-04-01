@@ -11,8 +11,8 @@ export const s3CLientProvider:Provider = {
             endpoint:configService.get<string>('s3Endpoint'),
             region:configService.get<string>('s3Region'),
             credentials:{
-                accessKeyId:configService.get<string>('s3AccessKey'),
-                secretAccessKey:configService.get<string>('s3SecretKey')
+              accessKeyId:configService.get<string>('s3AccessKey'),
+              secretAccessKey:configService.get<string>('s3SecretKey')
             },
             forcePathStyle:true
         } as S3ClientConfig)

@@ -2,9 +2,10 @@ import { Module } from "@nestjs/common";
 import { FilesController } from "./files.controller";
 import { GarageModule } from "../garage/garage.module";
 import { FilesModel } from "./files.model";
+import { AuthModule } from "../auth/auth.module";
 
 @Module({
-  imports: [GarageModule],
+  imports: [GarageModule,AuthModule],
   providers:[FilesModel],
   controllers:[FilesController]
 })

@@ -10,9 +10,11 @@ import type { ApiResponse } from "../../types/api.types";
 import { FilesModel } from "./files.model";
 import { CurrentUser } from "../users/decorators/user.decorator";
 import { SingleFileAPiResponse,File } from "../../types/file.types"
+import { AuthGuard } from "../auth/guards/auth.guard";
 
 
 @Controller('files')
+@UseGuards(AuthGuard)
 export class FilesController{
 
   constructor(
@@ -67,6 +69,107 @@ export class FilesController{
               const newFileName = `${filename.split('.')[0]}.webp`;
               const newSize = finalBuffer.length;
               const newMimeType = 'image/webp';
+
+              const mockFile = {
+                buffer: finalBuffer,
+                originalname: newFileName,
+                mimetype: newMimeType,
+                size: newSize
+              } as Express.Multer.File;
+
+              const { key } = await this.garageService.uploadFile(mockFile);
+              const file: File = await this.files.saveFile(currentUser.userId, newFileName, key, newSize, newMimeType);
+
+              const response: SingleFileAPiResponse = {
+                success: true,
+                message: `Successfully uploaded image file ${filename}.`,
+                data: file
+              };
+              resolve(response);
+            } catch (error) {
+              reject(error);
+            }
+          });
+
+          busboy.on('error', (error: Error) => reject(error));
+          req.pipe(busboy);
+        }
+      );
+    } catch (error) {
+      this.logger.error('Error in creating image', error);
+      const response: ApiResponse = {
+        success: false,
+        message: `${error.message}`,
+      };
+      throw new HttpException(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('upload/images/whatsapp')
+  async handleWhatsappUpload(@Req() req: Request, @CurrentUser() currentUser: any): Promise<SingleFileAPiResponse> {
+    try {
+      const fileSize = parseInt(req.headers['content-length'] || '0');
+      const busboy: Busboy = require('busboy')({ headers: req.headers } as BusboyConfig);
+      const resultForm = { fileKey: '', fields: {} as Record<string, string> };
+
+      if (fileSize > 20 * 1024 * 1024) throw new Error('File is too large, maximum size is 20MB');
+      if (!req.headers['content-type']?.includes('multipart/form-data')) throw new Error('Invalid file format');
+
+      return new Promise<SingleFileAPiResponse>(
+        (resolve, reject) => {
+          busboy.on('field', (name: string, val: string) => {
+            resultForm.fields[name] = val;
+          });
+
+          busboy.on('file', async (name: string, fileStream: Readable, info: FileInfo) => {
+            try {
+              const { filename, mimeType } = info;
+              if (!mimeType.startsWith('image/')) {
+                fileStream.resume();
+                return reject(new BadRequestException('Only images are allowed'));
+              }
+
+              // WhatsApp requirements: JPEG, 1:1 aspect ratio, max 5MB, min 500x500px
+              const transformer = sharp()
+                .resize(1080, 1080, {
+                  fit: 'cover',        // Crop to fill 1:1 aspect ratio
+                  position: 'center'     // Center crop
+                })
+                .jpeg({
+                  quality: 85,          // High quality but compressed
+                  progressive: true,    // Better loading
+                  mozjpeg: true         // Optimized encoding
+                });
+
+              const chunks: Buffer[] = [];
+              const processedStream = fileStream.pipe(transformer);
+
+              for await (const chunk of processedStream) {
+                chunks.push(chunk as Buffer);
+              }
+
+              const finalBuffer = Buffer.concat(chunks);
+
+              // WhatsApp max is 5MB, but allow override via field
+              let maxAllowed = 5 * 1024 * 1024; // Default WhatsApp limit
+
+              if (parseInt(resultForm.fields['maxFileSize']) && parseInt(resultForm.fields['maxFileSize']) > 0) {
+                maxAllowed = parseInt(resultForm.fields['maxFileSize']) * 1024 * 1024;
+              }
+
+              if (finalBuffer.length > maxAllowed) {
+                return reject(new BadRequestException('Compressed image exceeds size limit'));
+              }
+
+              // Ensure minimum WhatsApp requirement (500x500)
+              const metadata = await sharp(finalBuffer).metadata();
+              if (metadata.width < 500 || metadata.height < 500) {
+                return reject(new BadRequestException('Image dimensions too small, minimum 500x500px required'));
+              }
+
+              const newFileName = `${filename.split('.')[0]}.jpg`;
+              const newSize = finalBuffer.length;
+              const newMimeType = 'image/jpeg';
 
               const mockFile = {
                 buffer: finalBuffer,

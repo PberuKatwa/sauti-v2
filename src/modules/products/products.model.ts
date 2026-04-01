@@ -10,4 +10,12 @@ export class ProductModel{
     private readonly pgConfig:PostgresConfig
   ) { };
 
+  createTable() {
+    try {
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
