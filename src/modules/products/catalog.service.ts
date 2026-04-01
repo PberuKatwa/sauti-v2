@@ -11,7 +11,7 @@ import {
   CatalogFilters,
 } from './dto/catalog.dto';
 import { AppLogger } from '../../logger/winston.logger';
-import { BASE_CATALOG_FIELDS, BaseCatalogProduct, WHATSAPP_PRODUCT_FIELDS } from '../../types/catalog.types';
+import { BASE_CATALOG_FIELDS, BaseCatalogProduct, CreateCatalogProduct, WHATSAPP_PRODUCT_FIELDS } from '../../types/catalog.types';
 
 @Injectable()
 export class CatalogService {
@@ -147,7 +147,7 @@ export class CatalogService {
   /**
    * Create a single product (with upsert support)
    */
-  async createProduct(catalogId: string, product: CreateProductDto, allowUpsert = false): Promise<any> {
+  async createProduct(catalogId: string, product: CreateCatalogProduct, allowUpsert = false): Promise<BaseCatalogProduct> {
     try {
       const url = `${this.graphApiBaseUrl}/${catalogId}/products`;
 
@@ -162,13 +162,17 @@ export class CatalogService {
       );
 
       this.logger.info(`Created/Updated product: ${product.retailerId} in catalog ${catalogId}`);
+
+
       return {
         id: response.data.id,
-        retailerId: product.retailerId,
-        success: true,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        retailer_id:product.retailerId
       };
     } catch (error) {
-      this.handleError(error, `Failed to create product ${product.retailerId}`);
+      throw error;
     }
   }
 

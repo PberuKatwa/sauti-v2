@@ -30,6 +30,7 @@ export interface BaseCatalogProduct {
   name: string;
   description: string;
   price: number;
+  retailer_id:string
 }
 
 export const BASE_CATALOG_FIELDS = [
@@ -37,6 +38,7 @@ export const BASE_CATALOG_FIELDS = [
   'name',
   'description',
   'price',
+  'retailer_id',
 ].join(',');
 
 export interface CreateCatalogProduct {
