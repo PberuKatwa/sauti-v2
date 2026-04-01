@@ -1,3 +1,4 @@
+import { ApiResponse } from "./api.types";
 import { availabilityStatus } from "./products.types";
 
 export const WHATSAPP_PRODUCT_FIELDS = [
@@ -53,3 +54,6 @@ export interface CreateCatalogProduct {
   imageUrl: string;
   inventory: number;
 }
+
+
+export interface MinimalCatalogResponse extends ApiResponse<BaseCatalogProduct> { };
