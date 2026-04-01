@@ -13,7 +13,7 @@ export interface BaseProduct {
 export interface FullProduct extends BaseProduct {
   user_id: number;
   currency: string | null;
-  availability: string;
+  availability: availabilityStatus;
   brand: string | null;
   category: string | null;
   file_id: number | null;

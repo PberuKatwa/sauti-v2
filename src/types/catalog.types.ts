@@ -1,3 +1,5 @@
+import { availabilityStatus } from "./products.types";
+
 export const WHATSAPP_PRODUCT_FIELDS = [
   'id',
   'name',
@@ -36,3 +38,16 @@ export const BASE_CATALOG_FIELDS = [
   'description',
   'price',
 ].join(',');
+
+export interface CreateCatalogProduct {
+  retailerId: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  availability: availabilityStatus;
+  brand: string;
+  category: string;
+  imageUrl: string;
+  inventory: number;
+}
