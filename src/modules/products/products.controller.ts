@@ -1,19 +1,20 @@
-import { Controller, Post, Get, Req, Res, Query, Param } from "@nestjs/common";
+import { Controller, Post, Get, Req, Res, Query, Param, UseGuards } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
 import type {
+  CreateProductPayload,
+  UpdateProductPayload,
   AllProductsApiResponse,
   SingleProductApiResponse,
   SingleProductMinimalApiResponse
 } from "../../types/products.types";
 import { ProductsModel } from "./products.model";
-import type {
-  CreateProductPayload,
-  UpdateProductPayload
-} from "../../types/products.types";
+import { AuthGuard } from "../auth/guards/auth.guard";
+import { CurrentUser } from "../users/decorators/user.decorator";
 
 @Controller('products')
+@UseGuards(AuthGuard)
 export class ProductsController {
 
   constructor(
@@ -24,11 +25,13 @@ export class ProductsController {
   @Post('')
   async createProduct(
     @Req() req: Request,
-    @Res() res: Response
+    @Res() res: Response,
+    @CurrentUser() currentUser:any
   ): Promise<Response> {
     try {
 
       const payload: CreateProductPayload = req.body;
+      payload.user_id = currentUser.userId
 
       const product = await this.products.createProduct(payload);
 

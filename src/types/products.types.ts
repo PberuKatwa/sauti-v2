@@ -38,7 +38,6 @@ export interface ProductPayload {
 
 export interface CreateProductPayload extends ProductPayload {
   user_id: number;
-  retailer_id: string;
 }
 
 export interface UpdateProductPayload extends ProductPayload {

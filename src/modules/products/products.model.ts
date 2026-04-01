@@ -1,7 +1,7 @@
 import { Injectable, Inject } from "@nestjs/common";
 import { Pool } from "pg";
 import { PostgresConfig } from "../../databases/postgres.config";
-import type { AppLogger } from "../../logger/winston.logger";
+import { AppLogger } from "../../logger/winston.logger";
 import {
   BaseProduct,
   CreateProductPayload,
@@ -80,16 +80,16 @@ export class ProductsModel{
 
       this.logger.warn(`Attempting to create product ${payload.name}`);
 
-      const { user_id, retailer_id, name, description, price, currency, availability, brand, category, file_id, inventory } = payload;
+      const { user_id, name, description, price, currency, availability, brand, category, file_id, inventory } = payload;
 
       const query = `
-        INSERT INTO products(user_id, retailer_id, name, description, price, currency, availability, brand, category, file_id, inventory)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+        INSERT INTO products(user_id, name, description, price, currency, availability, brand, category, file_id, inventory)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
         RETURNING id, retailer_id, name, description, price;
       `
 
       const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [user_id, retailer_id, name, description, price, currency, availability, brand, category, file_id, inventory]);
+      const result = await pgPool.query(query, [user_id, name, description, price, currency, availability, brand, category, file_id, inventory]);
       const product: BaseProduct = result.rows[0];
 
       this.logger.info(`Successfully created product`);
