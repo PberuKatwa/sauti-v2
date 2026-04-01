@@ -6,11 +6,12 @@ import { HttpModule } from "@nestjs/axios";
 import { ProductsModel } from "./products.model";
 import { ProductsController } from "./products.controller";
 import { AuthModule } from "../auth/auth.module";
+import { CatalogSync } from "./catalog.sync";
 
 @Module({
   controllers:[ProductsController],
   imports: [WhatsappModule, HttpModule],
-  providers: [ProductsHandler, CatalogService, ProductsModel],
-  exports: [ProductsHandler, CatalogService, ProductsModel]
+  providers: [ProductsHandler, CatalogService, ProductsModel, CatalogSync],
+  exports: [ProductsHandler, CatalogService, ProductsModel, CatalogSync]
 })
 export class ProductsModule { };
