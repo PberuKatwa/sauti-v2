@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
-import { CreateProductPayload } from "../../types/products.types";
+import { BaseProduct, CreateProductPayload } from "../../types/products.types";
 
 @Injectable()
 export class ProductsModel{
@@ -68,7 +68,7 @@ export class ProductsModel{
     }
   }
 
-  async createProduct(payload: CreateProductPayload) {
+  async createProduct(payload: CreateProductPayload):Promise<BaseProduct> {
     try {
 
       this.logger.warn(`Attempting to create product ${payload.name}`);
@@ -78,9 +78,14 @@ export class ProductsModel{
       const query = `
         INSERT INTO products(user_id, retailer_id, name, description, price, currency, availability, brand, category, file_id, inventory)
         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-
+        RETURNING id, retailer_id, name, description, price;
       `
 
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [user_id, retailer_id, name, description, price, currency, availability, brand, category, file_id, inventory]);
+      const product:BaseProduct = result.rows[0];
+
+      return product;
     } catch (error) {
       throw error;
     }
