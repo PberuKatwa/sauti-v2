@@ -3,7 +3,7 @@ import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
 
 @Injectable()
-export class ProductModel{
+export class ProductsModel{
 
   constructor(
     private readonly logger: AppLogger,

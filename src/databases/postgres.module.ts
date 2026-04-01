@@ -14,11 +14,13 @@ import { OrdersModel } from "../modules/orders/orders.model";
 import { WhatsappConfig } from "../modules/whatsapp/whatsapp.config";
 import { WhatsappModule } from "../modules/whatsapp/whatsapp.module";
 import { AuthModule } from "../modules/auth/auth.module";
+import { ProductsModule } from "../modules/products/products.module";
+import { ProductsModel } from "../modules/products/products.model";
 
 @Global()
 @Module({
-  imports: [AppLoggerModule, UsersModule, FilesModule, ClientModule, OrdersModule, WhatsappModule, AuthModule],
-  providers:[PostgresConfig,PostgresGlobals, FilesModel, ClientModel],
+  imports: [AppLoggerModule, UsersModule, FilesModule, ClientModule, OrdersModule, WhatsappModule, AuthModule, ProductsModule],
+  providers: [PostgresConfig, PostgresGlobals],
   exports:[PostgresConfig]
 })
 
@@ -32,7 +34,8 @@ export class PostgresModule implements OnModuleInit {
     private readonly orders:OrdersModel,
     private readonly pgGlobals: PostgresGlobals,
     private readonly whatsappConfig: WhatsappConfig,
-    private readonly authSession:AuthSessionModel
+    private readonly authSession: AuthSessionModel,
+    private readonly products:ProductsModel
   ) { };
 
   async onModuleInit() {
