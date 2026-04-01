@@ -45,6 +45,7 @@ export class CatalogSync{
 
       const catalogProduct = await this.catalogService.createProduct(this.catalogId, catalogPayload);
 
+      this.logger.info(`Successfully created catalog product`)
       return catalogProduct;
     } catch (error) {
       throw error;
