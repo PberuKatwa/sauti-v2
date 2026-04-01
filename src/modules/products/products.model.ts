@@ -44,6 +44,7 @@ export class ProductsModel{
           file_url TEXT,
           inventory INTEGER NOT NULL,
           created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+          metadata JSONB,
 
           FOREIGN KEY (user_id)
             REFERENCES users(id)
