@@ -71,6 +71,16 @@ export class ProductsModel{
   async createProduct(payload: CreateProductPayload) {
     try {
 
+      this.logger.warn(`Attempting to create product ${payload.name}`);
+
+      const { user_id, retailer_id, name, description, price, currency, availability, brand, category, file_id, inventory } = payload;
+
+      const query = `
+        INSERT INTO products(user_id, retailer_id, name, description, price, currency, availability, brand, category, file_id, inventory)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+
+      `
+
     } catch (error) {
       throw error;
     }

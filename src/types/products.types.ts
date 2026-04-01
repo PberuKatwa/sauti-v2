@@ -13,3 +13,11 @@ export interface CreateProductPayload{
   file_id: number;
   inventory: number;
 }
+
+export interface BaseProduct {
+  id: number;
+  retailer_id: string;
+  name: string;
+  description: string;
+  price: number;
+}
