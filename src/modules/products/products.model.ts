@@ -30,10 +30,22 @@ export class ProductModel{
 
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_availability_status') THEN
+            CREATE TYPE product_availability_status AS ENUM ('in stock', 'out of stock', 'preorder', 'available for order', 'discontinued', 'pending');
+            END IF;
+        END
+        $$;
+
         CREATE TABLE IF NOT EXISTS products(
 
           id SERIAL PRIMARY KEY,
           retailer_id UUID DEFAULT uuid_generate_v4(),
+          name VARCHAR(100) NOT NULL,
+          description VARCHAR(240) NOT NULL,
+          price NUMERIC(10,2) NOT NULL,
+          currency VARCHAR(30),
 
         );
 
