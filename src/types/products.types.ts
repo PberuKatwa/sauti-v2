@@ -65,7 +65,7 @@ export interface AllProducts {
 export interface CatalogSyncPayload {
   id: number;
   status: Boolean;
-  crudOperation: CrudOpertations;
+  crudOperation: CrudOperations;
 }
 
 export interface AllProductsApiResponse extends ApiResponse<AllProducts> { }

@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { CatalogService } from "./catalog.service";
 import { ConfigService } from "@nestjs/config";
-import { CatalogSyncPayload, CreateProductPayload, UpdateProductPayload } from "../../types/products.types";
+import { CatalogSyncPayload, CreateProductPayload, FullProduct, UpdateProductPayload } from "../../types/products.types";
 import { ProductsModel } from "./products.model";
 import { BaseCatalogProduct, CatalogProductPayload } from "../../types/catalog.types";
 
@@ -45,7 +45,7 @@ export class CatalogSync{
       }
 
       const catalogProduct = await this.catalogService.createProduct(this.catalogId, catalogPayload);
-      await this.productModel.updateCatalogUploadStatus(fullProduct.id);
+      await this.productModel.updateCatalogSync({ id: fullProduct.id, status: true, crudOperation: "CREATE" });
 
       this.logger.info(`Successfully created catalog product`)
       return catalogProduct;
@@ -58,8 +58,6 @@ export class CatalogSync{
     try {
 
       await this.productModel.updateProduct(payload);
-      await this.productModel.updateCatalogUpdatedStatus(payload.id,false)
-
       const fullProduct = await this.productModel.getProduct(payload.id);
 
       const catalogPayload: CatalogProductPayload = {
@@ -77,7 +75,7 @@ export class CatalogSync{
       }
 
       await this.catalogService.updateProduct(this.catalogId, catalogPayload);
-      await this.productModel.updateCatalogUpdatedStatus(payload.id, true);
+      await this.productModel.updateCatalogSync({ id: fullProduct.id, status: true, crudOperation: "UPDATE" });
 
     } catch (error) {
       throw error;
@@ -94,6 +92,24 @@ export class CatalogSync{
     } catch(error) {
       throw error
     }
+  }
+
+  private mapProductToCatalog(product: FullProduct):CatalogProductPayload {
+
+    return {
+      retailer_id: product.retailer_id,
+      name: product.name,
+      description: product.description,
+      price: Math.round(parseInt(product.price) * 100),
+      currency:product.currency,
+      availability: product.availability,
+      brand: product.brand,
+      category: product.category,
+      image_url: `${this.baseS3Url}/${product.file_url.trim()}`,
+      url: `${this.baseS3Url}/${product.file_url.trim()}`,
+      inventory:product.inventory
+    }
+
   }
 
 }
