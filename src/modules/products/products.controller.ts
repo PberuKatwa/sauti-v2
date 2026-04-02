@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Req, Res, Query, Param, UseGuards } from "@nestjs/common";
+import { Controller, Post, Get, Req, Res, Query, Param, UseGuards, Delete } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
@@ -232,6 +232,38 @@ export class ProductsController {
       const { id } = req.body;
 
       await this.products.trashProduct(parseInt(id));
+
+      const response: ApiResponse = {
+        success: true,
+        message: `Successfully trashed product`
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error trashing product`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+  @Delete('catalog/:id')
+  async trashCatalogProduct(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const idParam = req.params.id;
+      const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+      await this.catalogSync.deleteCatalogProduct(parseInt(id));
 
       const response: ApiResponse = {
         success: true,
