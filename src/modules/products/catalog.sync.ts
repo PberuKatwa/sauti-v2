@@ -30,19 +30,7 @@ export class CatalogSync{
       const productCreate = await this.productModel.createProduct(payload);
       const fullProduct = await this.productModel.getProduct(productCreate.id);
 
-      const catalogPayload: CatalogProductPayload = {
-        retailer_id: fullProduct.retailer_id,
-        name: fullProduct.name,
-        description: fullProduct.description,
-        price: Math.round(parseInt(fullProduct.price) * 100),
-        currency:fullProduct.currency,
-        availability: fullProduct.availability,
-        brand: fullProduct.brand,
-        category: fullProduct.category,
-        image_url: `${this.baseS3Url}/${fullProduct.file_url.trim()}`,
-        url: `${this.baseS3Url}/${fullProduct.file_url.trim()}`,
-        inventory:fullProduct.inventory
-      }
+      const catalogPayload = this.mapProductToCatalog(fullProduct);
 
       const catalogProduct = await this.catalogService.createProduct(this.catalogId, catalogPayload);
       await this.productModel.updateCatalogSync({ id: fullProduct.id, status: true, crudOperation: "CREATE" });
@@ -60,19 +48,7 @@ export class CatalogSync{
       await this.productModel.updateProduct(payload);
       const fullProduct = await this.productModel.getProduct(payload.id);
 
-      const catalogPayload: CatalogProductPayload = {
-        retailer_id: fullProduct.retailer_id,
-        name: fullProduct.name,
-        description: fullProduct.description,
-        price: Math.round(parseInt(fullProduct.price) * 100),
-        currency:fullProduct.currency,
-        availability: fullProduct.availability,
-        brand: fullProduct.brand,
-        category: fullProduct.category,
-        image_url: `${this.baseS3Url}/${fullProduct.file_url.trim()}`,
-        url: `${this.baseS3Url}/${fullProduct.file_url.trim()}`,
-        inventory:fullProduct.inventory
-      }
+      const catalogPayload = this.mapProductToCatalog(fullProduct);
 
       await this.catalogService.updateProduct(this.catalogId, catalogPayload);
       await this.productModel.updateCatalogSync({ id: fullProduct.id, status: true, crudOperation: "UPDATE" });
@@ -82,12 +58,13 @@ export class CatalogSync{
     }
   }
 
-  async deleteCatalogProduct(payload:CatalogSyncPayload) {
+  async deleteCatalogProduct(id:number):Promise<void> {
     try {
 
-      const { id, status, crudOperation } = payload;
-
-
+      await this.productModel.trashProduct(id);
+      const fullProduct = await this.productModel.getProduct(id);
+      await this.catalogService.deleteProduct(this.catalogId, fullProduct.retailer_id);
+      await this.productModel.updateCatalogSync({ id: fullProduct.id, status: true, crudOperation: "DELETE" });
 
     } catch(error) {
       throw error
