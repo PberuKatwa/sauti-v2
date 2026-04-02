@@ -61,8 +61,8 @@ export class CatalogSync{
   async deleteCatalogProduct(id:number):Promise<void> {
     try {
 
-      await this.productModel.trashProduct(id);
       const fullProduct = await this.productModel.getProduct(id);
+      await this.productModel.trashProduct(id);
       await this.catalogService.deleteProduct(this.catalogId, fullProduct.retailer_id);
       await this.productModel.updateCatalogSync({ id: fullProduct.id, status: true, crudOperation: "DELETE" });
 

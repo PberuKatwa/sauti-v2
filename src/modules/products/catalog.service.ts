@@ -250,6 +250,7 @@ export class CatalogService {
    */
   async deleteProduct(catalogId: string, retailerId: string): Promise<void> {
     try {
+
       const existingProduct = await this.getBaseProductByRetailerId(catalogId, retailerId);
 
       if (!existingProduct) {
@@ -264,9 +265,9 @@ export class CatalogService {
         }),
       );
 
-      this.logger.info(`Deleted product: ${retailerId}`);
     } catch (error) {
-      this.handleError(error, `Failed to delete product ${retailerId}`);
+      this.logger.error("Update product failed:", error?.response?.data || error.message);
+      throw error;
     }
   }
 
