@@ -224,7 +224,7 @@ export class CatalogService {
   /**
    * Update product
    */
-  async updateProduct(catalogId: string, product: CatalogProductPayload): Promise<any> {
+  async updateProduct(catalogId: string, product: CatalogProductPayload): Promise<BaseCatalogProduct> {
     try {
       const existingProduct = await this.getBaseProductByRetailerId(catalogId, product.retailer_id);
 

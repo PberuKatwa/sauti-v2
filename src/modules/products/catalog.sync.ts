@@ -54,10 +54,11 @@ export class CatalogSync{
     }
   }
 
-  async updateCatalogProduct(payload:UpdateProductPayload) {
+  async updateCatalogProduct(payload:UpdateProductPayload):Promise<BaseCatalogProduct> {
     try {
 
       await this.productModel.updateProduct(payload);
+      await this.productModel.updateCatalogUpdatedStatus(payload.id,false)
 
       const fullProduct = await this.productModel.getProduct(payload.id);
 
@@ -74,6 +75,10 @@ export class CatalogSync{
         url: `${this.baseS3Url}/${fullProduct.file_url.trim()}`,
         inventory:fullProduct.inventory
       }
+
+      const catalogProduct = await this.catalogService.updateProduct(this.catalogId, catalogPayload);
+
+      return catalogProduct
 
     } catch (error) {
       throw error;

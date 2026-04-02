@@ -123,7 +123,7 @@ export class ProductsModel{
     }
   }
 
-  async updateCatalogUpdatedStatus(id:number):Promise<void> {
+  async updateCatalogUpdatedStatus(id:number,status:Boolean):Promise<void> {
     try {
 
       this.logger.warn(`Attempting to update catalog to true`);
@@ -137,7 +137,7 @@ export class ProductsModel{
       const pgPool = this.pgConfig.getPool()
 
       this.logger.info(`Successfully updated table products status`)
-      await pgPool.query(query, [true,id])
+      await pgPool.query(query, [status,id])
     } catch (error) {
       throw error
     }
