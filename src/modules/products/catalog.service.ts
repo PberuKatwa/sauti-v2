@@ -231,7 +231,7 @@ export class CatalogService {
       if (!existingProduct) throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
 
       const url = `${this.graphApiBaseUrl}/${existingProduct.id}`;
-      delete product.retailer_id; // Can't update retailer_id
+      delete product.retailer_id;
 
       const response = await firstValueFrom(
         this.httpService.post(url, {

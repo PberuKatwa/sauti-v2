@@ -53,6 +53,7 @@ export class ProductsModel{
           created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
           metadata JSONB,
           is_uploaded_catalog BOOLEAN DEFAULT FALSE,
+          is_catalog_updated BOOLEAN DEFAULT TRUE,
 
           FOREIGN KEY (user_id)
             REFERENCES users(id)
@@ -103,6 +104,26 @@ export class ProductsModel{
   }
 
   async updateCatalogUploadStatus(id:number):Promise<void> {
+    try {
+
+      this.logger.warn(`Attempting to update catalog to true`);
+
+      const query = `
+        UPDATE products
+        SET is_uploaded_catalog = $1
+        WHERE id= $2;
+      `;
+
+      const pgPool = this.pgConfig.getPool()
+
+      this.logger.info(`Successfully updated table products status`)
+      await pgPool.query(query, [true,id])
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async updateCatalogUpdatedStatus(id:number):Promise<void> {
     try {
 
       this.logger.warn(`Attempting to update catalog to true`);
