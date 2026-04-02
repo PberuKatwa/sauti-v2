@@ -224,16 +224,10 @@ export class CatalogService {
   /**
    * Update product
    */
-   async updateProduct(
-     catalogId: string,
-     product: CatalogProductPayload,
-   ): Promise<void> {
+   async updateProduct( catalogId: string, product: CatalogProductPayload ): Promise<void> {
      try {
-       const existingProduct = await this.getBaseProductByRetailerId(
-         catalogId,
-         product.retailer_id,
-       );
 
+       const existingProduct = await this.getBaseProductByRetailerId( catalogId,product.retailer_id);
        if (!existingProduct) throw new Error(`Product ${product.name} not found`);
 
        const url = `${this.graphApiBaseUrl}/${existingProduct.id}`;
