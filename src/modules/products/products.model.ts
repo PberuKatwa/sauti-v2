@@ -108,13 +108,14 @@ export class ProductsModel{
       this.logger.warn(`Attempting to update catalog to true`);
 
       const query = `
-        UPDATE TABLE products
+        UPDATE products
         SET is_uploaded_catalog = $1
         WHERE id= $2;
       `;
 
       const pgPool = this.pgConfig.getPool()
 
+      this.logger.info(`Successfully updated table products status`)
       await pgPool.query(query, [true,id])
     } catch (error) {
       throw error
