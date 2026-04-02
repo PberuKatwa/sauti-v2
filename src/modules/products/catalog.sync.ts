@@ -84,5 +84,14 @@ export class CatalogSync{
     }
   }
 
+  async deleteCatalogProduct(id: number) {
+    try {
+
+
+
+    } catch(error) {
+      throw error
+    }
+  }
 
 }

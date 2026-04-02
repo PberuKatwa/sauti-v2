@@ -54,6 +54,7 @@ export class ProductsModel{
           metadata JSONB,
           is_uploaded_catalog BOOLEAN DEFAULT FALSE,
           is_catalog_updated BOOLEAN DEFAULT TRUE,
+          is_catalog_deleted BOOLEAN DEFAULT FALSE,
 
           FOREIGN KEY (user_id)
             REFERENCES users(id)
