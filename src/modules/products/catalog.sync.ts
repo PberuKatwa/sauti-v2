@@ -77,6 +77,7 @@ export class CatalogSync{
       }
 
       const catalogProduct = await this.catalogService.updateProduct(this.catalogId, catalogPayload);
+      await this.productModel.updateCatalogUpdatedStatus(payload.id, true);
 
       return catalogProduct
 

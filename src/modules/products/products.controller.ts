@@ -124,6 +124,37 @@ export class ProductsController {
     }
   }
 
+  @Post('catalog/update')
+  async updateCatalogProduct(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const payload: UpdateProductPayload = req.body;
+
+      await this.catalogSync.updateCatalogProduct(payload);
+
+      const response: ApiResponse = {
+        success: true,
+        message: `Successfully updated product`
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error updating product`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
   @Get('')
   async fetchAllProducts(
     @Query('page') pageQuery: string,
