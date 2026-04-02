@@ -54,5 +54,7 @@ export class CatalogSync{
     }
   }
 
+  // async updateCatalogProduct
+
 
 }

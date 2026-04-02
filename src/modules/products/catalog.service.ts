@@ -168,10 +168,8 @@ export class CatalogService {
        };
 
      } catch (error) {
-       console.error("META ERROR:", error.response?.data || error.message);
-       throw new Error(
-         `Failed to create catalog product: ${JSON.stringify(error.response?.data)}`
-       );
+      this.logger.error("META ERROR:", error.response?.data || error.message);
+       throw error;
      }
    }
 
@@ -254,7 +252,8 @@ export class CatalogService {
         success: true,
       };
     } catch (error) {
-      this.handleError(error, `Failed to update product ${product.retailerId}`);
+      this.logger.error("META ERROR:", error.response?.data || error.message);
+      throw error;
     }
   }
 
