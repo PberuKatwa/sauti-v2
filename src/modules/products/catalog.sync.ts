@@ -54,7 +54,7 @@ export class CatalogSync{
     }
   }
 
-  async updateCatalogProduct(payload:UpdateProductPayload):Promise<BaseCatalogProduct> {
+  async updateCatalogProduct(payload:UpdateProductPayload):Promise<void> {
     try {
 
       await this.productModel.updateProduct(payload);
@@ -76,10 +76,8 @@ export class CatalogSync{
         inventory:fullProduct.inventory
       }
 
-      const catalogProduct = await this.catalogService.updateProduct(this.catalogId, catalogPayload);
+      await this.catalogService.updateProduct(this.catalogId, catalogPayload);
       await this.productModel.updateCatalogUpdatedStatus(payload.id, true);
-
-      return catalogProduct
 
     } catch (error) {
       throw error;

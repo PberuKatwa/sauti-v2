@@ -126,11 +126,11 @@ export class ProductsModel{
   async updateCatalogUpdatedStatus(id:number,status:Boolean):Promise<void> {
     try {
 
-      this.logger.warn(`Attempting to update catalog to true`);
+      this.logger.warn(`Attempting to catalog update to false`);
 
       const query = `
         UPDATE products
-        SET is_uploaded_catalog = $1
+        SET is_catalog_updated = $1
         WHERE id= $2;
       `;
 

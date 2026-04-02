@@ -224,36 +224,32 @@ export class CatalogService {
   /**
    * Update product
    */
-  async updateProduct(catalogId: string, product: CatalogProductPayload): Promise<BaseCatalogProduct> {
-    try {
-      const existingProduct = await this.getBaseProductByRetailerId(catalogId, product.retailer_id);
+   async updateProduct(
+     catalogId: string,
+     product: CatalogProductPayload,
+   ): Promise<void> {
+     try {
+       const existingProduct = await this.getBaseProductByRetailerId(
+         catalogId,
+         product.retailer_id,
+       );
 
-      if (!existingProduct) throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+       if (!existingProduct) throw new Error(`Product ${product.name} not found`);
 
-      const url = `${this.graphApiBaseUrl}/${existingProduct.id}`;
-      delete product.retailer_id;
+       const url = `${this.graphApiBaseUrl}/${existingProduct.id}`;
 
-      const response = await firstValueFrom(
-        this.httpService.post(url, {
-          ...product,
-          access_token: this.accessToken,
-        }),
-      );
+       await firstValueFrom(
+         this.httpService.post(url, {
+           ...product,
+           access_token: this.accessToken,
+         }),
+       );
 
-      this.logger.info(`Updated product: ${product.retailer_id}`);
-
-      return {
-        id: response.data.id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        retailer_id: product.retailer_id,
-      };
-    } catch (error) {
-      this.logger.error("META ERROR:", error.response?.data || error.message);
-      throw error;
-    }
-  }
+     } catch (error) {
+       this.logger.error("Update product failed:", error?.response?.data || error.message);
+       throw error;
+     }
+   }
 
   /**
    * Delete product by retailer ID

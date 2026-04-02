@@ -27,7 +27,7 @@ export const WHATSAPP_PRODUCT_FIELDS = [
 ].join(',');
 
 export interface BaseCatalogProduct {
-  id: number;
+  id?: number;
   name: string;
   description: string;
   price: number;
