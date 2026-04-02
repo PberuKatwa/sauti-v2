@@ -1,8 +1,15 @@
-export type availabilityStatus = 'in stock' | 'out of stock' | 'preorder' | 'available for order' | 'discontinued' | 'pending';
-export type CrudOpertations = "CREATE" | "UPDATE" | "DELETE";
-
-
 import { ApiResponse } from "./api.types";
+
+
+export type availabilityStatus = 'in stock' | 'out of stock' | 'preorder' | 'available for order' | 'discontinued' | 'pending';
+export type CrudOperations = "CREATE" | "UPDATE" | "DELETE";
+export type SyncColumnNames = "is_catalog_created" | "is_catalog_updated" | "is_catalog_deleted";
+
+export const crudSyncMap: Record<CrudOperations, SyncColumnNames> = {
+  "CREATE": "is_catalog_created",
+  "UPDATE": "is_catalog_updated",
+  "DELETE": "is_catalog_deleted"
+};
 
 export interface BaseProduct {
   id: number;

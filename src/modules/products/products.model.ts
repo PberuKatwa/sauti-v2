@@ -8,7 +8,9 @@ import {
   FullProduct,
   UpdateProductPayload,
   AllProducts,
-  CatalogSyncPayload
+  CatalogSyncPayload,
+  crudSyncMap,
+  SyncColumnNames
 } from "../../types/products.types";
 
 @Injectable()
@@ -53,9 +55,9 @@ export class ProductsModel{
           inventory INTEGER NOT NULL,
           created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
           metadata JSONB,
-          is_uploaded_catalog BOOLEAN DEFAULT FALSE,
-          is_catalog_updated BOOLEAN DEFAULT TRUE,
-          is_catalog_deleted BOOLEAN DEFAULT FALSE,
+          is_catalog_created BOOLEAN,
+          is_catalog_updated BOOLEAN,
+          is_catalog_deleted BOOLEAN,
 
           FOREIGN KEY (user_id)
             REFERENCES users(id)
@@ -105,67 +107,24 @@ export class ProductsModel{
     }
   }
 
-  async updateCatalogUploadStatus(id:number):Promise<void> {
-    try {
-
-      this.logger.warn(`Attempting to update catalog to true`);
-
-      const query = `
-        UPDATE products
-        SET is_uploaded_catalog = $1
-        WHERE id= $2;
-      `;
-
-      const pgPool = this.pgConfig.getPool()
-
-      this.logger.info(`Successfully updated table products status`)
-      await pgPool.query(query, [true,id])
-    } catch (error) {
-      throw error
-    }
-  }
-
-  async updateCatalogUpdatedStatus(id:number,status:Boolean):Promise<void> {
-    try {
-
-      this.logger.warn(`Attempting to catalog update to false`);
-
-      const query = `
-        UPDATE products
-        SET is_catalog_updated = $1
-        WHERE id= $2;
-      `;
-
-      const pgPool = this.pgConfig.getPool()
-
-      this.logger.info(`Successfully updated table products status`)
-      await pgPool.query(query, [status,id])
-    } catch (error) {
-      throw error
-    }
-  }
-
   async updateCatalogSync(payload:CatalogSyncPayload):Promise<void> {
     try {
 
       const { id, status, crudOperation } = payload;
       this.logger.warn(`Attempting to update catalog sync operation for id:${id} and crud:${crudOperation} to false`);
 
-      let column = "";
-      if(crudOperation === "CREATE")
-
-
+      const column:SyncColumnNames = crudSyncMap[crudOperation];
 
       const query = `
         UPDATE products
-        SET is_catalog_updated = $1
+        SET ${column} = $1
         WHERE id= $2;
       `;
 
       const pgPool = this.pgConfig.getPool()
+      await pgPool.query(query, [status, id])
 
       this.logger.info(`Successfully updated table products status`)
-      await pgPool.query(query, [status,id])
     } catch (error) {
       throw error
     }
