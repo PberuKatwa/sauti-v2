@@ -89,13 +89,13 @@ export class ProductsModel{
       const { user_id, name, description, price, currency, availability, brand, category, file_id, inventory } = payload;
 
       const query = `
-        INSERT INTO products(user_id, name, description, price, currency, availability, brand, category, file_id, inventory)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        INSERT INTO products(user_id, name, description, price, currency, availability, brand, category, file_id, inventory,is_catalog_created)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
         RETURNING id, retailer_id, name, description, price;
       `
 
       const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [user_id, name, description, price, currency, availability, brand, category, file_id, inventory]);
+      const result = await pgPool.query(query, [user_id, name, description, price, currency, availability, brand, category, file_id, inventory, false]);
       const product: BaseProduct = result.rows[0];
 
       this.logger.info(`Successfully created product`);
@@ -253,11 +253,12 @@ export class ProductsModel{
             category = $7,
             file_id = $8,
             inventory = $9,
-            metadata = $10
-        WHERE id = $11;
+            metadata = $10,
+            is_catalog_updated = $11
+        WHERE id = $12;
       `;
 
-      await pgPool.query(query, [name, description, price, currency, availability, brand, category, file_id, inventory, metadata, id]);
+      await pgPool.query(query, [name, description, price, currency, availability, brand, category, file_id, inventory, metadata, false, id]);
 
       this.logger.info(`Successfully updated product`);
 
@@ -272,12 +273,11 @@ export class ProductsModel{
       this.logger.warn(`Attempting to trash product with id:${id}`);
 
       const pool = this.pgConfig.getPool();
-      const query = `UPDATE products SET status = $1 WHERE id = $2;`;
+      const query = `UPDATE products SET status = $1, is_catalog_deleted = $2 WHERE id = $3;`;
 
-      await pool.query(query, ['trash', id]);
+      await pool.query(query, ['trash', false, id]);
 
       this.logger.info(`Successfully trashed product`);
-
     } catch (error) {
       throw error;
     }

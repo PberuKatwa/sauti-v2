@@ -89,8 +89,6 @@ export class CatalogSync{
 
       const { id, status, crudOperation } = payload;
 
-      let column = "";
-      if(crudOperation === "CREATE")
 
 
     } catch(error) {
