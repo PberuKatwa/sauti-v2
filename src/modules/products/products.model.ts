@@ -7,7 +7,8 @@ import {
   CreateProductPayload,
   FullProduct,
   UpdateProductPayload,
-  AllProducts
+  AllProducts,
+  CatalogSyncPayload
 } from "../../types/products.types";
 
 @Injectable()
@@ -128,6 +129,32 @@ export class ProductsModel{
     try {
 
       this.logger.warn(`Attempting to catalog update to false`);
+
+      const query = `
+        UPDATE products
+        SET is_catalog_updated = $1
+        WHERE id= $2;
+      `;
+
+      const pgPool = this.pgConfig.getPool()
+
+      this.logger.info(`Successfully updated table products status`)
+      await pgPool.query(query, [status,id])
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async updateCatalogSync(payload:CatalogSyncPayload):Promise<void> {
+    try {
+
+      const { id, status, crudOperation } = payload;
+      this.logger.warn(`Attempting to update catalog sync operation for id:${id} and crud:${crudOperation} to false`);
+
+      let column = "";
+      if(crudOperation === "CREATE")
+
+
 
       const query = `
         UPDATE products

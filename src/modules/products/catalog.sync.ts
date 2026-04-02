@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { CatalogService } from "./catalog.service";
 import { ConfigService } from "@nestjs/config";
-import { CreateProductPayload, UpdateProductPayload } from "../../types/products.types";
+import { CatalogSyncPayload, CreateProductPayload, UpdateProductPayload } from "../../types/products.types";
 import { ProductsModel } from "./products.model";
 import { BaseCatalogProduct, CatalogProductPayload } from "../../types/catalog.types";
 
@@ -84,9 +84,13 @@ export class CatalogSync{
     }
   }
 
-  async deleteCatalogProduct(id: number) {
+  async deleteCatalogProduct(payload:CatalogSyncPayload) {
     try {
 
+      const { id, status, crudOperation } = payload;
+
+      let column = "";
+      if(crudOperation === "CREATE")
 
 
     } catch(error) {

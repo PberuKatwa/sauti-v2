@@ -1,4 +1,6 @@
 export type availabilityStatus = 'in stock' | 'out of stock' | 'preorder' | 'available for order' | 'discontinued' | 'pending';
+export type CrudOpertations = "CREATE" | "UPDATE" | "DELETE";
+
 
 import { ApiResponse } from "./api.types";
 
@@ -51,6 +53,12 @@ export interface AllProducts {
     currentPage: number;
     totalPages: number;
   }
+}
+
+export interface CatalogSyncPayload {
+  id: number;
+  status: Boolean;
+  crudOperation: CrudOpertations;
 }
 
 export interface AllProductsApiResponse extends ApiResponse<AllProducts> { }
