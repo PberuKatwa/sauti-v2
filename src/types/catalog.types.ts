@@ -42,7 +42,7 @@ export const BASE_CATALOG_FIELDS = [
   'retailer_id',
 ].join(',');
 
-export interface CreateCatalogProduct {
+export interface CatalogProductPayload {
   retailer_id: string;
   name: string;
   description: string;

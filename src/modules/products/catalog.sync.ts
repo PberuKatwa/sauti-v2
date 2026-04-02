@@ -4,7 +4,7 @@ import { CatalogService } from "./catalog.service";
 import { ConfigService } from "@nestjs/config";
 import { CreateProductPayload } from "../../types/products.types";
 import { ProductsModel } from "./products.model";
-import { BaseCatalogProduct, CreateCatalogProduct } from "../../types/catalog.types";
+import { BaseCatalogProduct, CatalogProductPayload } from "../../types/catalog.types";
 
 @Injectable()
 export class CatalogSync{
@@ -30,7 +30,7 @@ export class CatalogSync{
       const productCreate = await this.productModel.createProduct(payload);
       const fullProduct = await this.productModel.getProduct(productCreate.id);
 
-      const catalogPayload: CreateCatalogProduct = {
+      const catalogPayload: CatalogProductPayload = {
         retailer_id: fullProduct.retailer_id,
         name: fullProduct.name,
         description: fullProduct.description,
@@ -54,7 +54,13 @@ export class CatalogSync{
     }
   }
 
-  // async updateCatalogProduct
+  async updateCatalogProduct() {
+    try {
+
+    } catch (error) {
+      throw error;
+    }
+  }
 
 
 }

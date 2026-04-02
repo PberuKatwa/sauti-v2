@@ -11,7 +11,7 @@ import {
   CatalogFilters,
 } from './dto/catalog.dto';
 import { AppLogger } from '../../logger/winston.logger';
-import { BASE_CATALOG_FIELDS, BaseCatalogProduct, CreateCatalogProduct, WHATSAPP_PRODUCT_FIELDS } from '../../types/catalog.types';
+import { BASE_CATALOG_FIELDS, BaseCatalogProduct, CatalogProductPayload, WHATSAPP_PRODUCT_FIELDS } from '../../types/catalog.types';
 
 @Injectable()
 export class CatalogService {
@@ -147,7 +147,7 @@ export class CatalogService {
   /**
    * Create a single product (with upsert support)
    */
-   async createProduct(catalogId: string, product: CreateCatalogProduct, allowUpsert = false): Promise<BaseCatalogProduct> {
+   async createProduct(catalogId: string, product: CatalogProductPayload, allowUpsert = false): Promise<BaseCatalogProduct> {
      try {
        const url = `${this.graphApiBaseUrl}/${catalogId}/products`;
 
