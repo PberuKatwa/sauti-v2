@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { CatalogService } from "./catalog.service";
 import { ConfigService } from "@nestjs/config";
-import { CreateProductPayload } from "../../types/products.types";
+import { CreateProductPayload, UpdateProductPayload } from "../../types/products.types";
 import { ProductsModel } from "./products.model";
 import { BaseCatalogProduct, CatalogProductPayload } from "../../types/catalog.types";
 
@@ -54,8 +54,26 @@ export class CatalogSync{
     }
   }
 
-  async updateCatalogProduct() {
+  async updateCatalogProduct(payload:UpdateProductPayload) {
     try {
+
+      await this.productModel.updateProduct(payload);
+
+      const fullProduct = await this.productModel.getProduct(payload.id);
+
+      const catalogPayload: CatalogProductPayload = {
+        retailer_id: fullProduct.retailer_id,
+        name: fullProduct.name,
+        description: fullProduct.description,
+        price: Math.round(parseInt(fullProduct.price) * 100),
+        currency:fullProduct.currency,
+        availability: fullProduct.availability,
+        brand: fullProduct.brand,
+        category: fullProduct.category,
+        image_url: `${this.baseS3Url}/${fullProduct.file_url.trim()}`,
+        url: `${this.baseS3Url}/${fullProduct.file_url.trim()}`,
+        inventory:fullProduct.inventory
+      }
 
     } catch (error) {
       throw error;

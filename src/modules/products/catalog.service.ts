@@ -224,32 +224,30 @@ export class CatalogService {
   /**
    * Update product
    */
-  async updateProduct(catalogId: string, product: UpdateProductDto): Promise<any> {
+  async updateProduct(catalogId: string, product: CatalogProductPayload): Promise<any> {
     try {
-      // First get the Meta product ID from retailer ID
-      const existingProduct = await this.getBaseProductByRetailerId(catalogId, product.retailerId);
+      const existingProduct = await this.getBaseProductByRetailerId(catalogId, product.retailer_id);
 
-      if (!existingProduct) {
-        throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
-      }
+      if (!existingProduct) throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
 
       const url = `${this.graphApiBaseUrl}/${existingProduct.id}`;
-
-      const updateData = this.mapProductToApiFormat(product);
-      delete updateData.retailer_id; // Can't update retailer_id
+      delete product.retailer_id; // Can't update retailer_id
 
       const response = await firstValueFrom(
         this.httpService.post(url, {
-          ...updateData,
+          ...product,
           access_token: this.accessToken,
         }),
       );
 
-      this.logger.info(`Updated product: ${product.retailerId}`);
+      this.logger.info(`Updated product: ${product.retailer_id}`);
+
       return {
         id: response.data.id,
-        retailerId: product.retailerId,
-        success: true,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        retailer_id: product.retailer_id,
       };
     } catch (error) {
       this.logger.error("META ERROR:", error.response?.data || error.message);
