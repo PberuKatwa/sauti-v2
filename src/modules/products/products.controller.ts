@@ -225,21 +225,18 @@ export class ProductsController {
     @Res() res: Response
   ): Promise<Response> {
     try {
-
-
       const product = await this.catalogSync.syncProducts();
 
       const response: AllMinimalCatalogResponse = {
         success: true,
-        message: `Successfully fetched product`,
+        message: `Successfully synced products`,
         data: product
       };
 
       return res.status(200).json(response);
-
     } catch (error) {
 
-      this.logger.error(`Error fetching product`, error);
+      this.logger.error(`Error in syncing products`, error);
 
       const response: ApiResponse = {
         success: false,
