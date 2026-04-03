@@ -77,3 +77,4 @@ export interface CatalogSyncPayload {
 export interface AllProductsApiResponse extends ApiResponse<AllProducts> { }
 export interface SingleProductApiResponse extends ApiResponse<FullProduct> { }
 export interface SingleProductMinimalApiResponse extends ApiResponse<BaseProduct> { }
+export interface AllUnsyncedProductsApiResponse extends ApiResponse<UnsyncedProducts[]> { };

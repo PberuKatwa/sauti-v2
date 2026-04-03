@@ -7,7 +7,8 @@ import type {
   UpdateProductPayload,
   AllProductsApiResponse,
   SingleProductApiResponse,
-  SingleProductMinimalApiResponse
+  SingleProductMinimalApiResponse,
+  AllUnsyncedProductsApiResponse
 } from "../../types/products.types";
 import { ProductsModel } from "./products.model";
 import { AuthGuard } from "../auth/guards/auth.guard";
@@ -196,6 +197,15 @@ export class ProductsController {
   ) {
     try {
 
+      const products = await this.products.getUnsyncedProducts()
+
+      const response: AllUnsyncedProductsApiResponse = {
+        success: true,
+        message: "Successfully fetched unsynced products",
+        data:products
+      }
+
+      return res.status(200).json(response);
     } catch (error) {
 
       const response: ApiResponse = {
@@ -206,7 +216,6 @@ export class ProductsController {
       this.logger.error(`Error in fetching unsynced products`, error)
 
       return res.status(500).json(response)
-
     }
   }
 
