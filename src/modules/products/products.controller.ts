@@ -14,7 +14,7 @@ import { ProductsModel } from "./products.model";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { CurrentUser } from "../users/decorators/user.decorator";
 import { CatalogSync } from "./catalog.sync";
-import { MinimalCatalogResponse } from "../../types/catalog.types";
+import { AllMinimalCatalogResponse, MinimalCatalogResponse } from "../../types/catalog.types";
 
 @Controller('products')
 @UseGuards(AuthGuard)
@@ -216,6 +216,37 @@ export class ProductsController {
       this.logger.error(`Error in fetching unsynced products`, error)
 
       return res.status(500).json(response)
+    }
+  }
+
+  @Post('sync-catalog')
+  async syncCatalogProducts(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+
+      const product = await this.catalogSync.syncProducts();
+
+      const response: AllMinimalCatalogResponse = {
+        success: true,
+        message: `Successfully fetched product`,
+        data: product
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error fetching product`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
     }
   }
 

@@ -57,3 +57,4 @@ export interface CatalogProductPayload {
 }
 
 export interface MinimalCatalogResponse extends ApiResponse<BaseCatalogProduct> { };
+export interface AllMinimalCatalogResponse extends ApiResponse<BaseCatalogProduct[]> { };
