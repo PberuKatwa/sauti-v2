@@ -33,6 +33,7 @@ export interface FullProduct extends BaseProduct {
 }
 
 export interface UnsyncedProducts extends FullProduct {
+  status: string;
   is_catalog_created: boolean;
   is_catalog_updated: boolean;
   is_catalog_deleted: boolean;

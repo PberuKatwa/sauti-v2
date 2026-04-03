@@ -212,6 +212,7 @@ export class ProductsModel{
         p.category,
         p.file_id,
         p.inventory,
+        p.status,
         p.created_at,
         p.is_catalog_created,
         p.is_catalog_updated,
@@ -221,9 +222,9 @@ export class ProductsModel{
       FROM products p
       LEFT JOIN files f ON p.file_id = f.id
       WHERE
-        p.is_catalog_created = $1,
-        p.is_catalog_updated = $1,
-        p.is_catalog_deleted = $1
+        p.is_catalog_created = $1
+        OR p.is_catalog_updated = $1
+        OR p.is_catalog_deleted = $1
       ORDER BY p.created_at DESC;
     `;
 
