@@ -32,6 +32,12 @@ export interface FullProduct extends BaseProduct {
   metadata: Record<string, any> | null;
 }
 
+export interface UnsyncedProducts extends FullProduct {
+  is_catalog_created: boolean;
+  is_catalog_updated: boolean;
+  is_catalog_deleted: boolean;
+}
+
 export interface ProductPayload {
   name: string;
   description: string;

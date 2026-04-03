@@ -10,7 +10,8 @@ import {
   AllProducts,
   CatalogSyncPayload,
   crudSyncMap,
-  SyncColumnNames
+  SyncColumnNames,
+  UnsyncedProducts
 } from "../../types/products.types";
 
 @Injectable()
@@ -138,6 +139,65 @@ export class ProductsModel{
       const page = pageInput ? pageInput : 1;
       const limit = limitInput ? limitInput : 10;
       const offset = (page - 1) * limit;
+
+      const dataQuery = `
+        SELECT
+          p.id,
+          p.user_id,
+          p.retailer_id,
+          p.name,
+          p.description,
+          p.price,
+          p.currency,
+          p.availability,
+          p.brand,
+          p.category,
+          p.file_id,
+          p.inventory,
+          p.created_at,
+          p.metadata,
+          f.file_url as file_url
+        FROM products p
+        LEFT JOIN files f ON p.file_id = f.id
+        WHERE p.status != 'trash'
+        ORDER BY p.created_at DESC
+        LIMIT $1 OFFSET $2;
+      `;
+
+      const countQuery = `
+        SELECT COUNT(*)
+        FROM products
+        WHERE status != 'trash';
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const [dataResult, paginationResult] = await Promise.all([
+        pgPool.query(dataQuery, [limit, offset]),
+        pgPool.query(countQuery)
+      ]);
+
+      const totalCount = parseInt(paginationResult.rows[0].count);
+
+      this.logger.info(`Successfully fetched ${totalCount} products`);
+
+      return {
+        products: dataResult.rows,
+        pagination: {
+          totalCount: totalCount,
+          currentPage: page,
+          totalPages: Math.ceil(totalCount / limit)
+        }
+      };
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getUnsyncedProducts(): Promise<UnsyncedProducts[]> {
+    try {
+
+      this.logger.warn(`Attempting to fetch unynced products `);
 
       const dataQuery = `
         SELECT
