@@ -197,7 +197,7 @@ export class ProductsModel{
   async getUnsyncedProducts(): Promise<UnsyncedProducts[]> {
     try {
 
-      this.logger.warn(`Attempting to fetch unynced products `);
+      this.logger.warn(`Attempting to fetch unynced catalog products `);
 
       const dataQuery = `
         SELECT
@@ -218,35 +218,14 @@ export class ProductsModel{
           f.file_url as file_url
         FROM products p
         LEFT JOIN files f ON p.file_id = f.id
-        WHERE p.status != 'trash'
+        WHERE
+          p.is_catalog_created = $1,
+          p.is_catalog_updated = $1,
+          p.is_catalog_deleted = $1
         ORDER BY p.created_at DESC
-        LIMIT $1 OFFSET $2;
       `;
 
-      const countQuery = `
-        SELECT COUNT(*)
-        FROM products
-        WHERE status != 'trash';
-      `;
 
-      const pgPool = this.pgConfig.getPool();
-      const [dataResult, paginationResult] = await Promise.all([
-        pgPool.query(dataQuery, [limit, offset]),
-        pgPool.query(countQuery)
-      ]);
-
-      const totalCount = parseInt(paginationResult.rows[0].count);
-
-      this.logger.info(`Successfully fetched ${totalCount} products`);
-
-      return {
-        products: dataResult.rows,
-        pagination: {
-          totalCount: totalCount,
-          currentPage: page,
-          totalPages: Math.ceil(totalCount / limit)
-        }
-      };
 
     } catch (error) {
       throw error;
