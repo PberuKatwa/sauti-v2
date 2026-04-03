@@ -199,7 +199,7 @@ export class ProductsModel{
 
       this.logger.warn(`Attempting to fetch unynced catalog products `);
 
-      const dataQuery = `
+      const query = `
         SELECT
           p.id,
           p.user_id,
@@ -214,6 +214,9 @@ export class ProductsModel{
           p.file_id,
           p.inventory,
           p.created_at,
+          p.is_catalog_created,
+          p.is_catalog_updated,
+          p.is_catalog_deleted,
           p.metadata,
           f.file_url as file_url
         FROM products p
@@ -222,11 +225,15 @@ export class ProductsModel{
           p.is_catalog_created = $1,
           p.is_catalog_updated = $1,
           p.is_catalog_deleted = $1
-        ORDER BY p.created_at DESC
+        ORDER BY p.created_at DESC;
       `;
 
+      const pgPool = this.pgConfig.getPool();
 
+      const result = await pgPool.query(query, [false]);
+      const products:UnsyncedProducts[] = result.rows
 
+      return products;
     } catch (error) {
       throw error;
     }
