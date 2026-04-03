@@ -71,6 +71,26 @@ export class CatalogSync{
     }
   }
 
+  async syncProducts() {
+
+    const products = await this.productModel.getUnsyncedProducts()
+
+    const AllPromises = await Promise.all(
+      products.map(
+        async(product) => {
+          try {
+
+          } catch (error) {
+            this.logger.error(`Error in syncing product Id:${product.id}`, error)
+          }
+
+
+        }
+      )
+    )
+
+  }
+
   private mapProductToCatalog(product: FullProduct):CatalogProductPayload {
 
     return {
