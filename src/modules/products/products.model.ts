@@ -195,48 +195,44 @@ export class ProductsModel{
   }
 
   async getUnsyncedProducts(): Promise<UnsyncedProducts[]> {
-    try {
 
-      this.logger.warn(`Attempting to fetch unynced catalog products `);
+    this.logger.warn(`Attempting to fetch unynced catalog products `);
 
-      const query = `
-        SELECT
-          p.id,
-          p.user_id,
-          p.retailer_id,
-          p.name,
-          p.description,
-          p.price,
-          p.currency,
-          p.availability,
-          p.brand,
-          p.category,
-          p.file_id,
-          p.inventory,
-          p.created_at,
-          p.is_catalog_created,
-          p.is_catalog_updated,
-          p.is_catalog_deleted,
-          p.metadata,
-          f.file_url as file_url
-        FROM products p
-        LEFT JOIN files f ON p.file_id = f.id
-        WHERE
-          p.is_catalog_created = $1,
-          p.is_catalog_updated = $1,
-          p.is_catalog_deleted = $1
-        ORDER BY p.created_at DESC;
-      `;
+    const query = `
+      SELECT
+        p.id,
+        p.user_id,
+        p.retailer_id,
+        p.name,
+        p.description,
+        p.price,
+        p.currency,
+        p.availability,
+        p.brand,
+        p.category,
+        p.file_id,
+        p.inventory,
+        p.created_at,
+        p.is_catalog_created,
+        p.is_catalog_updated,
+        p.is_catalog_deleted,
+        p.metadata,
+        f.file_url as file_url
+      FROM products p
+      LEFT JOIN files f ON p.file_id = f.id
+      WHERE
+        p.is_catalog_created = $1,
+        p.is_catalog_updated = $1,
+        p.is_catalog_deleted = $1
+      ORDER BY p.created_at DESC;
+    `;
 
-      const pgPool = this.pgConfig.getPool();
+    const pgPool = this.pgConfig.getPool();
 
-      const result = await pgPool.query(query, [false]);
-      const products:UnsyncedProducts[] = result.rows
+    const result = await pgPool.query(query, [false]);
+    const products:UnsyncedProducts[] = result.rows
 
-      return products;
-    } catch (error) {
-      throw error;
-    }
+    return products;
   }
 
   async getProduct(productId: number): Promise<FullProduct> {
