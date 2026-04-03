@@ -71,23 +71,49 @@ export class CatalogSync{
     }
   }
 
-  async syncProducts() {
+  async syncProducts():Promise<BaseCatalogProduct[]> {
 
     const products = await this.productModel.getUnsyncedProducts()
 
-    const AllPromises = await Promise.all(
+    const syncedProducts:BaseCatalogProduct[]= await Promise.all(
       products.map(
-        async(product) => {
+        async(product):Promise<BaseCatalogProduct> => {
           try {
+
+            const catalogPayload = this.mapProductToCatalog(product);
+
+            if (!product.is_catalog_created) {
+              await this.catalogService.createProduct(this.catalogId, catalogPayload);
+              await this.productModel.updateCatalogSync({ id: product.id, status: true, crudOperation: "CREATE" });
+            }
+            else if (!product.is_catalog_updated) {
+
+              await this.catalogService.updateProduct(this.catalogId, catalogPayload);
+              await this.productModel.updateCatalogSync({ id: product.id, status: true, crudOperation: "UPDATE" });
+            }
+
+            else if (!product.is_catalog_deleted) {
+
+              await this.catalogService.deleteProduct(this.catalogId, product.retailer_id);
+              await this.productModel.updateCatalogSync({ id: product.id, status: true, crudOperation: "DELETE" });
+            }
+
+            return {
+              id: product.id,
+              retailer_id: product.retailer_id,
+              name: product.name,
+              description: product.description,
+              price: Math.floor(parseInt(product.price))
+            }
 
           } catch (error) {
             this.logger.error(`Error in syncing product Id:${product.id}`, error)
           }
-
-
         }
       )
     )
+
+    return syncedProducts
 
   }
 
