@@ -189,6 +189,27 @@ export class ProductsController {
     }
   }
 
+  @Get('unsynced-products')
+  async fetchUnsyncedProducts(
+    @Req() req: Request,
+    @Res() res:Response
+  ) {
+    try {
+
+    } catch (error) {
+
+      const response: ApiResponse = {
+        success: false,
+        message:`${error}`
+      }
+
+      this.logger.error(`Error in fetching unsynced products`, error)
+
+      return res.status(500).json(response)
+
+    }
+  }
+
   @Get(':id')
   async fetchProduct(
     @Req() req: Request,
