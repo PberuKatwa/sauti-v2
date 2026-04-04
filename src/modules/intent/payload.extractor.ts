@@ -9,7 +9,7 @@ export class PayloadExtractor{
     private readonly logger:AppLogger
   ) { };
 
-  extractCoreNouns(sentence: string) {
+  private extractCoreNouns(sentence: string):string[] {
     const doc = nlp(sentence);
 
     const pronouns = new Set([
@@ -26,9 +26,22 @@ export class PayloadExtractor{
       .filter(word => word && !pronouns.has(word))
   }
 
-  singularizeNouns(nouns: string[]) {
+  private singularizeNouns(nouns: string[]):string[] {
+    nouns.map(
+      (noun) => {
+        nlp(noun).nouns().toSingular().out("text")
+      }
+    )
 
+    return nouns
   }
+
+  extractPayload(text: string):string[] {
+    const nouns = this.extractCoreNouns(text);
+    return this.singularizeNouns(nouns);
+  }
+
+
 
 
 

@@ -24,7 +24,7 @@ export class IntentController{
 
       const { text } = req.body;
 
-      const nouns = await this.extractor.extractCoreNouns(text);
+      const nouns = this.extractor.extractPayload(text);
 
       const response: ApiResponse = {
         success: true,
