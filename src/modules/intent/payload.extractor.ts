@@ -1,6 +1,8 @@
 import nlp from "compromise";
 import { AppLogger } from "../../logger/winston.logger";
+import { Injectable } from "@nestjs/common";
 
+@Injectable()
 export class PayloadExtractor{
 
   constructor(
