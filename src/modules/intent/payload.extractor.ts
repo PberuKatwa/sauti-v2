@@ -9,21 +9,20 @@ export class PayloadExtractor{
     private readonly logger:AppLogger
   ) { };
 
-  async extractCoreNouns(sentence:string) {
+   async extractCoreNouns(sentence:string) {
     const doc = nlp(sentence);
 
-    const nouns = doc.nouns().json();
+    const nouns = doc.nouns().json() as any[];
 
-    return nouns.map(noun => {
-      // Get the last word (the actual noun, after adjectives)
-      const words = noun.singular.split(' ');
-      return {
-        original: noun.text,      // "white roses"
-        singular: words[words.length - 1],  // "rose"
-        plural: noun.text.split(' ').pop()  // "roses"
-      };
-    });
-
+    return nouns
+      .filter(noun => noun && noun.text)
+      .map(noun => {
+        const singularPhrase = noun.singular || noun.text;
+        // Extract only the last word to remove adjectives
+        const words = singularPhrase.trim().split(' ');
+        return words[words.length - 1];
+      })
+      .filter(word => word && word.length > 0);
   }
 
 }
