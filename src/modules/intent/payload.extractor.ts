@@ -26,14 +26,16 @@ export class PayloadExtractor{
       .filter(word => word && !pronouns.has(word))
   }
 
-  private singularizeNouns(nouns: string[]):string[] {
-    nouns.map(
-      (noun) => {
-        nlp(noun).nouns().toSingular().out("text")
-      }
-    )
+  private singularizeNouns(nouns: string[]): string[] {
+    const allNouns = nouns.map((noun) => {
 
-    return nouns
+      const sanitized = noun.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+      const singular = nlp(sanitized).nouns().toSingular().out("text");
+
+      return singular;
+    });
+
+    return allNouns;
   }
 
   extractPayload(text: string):string[] {
