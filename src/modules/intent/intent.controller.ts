@@ -1,11 +1,21 @@
-import { Controller } from "@nestjs/common";
+import { Controller, Post, Req, Res } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
+import { PayloadExtractor } from "./payload.extractor";
 
-@Controller()
+@Controller('intent')
 export class IntentController{
 
   constructor(
-    private readonly logger:AppLogger
-  ){}
+    private readonly logger: AppLogger,
+    private readonly extractor:PayloadExtractor
+  ) { };
+
+  @Post("extract")
+  async extractPayload(
+    @Req() req: Request,
+    @Res() res:Response
+  ) {
+
+  }
 
 }
