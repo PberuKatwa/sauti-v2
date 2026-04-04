@@ -28,10 +28,6 @@ export function buildFlowerMap(catalog: CatalogItem[]): FlowerMap {
       .map(w => w.replace(/[^a-z]/g, ""))
       .map(w => toSingular(w)); // ✅ key change
 
-    console.log("tokensss", tokens)
-    console.log("tokensss", tokens)
-    console.log("tokensss", tokens)
-
     for (const token of tokens) {
       if (FLOWER_KEYWORDS.includes(token)) {
         if (!map[token]) {

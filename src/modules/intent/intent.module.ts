@@ -6,6 +6,7 @@ import { IntentGeminiService } from "./intent.gemini";
 import { AppLogger } from "../../logger/winston.logger";
 import { ConfigService } from "@nestjs/config";
 import { PayloadExtractor } from "./payload.extractor";
+import { IntentController } from "./intent.controller";
 
 @Module({
   providers: [
@@ -24,6 +25,7 @@ import { PayloadExtractor } from "./payload.extractor";
     },
     PayloadExtractor
   ],
+  controllers:[IntentController],
   exports: [IntentDetectorService, PayloadExtractor]
 })
 export class IntentModule { };
