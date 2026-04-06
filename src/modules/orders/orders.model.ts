@@ -117,7 +117,7 @@ export class OrdersModel {
         delivery_status,
         order_contact,
         delivery_type,
-        special_intructions,
+        special_instructions,
         items;
     `;
 
@@ -148,7 +148,7 @@ export class OrdersModel {
       UPDATE orders
       SET order_contact = $1,
           delivery_type = $2,
-          special_intructions = $3
+          special_instructions = $3
       WHERE id = $4;
     `;
 
@@ -218,7 +218,7 @@ export class OrdersModel {
         delivery_status,
         order_contact,
         delivery_type,
-        special_intructions,
+        special_instructions,
         items,
         client_id,
         latitude,
@@ -254,7 +254,7 @@ export class OrdersModel {
         delivery_status,
         order_contact,
         delivery_type,
-        special_intructions,
+        special_instructions,
         items,
         client_id,
         latitude,
@@ -292,7 +292,7 @@ export class OrdersModel {
         delivery_status,
         order_contact,
         delivery_type,
-        special_intructions,
+        special_instructions,
         items,
         client_id,
         latitude,

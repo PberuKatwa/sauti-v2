@@ -86,6 +86,17 @@ export class OrdersHandler{
 
     const products = await this.productsModel.searchProductsByRetailerIds(retailerIds);
 
+    // const allItems: OrderItem[] = products.map(
+    //   function (product) {
+    //     return {
+    //       name: product.name,
+    //       catalogId: product.retailer_id,
+    //       quantity: item.quantity,
+    //       unitPrice:product.price
+    //     }
+    //   }
+    // )
+
     const productItems: OrderItem[] = await Promise.all(
 
       catalogMessage.product_items.map(
