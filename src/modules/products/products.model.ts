@@ -333,38 +333,6 @@ export class ProductsModel{
       const patterns = searchTerms.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
       const query = `
-        WITH search_results AS (
-          SELECT
-            p.id,
-            p.retailer_id,
-            p.name,
-            p.description,
-            p.price
-          FROM products p
-          WHERE p.status != 'trash'
-            AND p.name ~* ANY($1::text[])
-          ORDER BY p.created_at DESC
-          LIMIT 5
-        ),
-        fallback_results AS (
-          SELECT
-            p.id,
-            p.retailer_id,
-            p.name,
-            p.description,
-            p.price
-          FROM products p
-          WHERE p.status != 'trash'
-            AND NOT EXISTS (SELECT 1 FROM search_results)
-          ORDER BY p.created_at DESC
-          LIMIT 5
-        )
-        SELECT * FROM search_results
-        UNION ALL
-        SELECT * FROM fallback_results;
-      `;
-
-      const query2 = `
         SELECT
           p.id,
           p.retailer_id,
@@ -379,7 +347,7 @@ export class ProductsModel{
       `;
 
       const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query2, [patterns]);
+      const result = await pgPool.query(query, [patterns]);
       const products: BaseProduct[] = result.rows;
 
       this.logger.info(`Successfully fetched ${products.length} products (search or fallback)`);
@@ -390,4 +358,34 @@ export class ProductsModel{
       throw error;
     }
   }
+
+  async searchProductsByRetailerIds(retailerIds: string[]): Promise<BaseProduct[]> {
+    this.logger.warn(`Attempting to search products with retailerIds: ${retailerIds.join(', ')}`);
+
+    if (!retailerIds || retailerIds.length === 0) {
+      throw new Error('Please provide at least one retailerId');
+    }
+
+    const query = `
+      SELECT
+        p.id,
+        p.retailer_id,
+        p.name,
+        p.description,
+        p.price
+      FROM products p
+      WHERE p.status != 'trash'
+        AND p.retailer_id = ANY($1::text[])
+      ORDER BY p.created_at DESC;
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+    const result = await pgPool.query(query, [retailerIds]);
+    const products: BaseProduct[] = result.rows;
+
+    this.logger.info(`Successfully fetched ${products.length} products for ${retailerIds.length} retailer(s)`);
+
+    return products;
+  }
+
 }

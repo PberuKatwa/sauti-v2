@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
-import { OrdersModel } from "./orders.model2";
+import { OrdersModel } from "./orders.model";
 import { BestIntent } from "../../validators/bestIntent.schema";
 import { ClientModel } from "../client/client.model";
 import { ProductsHandler, catalog } from "../products/products.handler";
@@ -68,13 +68,19 @@ export class OrdersHandler{
         ]
       : [];
 
-    const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: items })
+    const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, tax:10,subtotal: })
     await this.sendOrderInvoice(recipient, orderCreated)
   }
 
   public async handleCatalogueCreateOrder(catalogMessage:CatalogOrderMessage, recipient:string) {
 
     const client = await this.clientsModel.createClient({ phoneNumber: parseInt(recipient) });
+
+    const productItems = catalogMessage.product_items.map(
+      function (item):OrderItem {
+
+      }
+    )
 
     const catalogueItems: OrderItem[] = await Promise.all(
 

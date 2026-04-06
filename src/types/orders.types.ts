@@ -1,6 +1,7 @@
 import type { ApiResponse } from "./api.types";
 
 export interface OrderItem {
+  id?: number;
   name: string;
   catalogId: string;
   quantity: number;
