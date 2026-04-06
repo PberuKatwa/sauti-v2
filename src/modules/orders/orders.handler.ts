@@ -9,6 +9,7 @@ import { OrderItem, OrderProfile } from "../../types/orders.types";
 import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
 import { CatalogService } from "../products/catalog.service";
 import { ConfigService } from "@nestjs/config";
+import { ProductsModel } from "../products/products.model";
 
 @Injectable()
 export class OrdersHandler{
@@ -21,6 +22,7 @@ export class OrdersHandler{
     private readonly ordersModel: OrdersModel,
     private readonly clientsModel: ClientModel,
     private readonly productsHandler: ProductsHandler,
+    private readonly productsModel:ProductsModel,
     private readonly catalogService: CatalogService,
     private readonly configService:ConfigService
   ) {
@@ -68,7 +70,7 @@ export class OrdersHandler{
         ]
       : [];
 
-    const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, tax:10,subtotal: })
+    const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items:items })
     await this.sendOrderInvoice(recipient, orderCreated)
   }
 
@@ -76,12 +78,33 @@ export class OrdersHandler{
 
     const client = await this.clientsModel.createClient({ phoneNumber: parseInt(recipient) });
 
-    const productItems = catalogMessage.product_items.map(
-      function (item):OrderItem {
-        return {
-          nam
-        }
+    const retailerIds = catalogMessage.product_items.map(
+      function (product) {
+        return product.product_retailer_id
       }
+    )
+
+    const products = await this.productsModel.searchProductsByRetailerIds(retailerIds);
+
+    const productItems: OrderItem[] = await Promise.all(
+
+      catalogMessage.product_items.map(
+        async (item): Promise<OrderItem> => {
+
+          const data = await this.catalogService.getBaseProductByRetailerId(this.catalogId, item.product_retailer_id);
+
+          console.log("dataaaa", data)
+          console.log("dataaaa", data)
+
+
+          return {
+            name: data.name,
+            catalogId: item.product_retailer_id,
+            quantity: item.quantity,
+            unitPrice:item.item_price
+          }
+        }
+      )
     )
 
     const catalogueItems: OrderItem[] = await Promise.all(
@@ -260,7 +283,7 @@ export class OrdersHandler{
     await this.whatsappService.callApi(recipient, payload);
   }
 
-  private async sendOrderTracking(recipient: string, order: any) {
+  private async sendOrderTracking(recipient: string, order: OrderProfile) {
     const steps = [
       {
         key: "pending",
