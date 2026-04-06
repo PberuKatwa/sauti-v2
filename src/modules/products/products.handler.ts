@@ -7,6 +7,7 @@ import { OrderItem } from "../../types/orders.types";
 import { getMap, getProductIdsFromMessage } from "../../utils/flowerMap.util";
 import { ConfigService } from "@nestjs/config";
 import { PayloadExtractor } from "../intent/payload.extractor";
+import { ProductsModel } from "./products.model";
 
 export interface ProductSection {
   title: string;
@@ -130,7 +131,8 @@ export class ProductsHandler{
     private readonly whatsappService: WhatsappService,
     private readonly logger: AppLogger,
     private readonly configService: ConfigService,
-    private readonly payloadExtractor:PayloadExtractor
+    private readonly payloadExtractor: PayloadExtractor,
+    private readonly productsModel:ProductsModel
   ) {
     this.catalogId = this.configService.get<string>("catalogId");
   };
@@ -156,10 +158,13 @@ export class ProductsHandler{
   private async handleGetAllProductsCatalog(userMessage: string, recipient: string) {
 
     const payload = this.payloadExtractor.extractPayload(userMessage);
+    const products = await this.productsModel.searchProductsByName(payload);
 
-    console.log("payloadddd", payload)
-    console.log("payloadddd", payload)
-
+    const productIds = products.map(
+      function (product) {
+        return product.retailer_id
+      }
+    )
 
     const options: MultiProductMessageOptions = {
       recipient,
@@ -168,21 +173,17 @@ export class ProductsHandler{
       headerText: "Our Beautiful Flower Collection 💐",
 
       bodyText:
-        `Hi there! 🌸\n\n` +
-        `Welcome to *Purple Hearts* — here are some of our most loved arrangements, carefully crafted to brighten any moment.\n\n` +
-        `✨ Browse through the collection below and tap on any bouquet to view details or place your order.\n\n` +
-        `We’re here to help you make someone’s day special 💜`,
+      `Hi there! 🌸\n\n` +
+      `Welcome to *Purple Hearts* — here are our most loved arrangements.\n\n` +
+      `✨ Tap any bouquet to view details or order.\n\n` +
+      `Let's make someone's day special 💜`,
 
       footerText: "Purple Hearts 💜 - Spreading Love, One Bloom at a Time.",
 
       sections: [
         {
           title: "🌹 Featured Bouquets",
-          productIds: ["nyamfilrp4","fjetiqjb8q"],
-        },
-        {
-          title: "🌼 More Beautiful Picks",
-          productIds: ["mrkpzxgy3p","1vnmye9ym7"],
+          productIds: productIds,
         }
       ]
     };
