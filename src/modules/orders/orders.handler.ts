@@ -86,63 +86,25 @@ export class OrdersHandler{
 
     const products = await this.productsModel.searchProductsByRetailerIds(retailerIds);
 
-    // const allItems: OrderItem[] = products.map(
-    //   function (product) {
-    //     return {
-    //       name: product.name,
-    //       catalogId: product.retailer_id,
-    //       quantity: item.quantity,
-    //       unitPrice:product.price
-    //     }
-    //   }
-    // )
+    const productItems: OrderItem[] = catalogMessage.product_items.map(
+      (item): OrderItem => {
 
-    const productItems: OrderItem[] = await Promise.all(
+        const data = products.find(p => p.retailer_id === item.product_retailer_id);
 
-      catalogMessage.product_items.map(
-        async (item): Promise<OrderItem> => {
-
-          const data = await this.catalogService.getBaseProductByRetailerId(this.catalogId, item.product_retailer_id);
-
-          console.log("dataaaa", data)
-          console.log("dataaaa", data)
-
-
-          return {
-            name: data.name,
-            catalogId: item.product_retailer_id,
-            quantity: item.quantity,
-            unitPrice:item.item_price
-          }
+        if (!data) {
+          throw new Error(`Product not found for retailer_id: ${item.product_retailer_id}`);
         }
-      )
+
+        return {
+          name: data.name,
+          catalogId: item.product_retailer_id,
+          quantity: item.quantity,
+          unitPrice: item.item_price
+        };
+      }
     )
 
-    const catalogueItems: OrderItem[] = await Promise.all(
-
-      catalogMessage.product_items.map(
-        async (item): Promise<OrderItem> => {
-
-          const data = await this.catalogService.getBaseProductByRetailerId(this.catalogId, item.product_retailer_id);
-
-          console.log("dataaaa", data)
-          console.log("dataaaa", data)
-
-
-          return {
-            name: data.name,
-            catalogId: item.product_retailer_id,
-            quantity: item.quantity,
-            unitPrice:item.item_price
-          }
-        }
-      )
-    )
-
-
-
-
-    const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: catalogueItems })
+    const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: productItems })
     await this.sendOrderInvoice(recipient, orderCreated)
   }
 
