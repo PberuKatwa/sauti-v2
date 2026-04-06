@@ -7,7 +7,7 @@ import type {
   OrderProfile,
   CreateOrderPayload,
   MarkOrderPaidPayload
-} from "../../types/orders.types";
+} from "../../types/orders.types3";
 
 @Injectable()
 export class OrdersModel {
