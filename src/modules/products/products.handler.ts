@@ -183,9 +183,8 @@ export class ProductsHandler{
 
       bodyText:
       `Hi there! 🌸\n\n` +
-      `Welcome to *Purple Hearts* — here are our most loved arrangements.\n\n` +
-      `✨ Tap any bouquet to view details or order.\n\n` +
-      `Let's make someone's day special 💜`,
+      `Welcome to *Purple Hearts*, view our most loved arrangements.\n\n` +
+      `✨ Tap any bouquet to view details or order.\n\n`,
 
       footerText: "Purple Hearts 💜 - Spreading Love, One Bloom at a Time.",
 
@@ -197,7 +196,9 @@ export class ProductsHandler{
       ]
     };
 
-    await this.sendMultiProductMessage(options);
+    // await this.sendMultiProductMessage(options);
+    await this.sendFullCatalog(recipient);
+
 
   }
 
