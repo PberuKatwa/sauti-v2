@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
-import { OrdersModel } from "./orders.model";
+import { OrdersModel } from "./orders.model2";
 import { BestIntent } from "../../validators/bestIntent.schema";
 import { ClientModel } from "../client/client.model";
 import { ProductsHandler, catalog } from "../products/products.handler";
