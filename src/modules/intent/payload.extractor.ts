@@ -29,8 +29,8 @@ export class PayloadExtractor{
   private singularizeNouns(nouns: string[]): string[] {
     const allNouns = nouns.map((noun) => {
 
-      const sanitized = noun.replace(/[^a-zA-Z0-9\s]/g, '').trim();
-      const singular = nlp(sanitized).nouns().toSingular().out("text");
+      // const sanitized = noun.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+      const singular = nlp(noun).nouns().toSingular().out("text");
 
       return singular;
     });

@@ -6,6 +6,7 @@ import { OrderItem } from "../../types/orders.types";
 
 import { getMap, getProductIdsFromMessage } from "../../utils/flowerMap.util";
 import { ConfigService } from "@nestjs/config";
+import { PayloadExtractor } from "../intent/payload.extractor";
 
 export interface ProductSection {
   title: string;
@@ -128,7 +129,8 @@ export class ProductsHandler{
   constructor(
     private readonly whatsappService: WhatsappService,
     private readonly logger: AppLogger,
-    private readonly configService:ConfigService
+    private readonly configService: ConfigService,
+    private readonly payloadExtractor:PayloadExtractor
   ) {
     this.catalogId = this.configService.get<string>("catalogId");
   };
@@ -152,6 +154,12 @@ export class ProductsHandler{
   }
 
   private async handleGetAllProductsCatalog(userMessage: string, recipient: string) {
+
+    const payload = this.payloadExtractor.extractPayload(userMessage);
+
+    console.log("payloadddd", payload)
+    console.log("payloadddd", payload)
+
 
     const options: MultiProductMessageOptions = {
       recipient,

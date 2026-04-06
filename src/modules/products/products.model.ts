@@ -325,4 +325,55 @@ export class ProductsModel{
       throw error;
     }
   }
+
+  async searchProductsByName(searchTerms: string[]): Promise<BaseProduct[]> {
+    try {
+      this.logger.warn(`Attempting to search products with terms: ${searchTerms.join(', ')}`);
+
+      const patterns = searchTerms.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
+      const query = `
+        WITH search_results AS (
+          SELECT
+            p.id,
+            p.retailer_id,
+            p.name,
+            p.description,
+            p.price
+          FROM products p
+          WHERE p.status != 'trash'
+            AND p.name ~* ANY($1::text[])
+          ORDER BY p.created_at DESC
+          LIMIT 5
+        ),
+        fallback_results AS (
+          SELECT
+            p.id,
+            p.retailer_id,
+            p.name,
+            p.description,
+            p.price
+          FROM products p
+          WHERE p.status != 'trash'
+            AND NOT EXISTS (SELECT 1 FROM search_results)
+          ORDER BY p.created_at DESC
+          LIMIT 5
+        )
+        SELECT * FROM search_results
+        UNION ALL
+        SELECT * FROM fallback_results;
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [patterns]);
+      const products: BaseProduct[] = result.rows;
+
+      this.logger.info(`Successfully fetched ${products.length} products (search or fallback)`);
+
+      return products;
+
+    } catch (error) {
+      throw error;
+    }
+  }
 }
