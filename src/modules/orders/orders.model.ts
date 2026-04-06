@@ -51,7 +51,9 @@ export class OrdersModel {
         tax NUMERIC(10,2) DEFAULT 0,
         total NUMERIC(10,2) NOT NULL,
 
-        status order_status DEFAULT 'pending_location',
+        status row_status DEFAULT 'active',
+        delivery_status order_status DEFAULT 'pending_location',
+
         latitude DECIMAL(10, 8),
         longitude DECIMAL(11, 8),
         order_contact BIGINT,
@@ -59,6 +61,8 @@ export class OrdersModel {
 
         order_number INTEGER UNIQUE DEFAULT NEXTVAL('order_number_seq'),
         special_intructions VARCHAR(240),
+
+        items JSONB NOT NULL,
 
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -85,35 +89,36 @@ export class OrdersModel {
   }
 
   async createOrder(payload: CreateOrderPayload): Promise<OrderProfile> {
-    const { clientId, subtotal, tax, status } = payload;
+    const { clientId, items } = payload;
 
     if (!clientId) throw new Error(`Please provide a client id`);
-    if (subtotal === undefined || subtotal === null) throw new Error(`Please provide subtotal`);
-    if (tax === undefined || tax === null) throw new Error(`Please provide tax`);
+    if (!items || items.length === 0) throw new Error(`Please provide order items`);
 
+    let subtotal = 0;
+
+    for (const item of items) {
+      subtotal += item.quantity * item.unitPrice;
+    }
+
+    const tax = Math.floor(subtotal * (0.15));
     const total = subtotal + tax;
-    const orderStatus = status || 'pending_location';
 
     this.logger.warn(`Attempting to create order for client: ${clientId}`);
 
     const query = `
-      INSERT INTO orders (client_id, subtotal, tax, total, status)
+      INSERT INTO orders (client_id, subtotal, tax, total, items)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING
         id,
-        client_id,
         order_number,
         subtotal,
         tax,
         total,
-        status,
-        latitude,
-        longitude,
+        delivery_status,
         order_contact,
         delivery_type,
         special_intructions,
-        created_at,
-        updated_at;
+        items;
     `;
 
     const pool = this.pgConfig.getPool();
@@ -122,7 +127,7 @@ export class OrdersModel {
       subtotal,
       tax,
       total,
-      orderStatus
+      items
     ]);
 
     const order: OrderProfile = result.rows[0];

@@ -30,6 +30,7 @@ export class ClientModel {
           first_name TEXT DEFAULT 'unconfirmed',
           last_name TEXT DEFAULT 'unconfirmed',
           phone_number BIGINT NOT NULL UNIQUE,
+          status row_status DEFAULT 'active',
           created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );

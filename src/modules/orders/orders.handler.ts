@@ -78,7 +78,9 @@ export class OrdersHandler{
 
     const productItems = catalogMessage.product_items.map(
       function (item):OrderItem {
-
+        return {
+          nam
+        }
       }
     )
 
