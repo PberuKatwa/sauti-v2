@@ -88,19 +88,24 @@ export class OrdersHandler{
 
     const productItems: OrderItem[] = catalogMessage.product_items.map(
       (item): OrderItem => {
+        try {
+          const data = products.find(p => p.retailer_id === item.product_retailer_id);
 
-        const data = products.find(p => p.retailer_id === item.product_retailer_id);
+          if (!data) {
+            throw new Error(`Product not found for retailer_id: ${item.product_retailer_id}`);
+          }
 
-        if (!data) {
-          throw new Error(`Product not found for retailer_id: ${item.product_retailer_id}`);
+          return {
+            name: data.name,
+            catalogId: item.product_retailer_id,
+            quantity: item.quantity,
+            unitPrice: item.item_price
+          };
+
+        } catch (error) {
+          this.logger.error(error)
         }
 
-        return {
-          name: data.name,
-          catalogId: item.product_retailer_id,
-          quantity: item.quantity,
-          unitPrice: item.item_price
-        };
       }
     )
 
