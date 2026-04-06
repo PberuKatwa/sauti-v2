@@ -195,7 +195,7 @@ export class OrdersModel {
 
     const query = `
       UPDATE orders
-      SET status = $1
+      SET delivery_status = $1
       WHERE id = $2;
     `;
 
@@ -211,17 +211,18 @@ export class OrdersModel {
     const query = `
       SELECT
         id,
-        client_id,
         order_number,
         subtotal,
         tax,
         total,
-        status,
-        latitude,
-        longitude,
+        delivery_status,
         order_contact,
         delivery_type,
         special_intructions,
+        items,
+        client_id,
+        latitude,
+        longitude,
         created_at,
         updated_at
       FROM orders
