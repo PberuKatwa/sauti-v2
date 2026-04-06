@@ -5,7 +5,7 @@ import { OrdersModel } from "./orders.model";
 import { BestIntent } from "../../validators/bestIntent.schema";
 import { ClientModel } from "../client/client.model";
 import { ProductsHandler, catalog } from "../products/products.handler";
-import { OrderItem, OrderProfile } from "../../types/orders.types2";
+import { OrderItem, OrderProfile } from "../../types/orders.types";
 import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
 import { CatalogService } from "../products/catalog.service";
 import { ConfigService } from "@nestjs/config";

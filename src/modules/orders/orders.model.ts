@@ -9,7 +9,7 @@ import type {
   UpdateContactPayload,
   UpdateLocationPayload,
   UpdateStatusPayload
-} from "../../types/orders.types2";
+} from "../../types/orders.types";
 
 @Injectable()
 export class OrdersModel {
