@@ -158,7 +158,17 @@ export class ProductsHandler{
   private async handleGetAllProductsCatalog(userMessage: string, recipient: string) {
 
     const payload = this.payloadExtractor.extractPayload(userMessage);
-    const products = await this.productsModel.searchProductsByName(payload);
+
+
+    const splitItems = payload.flatMap(item =>
+      item.split(',').map(s => s.trim())
+    );
+
+    console.log("split itemmm", splitItems)
+    console.log("split itemmm", splitItems)
+    console.log("split itemmm", splitItems)
+
+    const products = await this.productsModel.searchProductsByName(splitItems);
 
     const productIds = products.map(
       function (product) {

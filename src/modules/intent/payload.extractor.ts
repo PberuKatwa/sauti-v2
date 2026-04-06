@@ -28,10 +28,7 @@ export class PayloadExtractor{
 
   private singularizeNouns(nouns: string[]): string[] {
     const allNouns = nouns.map((noun) => {
-
-      // const sanitized = noun.replace(/[^a-zA-Z0-9\s]/g, '').trim();
       const singular = nlp(noun).nouns().toSingular().out("text");
-
       return singular;
     });
 
@@ -40,7 +37,20 @@ export class PayloadExtractor{
 
   extractPayload(text: string):string[] {
     const nouns = this.extractCoreNouns(text);
-    return this.singularizeNouns(nouns);
+    // return this.singularizeNouns(nouns);
+    return nouns;
+
+  }
+
+  private tokenize(text:string):string[] {
+
+    const cleanText = text.toLocaleLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+
+    return Array.from(new Set(cleanText));
+
   }
 
 
