@@ -158,16 +158,15 @@ export class ProductsHandler{
 
     const payload = this.payloadExtractor.extractPayload(userMessage);
 
-
     const splitItems = payload.flatMap(item =>
       item.split(',').map(s => s.trim())
     );
 
     console.log("split itemmm", splitItems)
-    console.log("split itemmm", splitItems)
-    console.log("split itemmm", splitItems)
 
     const products = await this.productsModel.searchProductsByName(splitItems);
+
+    if(products.length === 0) return await this.sendFullCatalog(recipient);
 
     const productIds = products.map(
       function (product) {
@@ -196,10 +195,7 @@ export class ProductsHandler{
       ]
     };
 
-    // await this.sendMultiProductMessage(options);
-    await this.sendFullCatalog(recipient);
-
-
+    await this.sendMultiProductMessage(options);
   }
 
   private async handleGetProduct(userMessage: string, recipient:string) {

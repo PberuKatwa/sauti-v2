@@ -364,8 +364,22 @@ export class ProductsModel{
         SELECT * FROM fallback_results;
       `;
 
+      const query2 = `
+        SELECT
+          p.id,
+          p.retailer_id,
+          p.name,
+          p.description,
+          p.price
+        FROM products p
+        WHERE p.status != 'trash'
+          AND p.name ~* ANY($1::text[])
+        ORDER BY p.created_at DESC
+        LIMIT 5;
+      `;
+
       const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [patterns]);
+      const result = await pgPool.query(query2, [patterns]);
       const products: BaseProduct[] = result.rows;
 
       this.logger.info(`Successfully fetched ${products.length} products (search or fallback)`);
