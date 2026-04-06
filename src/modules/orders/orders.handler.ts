@@ -5,7 +5,7 @@ import { OrdersModel } from "./orders.model";
 import { BestIntent } from "../../validators/bestIntent.schema";
 import { ClientModel } from "../client/client.model";
 import { ProductsHandler, catalog } from "../products/products.handler";
-import { OrderItem, OrderProfile } from "../../types/orders.types";
+import { OrderItem, OrderProfile } from "../../types/orders.types2";
 import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
 import { CatalogService } from "../products/catalog.service";
 import { ConfigService } from "@nestjs/config";
@@ -176,7 +176,7 @@ export class OrdersHandler{
 
   }
 
-  private async sendOrderInvoice(recipient: string, order: any) {
+  private async sendOrderInvoice(recipient: string, order: OrderProfile) {
 
     const itemSummary = order.items
       .map((item: any) => `• ${item.name} (x${item.quantity})`)
@@ -190,7 +190,7 @@ export class OrdersHandler{
         type: "button",
         header: {
           type: "text",
-          text: `Order Confirmation ${order.invoice_number}`
+          text: `Order Confirmation ORDER-${order.order_number}`
         },
         body: {
           text:
@@ -200,7 +200,7 @@ export class OrdersHandler{
             `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
             `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
             `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
-            `Status: _${order.status.toUpperCase()}_`
+            `Status: _${order.delivery_status.toUpperCase()}_`
         },
         footer: {
           text: "Thank you for choosing Purple Hearts 🌸"
@@ -244,11 +244,11 @@ export class OrdersHandler{
 
       return {
         id: `retrieve order info - ORDER_ID:${order.id}`,
-        title: `🧾 ${order.invoice_number}`,
+        title: `🧾 ${order.order_number}`,
         description:
           `${itemsSummary}${moreItems}\n` +
           `KES ${Number(order.total).toLocaleString()} • ` +
-          `${order.status.toUpperCase()} • ${order.payment_status.toUpperCase()}`
+          `${order.delivery_status.toUpperCase()}}`
       };
     });
 
@@ -302,7 +302,7 @@ export class OrdersHandler{
       }
     ];
 
-    const currentIndex = steps.findIndex(s => s.key === order.status);
+    const currentIndex = steps.findIndex(s => s.key === order.delivery_status);
 
     const progressText = steps
       .map((step, index) => {
@@ -336,7 +336,7 @@ export class OrdersHandler{
         type: "button",
         header: {
           type: "text",
-          text: `🌸 Order Tracking • ${order.invoice_number}`
+          text: `🌸 Order Tracking • ORDER-${order.order_number}`
         },
         body: {
           text:
