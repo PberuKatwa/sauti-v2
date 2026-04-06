@@ -110,7 +110,7 @@ export class OrdersHandler{
     )
 
     const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: productItems })
-    await this.sendOrderInvoice(recipient, orderCreated)
+    await this.sendOrder(recipient, orderCreated)
   }
 
   private async handleGetAllOrders(userMessage: string, recipient: string) {
@@ -152,6 +152,78 @@ export class OrdersHandler{
 
     return await this.sendOrderTracking(recipient, currentOrder);
 
+  }
+
+  private async sendOrder(recipient: string, order: OrderProfile) {
+
+    const itemSummary = order.items
+      .map((item: any) => `• ${item.name} (x${item.quantity})`)
+      .join('\n');
+
+    const deliveryTypeLabel =
+      order.delivery_type === "scheduled" ? "Scheduled Delivery 🗓️" : "Immediate Delivery ⚡";
+
+    const contactLabel = order.order_contact
+      ? `+${order.order_contact}`
+      : "Not provided";
+
+    const instructionsLabel = order.special_instructions
+      ? order.special_instructions
+      : "_None_";
+
+    const payload = {
+      messaging_product: "whatsapp",
+      to: recipient,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        header: {
+          type: "text",
+          text: `Order Confirmation ORDER-${order.order_number}`
+        },
+        body: {
+          text:
+            `Hi there! 💜 Your order has been placed.\n\n` +
+
+            `*Order Details:*\n${itemSummary}\n\n` +
+
+            `*Delivery Info:*\n` +
+            `Type: ${deliveryTypeLabel}\n` +
+            `Contact: ${contactLabel}\n` +
+            `Instructions: ${instructionsLabel}\n\n` +
+
+            `*Summary:*\n` +
+            `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
+            `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
+            `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
+
+            `Status: _${order.delivery_status.replace(/_/g, " ").toUpperCase()}_`
+        },
+        footer: {
+          text: "Thank you for choosing Purple Hearts 🌸"
+        },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: {
+                id: `pay_for_order_ORDER_${order.id}`, // internal only
+                title: "Pay Now 💳"
+              }
+            },
+            {
+              type: "reply",
+              reply: {
+                id: `track_order_ORDER_${order.id}`,
+                title: "Track Order"
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    await this.whatsappService.callApi(recipient, payload);
   }
 
   private async sendOrderInvoice(recipient: string, order: OrderProfile) {
