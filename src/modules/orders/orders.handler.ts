@@ -244,7 +244,7 @@ export class OrdersHandler{
 
       return {
         id: `retrieve order info - ORDER_ID:${order.id}`,
-        title: `🧾 ${order.order_number}`,
+        title: `ORDER-${order.order_number}`,
         description:
           `${itemsSummary}${moreItems}\n` +
           `KES ${Number(order.total).toLocaleString()} • ` +

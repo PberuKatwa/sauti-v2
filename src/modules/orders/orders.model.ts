@@ -60,7 +60,7 @@ export class OrdersModel {
         delivery_type types_of_delivery DEFAULT 'immediate',
 
         order_number INTEGER UNIQUE DEFAULT NEXTVAL('order_number_seq'),
-        special_intructions VARCHAR(240),
+        special_instructions VARCHAR(240),
 
         items JSONB NOT NULL,
 
@@ -69,7 +69,7 @@ export class OrdersModel {
 
         FOREIGN KEY(client_id)
           REFERENCES clients(id)
-          ON DELETE SET NULL
+          ON DELETE CASCADE
       );
 
       DROP TRIGGER IF EXISTS update_orders_timestamp ON orders;
@@ -127,7 +127,7 @@ export class OrdersModel {
       subtotal,
       tax,
       total,
-      items
+      JSON.stringify(items)
     ]);
 
     const order: OrderProfile = result.rows[0];

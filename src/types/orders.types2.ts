@@ -19,7 +19,7 @@ export interface BaseOrder {
   delivery_status: OrderStatus;
   order_contact: number | null;
   delivery_type: 'scheduled' | 'immediate';
-  special_intructions: string | null;
+  special_instructions: string | null;
   items: OrderItem[];
 }
 
