@@ -54,7 +54,7 @@ export class OrdersHandler{
     const match = userMessage.match(/ProductID:(\d+)/);
     const productId = match ? Number(match[1]) : null;
 
-    if (!productId) return this.productsHandler.sendFlowerCatalog(recipient);
+    if (!productId) return this.productsHandler.sendFullCatalog(recipient);
 
     const product = catalog.find(item => item.productId === productId);
     const items:OrderItem[] | [] = product

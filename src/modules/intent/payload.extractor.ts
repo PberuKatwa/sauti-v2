@@ -15,7 +15,7 @@ export class PayloadExtractor{
     const pronouns = new Set([
       "i","you","he","she","it","we","they",
       "me","him","her","us","them",
-      "my","your","his","their","our","its"
+      "my","your","his","their","our","its","flower","flowers"
     ]);
 
     return doc

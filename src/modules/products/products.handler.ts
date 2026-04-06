@@ -3,7 +3,6 @@ import { BestIntent, IntentDefinition } from "../../types/intent.types";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { AppLogger } from "../../logger/winston.logger";
 import { OrderItem } from "../../types/orders.types";
-
 import { getMap, getProductIdsFromMessage } from "../../utils/flowerMap.util";
 import { ConfigService } from "@nestjs/config";
 import { PayloadExtractor } from "../intent/payload.extractor";
@@ -138,7 +137,7 @@ export class ProductsHandler{
   };
 
   private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
-    'GET_ALL_PRODUCTS': (msg,recipient) => this.handleGetAllProductsCatalog(msg,recipient),
+    'GET_ALL_PRODUCTS': (msg,recipient) => this.handleGetAllProducts(msg,recipient),
     'GET_PRODUCT': (msg,recipient) => this.handleGetProduct(msg,recipient)
   };
 
@@ -155,7 +154,7 @@ export class ProductsHandler{
     }
   }
 
-  private async handleGetAllProductsCatalog(userMessage: string, recipient: string) {
+  private async handleGetAllProducts(userMessage: string, recipient: string) {
 
     const payload = this.payloadExtractor.extractPayload(userMessage);
 
@@ -202,87 +201,19 @@ export class ProductsHandler{
 
   }
 
-  private async handleGetAllProducts(userMessage: string, recipient:string) {
-
-    const flowerMap = getMap(catalog)
-    const productIds = getProductIdsFromMessage(userMessage, flowerMap, catalog);
-
-    if (productIds.length === 0) {
-      const itemsList = catalog.slice(0, 3);
-      return await this.sendFlowerCatalog(recipient, itemsList);
-    }
-
-    this.logger.info("Matched product IDs:", productIds);
-
-    const products = catalog.filter(item =>
-      productIds.includes(item.productId)
-    );
-
-    // send via whatsapp service
-    return this.sendFlowerCatalog(recipient, products);
-  }
-
   private async handleGetProduct(userMessage: string, recipient:string) {
     await this.whatsappService.sendText(`WERE AT GET_PRODUCT`, recipient);
   }
 
-  async sendFlowerCatalog(
-    recipient: string,
-    itemsList: CatalogItem[] = [],
-  ) {
 
-    const allItems = itemsList ? itemsList.length > 0 : catalog.slice(0, 3);
-
-    for (const flower of itemsList) {
-      const payload = {
-        messaging_product: "whatsapp",
-        to: recipient,
-        type: "interactive",
-        interactive: {
-          type: "button",
-          header: {
-            type: "image",
-            image: { link: flower.imageUrl }
-          },
-          body: {
-            // Use Markdown (Bolding) to make the name and price stand out
-            text: `*${flower.name}*\n\n${flower.description}\n\n*Price:* KES ${flower.unitPrice.toLocaleString()}`
-          },
-          footer: {
-            text: "Purple Hearts 💜 - Tap 'Order' to start"
-          },
-          action: {
-            buttons: [
-              {
-                type: "reply",
-                reply: {
-                  id: `generate an invoice exact -ProductID:${flower.productId}`,
-                  title: "Order Now 🛍️"
-                }
-              }
-            ]
-          }
-        }
-      };
-
-      await this.whatsappService.callApi(recipient, payload);
-    }
-  }
-
-  /**
-    * Send Multi-Product Message (up to 30 products in sections)
-    * Users can browse, filter by section, add to cart, and send order
-    */
    async sendMultiProductMessage(options: MultiProductMessageOptions): Promise<void> {
      const { recipient, catalogId, bodyText, headerText, footerText, sections } = options;
 
-     // Validate: max 30 products total across all sections
      const totalProducts = sections.reduce((sum, s) => sum + s.productIds.length, 0);
      if (totalProducts > 30) {
        throw new Error('Multi-product messages support maximum 30 products total');
      }
 
-     // Validate: max 10 sections
      if (sections.length > 10) {
        throw new Error('Multi-product messages support maximum 10 sections');
      }
@@ -320,8 +251,29 @@ export class ProductsHandler{
        },
      };
 
-     await this.whatsappService.callApi(recipient, payload);;
+     await this.whatsappService.callApi(recipient, payload);
    }
+
+  async sendFullCatalog(recipient: string) {
+
+    const payload = {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: recipient,
+      type: "interactive",
+      interactive: {
+        type: "catalog_message",
+        body: {
+          text: "Browse our full collection 💐"
+        },
+        action: {
+          name: "catalog_message",
+        }
+      }
+    };
+
+    await this.whatsappService.callApi(recipient, payload);
+  }
 
 
 };
