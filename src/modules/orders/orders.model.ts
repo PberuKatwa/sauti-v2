@@ -247,17 +247,18 @@ export class OrdersModel {
     const query = `
       SELECT
         id,
-        client_id,
         order_number,
         subtotal,
         tax,
         total,
-        status,
-        latitude,
-        longitude,
+        delivery_status,
         order_contact,
         delivery_type,
         special_intructions,
+        items,
+        client_id,
+        latitude,
+        longitude,
         created_at,
         updated_at
       FROM orders
@@ -284,17 +285,18 @@ export class OrdersModel {
     const query = `
       SELECT
         id,
-        client_id,
         order_number,
         subtotal,
         tax,
         total,
-        status,
-        latitude,
-        longitude,
+        delivery_status,
         order_contact,
         delivery_type,
         special_intructions,
+        items,
+        client_id,
+        latitude,
+        longitude,
         created_at,
         updated_at
       FROM orders
