@@ -49,6 +49,10 @@ export class OrdersHandler{
     }
   }
 
+  public async handleOrderCompletion(recipient: string) {
+
+  }
+
   private async handleCreateOrder(userMessage: string, recipient: string) {
 
     const client = await this.clientsModel.createClient({ phoneNumber: parseInt(recipient) });
