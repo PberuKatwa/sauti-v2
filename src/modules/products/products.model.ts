@@ -375,7 +375,7 @@ export class ProductsModel{
         p.price
       FROM products p
       WHERE p.status != 'trash'
-        AND p.retailer_id = ANY($1::text[])
+         AND p.retailer_id = ANY($1::uuid[])
       ORDER BY p.created_at DESC;
     `;
 

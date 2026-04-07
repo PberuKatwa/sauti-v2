@@ -179,7 +179,7 @@ export class OrdersHandler{
         type: "button",
         header: {
           type: "text",
-          text: `Order Confirmation ORDER-${order.order_number}`
+          text: `ORDER-NUMBER=${order.order_number}`
         },
         body: {
           text:
@@ -187,7 +187,7 @@ export class OrdersHandler{
 
             `*Order Details:*\n${itemSummary}\n\n` +
 
-            `*Delivery Info:*\n` +
+            `*Delivery Information:*\n` +
             `Type: ${deliveryTypeLabel}\n` +
             `Contact: ${contactLabel}\n` +
             `Instructions: ${instructionsLabel}\n\n` +
