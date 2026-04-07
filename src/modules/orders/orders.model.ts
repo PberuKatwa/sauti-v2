@@ -88,6 +88,91 @@ export class OrdersModel {
     return "orders";
   }
 
+  async createValidatedOrder(payload: CreateOrderPayload): Promise<{ order: OrderProfile; isNew: boolean }> {
+    const { clientId, items } = payload;
+
+    if (!clientId) throw new Error(`Please provide a client id`);
+    if (!items || items.length === 0) throw new Error(`Please provide order items`);
+
+    let subtotal = 0;
+    for (const item of items) {
+      subtotal += item.quantity * item.unitPrice;
+    }
+    const tax = Math.floor(subtotal * (0.15));
+    const total = subtotal + tax;
+
+    this.logger.warn(`Attempting to create validated order for client: ${clientId}`);
+
+    const query = `
+      WITH existing_order AS (
+        SELECT
+          id,
+          order_number,
+          subtotal,
+          tax,
+          total,
+          delivery_status,
+          order_contact,
+          delivery_type,
+          special_instructions,
+          items,
+          client_id,
+          latitude,
+          longitude,
+          created_at,
+          updated_at,
+          'existing' AS source
+        FROM orders
+        WHERE client_id = $1
+          AND delivery_status IN ('pending_location', 'pending_contact', 'pending_delivery_type')
+        ORDER BY id DESC
+        LIMIT 1
+      ),
+      new_order AS (
+        INSERT INTO orders (client_id, subtotal, tax, total, items)
+        SELECT $1, $2, $3, $4, $5
+        WHERE NOT EXISTS (SELECT 1 FROM existing_order)
+        RETURNING
+          id,
+          order_number,
+          subtotal,
+          tax,
+          total,
+          delivery_status,
+          order_contact,
+          delivery_type,
+          special_instructions,
+          items,
+          client_id,
+          latitude,
+          longitude,
+          created_at,
+          updated_at,
+          'new' AS source
+      )
+      SELECT * FROM existing_order
+      UNION ALL
+      SELECT * FROM new_order
+      LIMIT 1;
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, [
+      clientId,
+      subtotal,
+      tax,
+      total,
+      JSON.stringify(items)
+    ]);
+
+    const order: OrderProfile & { source?: string } = result.rows[0];
+    const isNew = order.source === 'new';
+
+    this.logger.info(`Validated order: ${isNew ? 'created' : 'existing'} - id: ${order.id}`);
+
+    return { order, isNew };
+  }
+
   async createOrder(payload: CreateOrderPayload): Promise<OrderProfile> {
     const { clientId, items } = payload;
 
