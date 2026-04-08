@@ -10,6 +10,7 @@ import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
 import { CatalogService } from "../products/catalog.service";
 import { ConfigService } from "@nestjs/config";
 import { ProductsModel } from "../products/products.model";
+import { OrderCacheService } from "../cache/cache.order";
 
 @Injectable()
 export class OrdersHandler{
@@ -25,7 +26,7 @@ export class OrdersHandler{
     private readonly productsModel:ProductsModel,
     private readonly catalogService: CatalogService,
     private readonly configService: ConfigService,
-    // private readonly
+    private readonly orderCache:OrderCacheService
   ) {
     this.catalogId = this.configService.get<string>("catalogId");
   };
@@ -52,8 +53,28 @@ export class OrdersHandler{
 
   public async handleOrderCompletion(recipient: string) {
 
-    const client = await this.clientsModel.fetchClientByPhone(parseInt(recipient));
-    const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
+    let order: OrderProfile | null = null;
+
+    if (this.orderCache.getOrder(parseInt(recipient))) {
+      order = this.orderCache.getOrder(parseInt(recipient));
+    } else {
+      const client = await this.clientsModel.fetchClientByPhone(parseInt(recipient));
+      const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
+      this.orderCache.setOrder(parseInt(recipient), currentOrder);
+    }
+
+    if (!order.order_contact) {
+
+    }
+    else if (!order.latitude || !order.longitude) {
+
+    }
+    else if (!order.delivery_type) {
+
+    }
+    else if (!order.special_instructions) {
+
+    }
 
   }
 

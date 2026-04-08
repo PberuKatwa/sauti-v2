@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { OrderProfile } from "../../types/orders.types";
 
 @Injectable()
-export class CacheService {
+export class OrderCacheService {
   private cache: Map<string, OrderProfile> = new Map();
 
   setOrder(phoneNumber: number, order: OrderProfile): void {
