@@ -410,15 +410,11 @@ export class OrdersHandler {
 
       const client = await this.clientsModel.fetchClientByPhone(recipientInt);
 
-      if (!client) {
-        return { orderTaskExists: false };
-      }
+      if (!client) return { orderTaskExists: false };
 
       const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
 
-      if (!currentOrder) {
-        return { orderTaskExists: false };
-      }
+      if (!currentOrder) return { orderTaskExists: false };
 
       this.orderCache.setOrder(recipientInt, currentOrder);
       order = currentOrder;
