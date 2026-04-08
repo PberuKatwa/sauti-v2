@@ -58,7 +58,7 @@ export interface IncomingMessages {
   id: string;
   timestamp: string;
 
-  type: "text" | "interactive" | "button" | "order";
+  type: "text" | "interactive" | "button" | "order" | "location";
 
   order?:CatalogOrderMessage
 
@@ -82,5 +82,13 @@ export interface IncomingMessages {
   button?: {
     payload: string;
     text: string;
+  };
+
+  // Add location field
+  location?: {
+    latitude: number;
+    longitude: number;
+    name?: string;        // Optional: location name if shared
+    address?: string;     // Optional: address if shared
   };
 }

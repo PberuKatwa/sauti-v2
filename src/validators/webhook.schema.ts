@@ -44,7 +44,7 @@ const IncomingMessagesSchema = z.object({
   id: z.string(),
   timestamp: z.string(),
 
-  type: z.enum(["text", "interactive", "button", "order"]),
+  type: z.enum(["text", "interactive", "button", "order", "location"]),
 
   order: CatalogOrderMessageSchema.optional(),
 
@@ -58,6 +58,15 @@ const IncomingMessagesSchema = z.object({
     payload: z.string(),
     text: z.string(),
   }).optional(),
+
+  // Add location schema
+  location: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+    name: z.string().optional(),
+    address: z.string().optional(),
+  }).optional(),
+
 });
 
 export const WhatsappWebhookSchema = z.object({

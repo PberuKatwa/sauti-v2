@@ -85,6 +85,10 @@ export class HandlerService{
           null;
       }
 
+      else if (msg.type === "location") {
+        userMessage = `${msg.location}`
+      }
+
       if (!userMessage) {
         throw new Error(`Unsupported or empty message type: ${msg.type}`);
       }
@@ -130,6 +134,26 @@ export class HandlerService{
         userMessage: userMessage,
         recipient:recipient
       })
+
+      if (!this.ordersHandler.handleOrderCompletion(userMessage, recipient)) {
+
+        const intent:BestIntent = {
+          id: 0,
+          name: "",
+          description: "",
+          userMessage: "",
+          entity: "",
+          score: 0,
+          phrase_tokens: [""],
+          organisation_tokens: [""],
+        }
+
+        return {
+          userMessage,
+          recipient,
+          intent
+        }
+      }
 
       const intentsFile = loadIntentsFromFile();
       this.intentDetector.setup(intentsFile, STOP_WORDS);
