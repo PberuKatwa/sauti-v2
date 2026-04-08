@@ -174,8 +174,8 @@ export class OrdersModel {
   }
 
   async updateContactAndDelivery(payload: UpdateContactPayload): Promise<void> {
-    const { orderId, orderContact, deliveryType, specialInstructions } = payload;
 
+    const { orderId, orderContact, deliveryType, specialInstructions } = payload;
     if (!orderId) throw new Error(`Please provide an order id`);
 
     this.logger.warn(`Attempting to update contact and delivery for order: ${orderId}`);

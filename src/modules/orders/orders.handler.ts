@@ -418,9 +418,9 @@ export class OrdersHandler {
       order = currentOrder;
     }
 
-
-    if (order.latitude && order.longitude && order.order_contact) {
-      this.orderCache.clearAll();
+    if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
+      this.orderCache.clearAll()
+      return { orderTaskExists: false };
     }
 
     const updateOrder: UpdateContactPayload = {
@@ -456,6 +456,7 @@ export class OrdersHandler {
 
       updateOrder.specialInstructions = userMessage;
       order.special_instructions = userMessage;
+      console.log("speciallllll", updateOrder)
       await this.ordersModel.updateContactAndDelivery(updateOrder);
     }
 
@@ -464,11 +465,7 @@ export class OrdersHandler {
 
     if (!order.order_contact) {
 
-      const message = `
-        Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} has been placed successfully.\n
-        To ensure smooth delivery, please provide the recipient's phone number.
-        Kindly reply with only the phone number (e.g., 07XXXXXXXX).`;
-
+      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} has been placed successfully.\nTo ensure smooth delivery, please provide the recipient's phone number.Kindly reply with only the phone number (e.g., 07XXXXXXXX).`;
       await this.whatsappService.sendText(message, recipient);
 
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_CONTACT");
@@ -476,13 +473,7 @@ export class OrdersHandler {
 
     else if (!order.latitude || !order.longitude) {
 
-      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.
-        Please share your delivery location via WhatsApp.
-        To do this:\n
-        1. Tap the attachment 📎 icon\n
-        2. Select "Location"\n
-        3. Send your current location.\n
-        This helps us deliver accurately.`;
+      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.Please share your delivery location via WhatsApp.To do this:\n1. Tap the attachment 📎 icon\n2. Select "Location"\n3. Send your current location.\nThis helps us deliver accurately.`;
       await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_LOCATION");
 
@@ -490,16 +481,12 @@ export class OrdersHandler {
 
     else if (!order.special_instructions) {
 
-      const message =
-        `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.
-        Do you have any special instructions? (e.g., message on the card, delivery notes)
-        Reply with your instructions or type "No" if none.
-        `;
-
+      const message =`Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.Do you have any special instructions? (e.g., message on the card, delivery notes).Reply with your instructions or type "No" if none.`;
       await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_SPECIAL_INSTRUCTIONS");
     }
 
+    console.log("specialllllllll", this.orderCache.getOrderCompletionMessage(recipientInt))
     return {
       orderTaskExists: true
     };

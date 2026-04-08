@@ -11,7 +11,7 @@ function normalizeArray(arr: string[]): string[] {
 const INTENT_FILE_PATH = path.join(process.cwd(), 'src', 'files', 'intent.json');
 
 export function loadIntentsFromFile():IntentDefinition[]{
-  try{
+  try {
 
     if (!fs.existsSync(INTENT_FILE_PATH)) {
       throw new Error(`Intent File not found at: ${INTENT_FILE_PATH}`);

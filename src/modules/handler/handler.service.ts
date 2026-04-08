@@ -133,7 +133,7 @@ export class HandlerService{
         recipient:recipient
       })
 
-      if (!this.ordersHandler.handleOrderCompletion(userMessage, recipient)) return;
+      if (!this.ordersHandler.handleOrderCompletion2(userMessage, recipient)) return;
 
       const intentsFile = loadIntentsFromFile();
       this.intentDetector.setup(intentsFile, STOP_WORDS);

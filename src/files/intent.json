@@ -246,18 +246,6 @@
     ]
   },
   {
-    "id": 4,
-    "organization_type": "SALES",
-    "name": "UPDATE_ORDER_CONTACT",
-    "description": "Intent triggered when a user wants to retrieve or view a specific order or invoice by ID, number, or reference.",
-    "entity": "Orders",
-    "category": "General",
-    "organisation_tokens": [
-    ],
-    "phrase_tokens": [
-    ]
-  },
-  {
     "id": 5,
     "organization_type": "SALES",
     "name": "CREATE_ORDER",
