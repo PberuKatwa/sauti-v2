@@ -33,6 +33,18 @@ export class OrderCacheService {
     return this.orderCache.has(phoneNumber.toString());
   }
 
+  setOrderCompletionMessage(phoneNumber: number, completeType: OrderCompleteType) {
+    return this.completionCache.set(phoneNumber.toString(), completeType);
+  }
+
+  getOrderCompletionMessage(phoneNumber: number) {
+    return this.completionCache.get(phoneNumber.toString());
+  }
+
+  deleteOrderCompletionMessage(phoneNumber: number): boolean {
+    const key = phoneNumber.toString();
+    return this.completionCache.delete(key);
+  }
 
   getStats(): { orders: number; completions: number } {
     return {
