@@ -4,6 +4,7 @@
 //   | { type: 'UNKNOWN'; data: any };
 
 export type WebhookType = 'MESSAGE' | 'STATUS' | 'UNKNOWN';
+export type WebhookIncomingMessagesType = "text" | "interactive" | "button" | "order" | "location";
 
 export interface WhatsappWebhook{
   object:"whatsapp_business_account";
@@ -82,15 +83,10 @@ export interface IncomingMessages {
   from: string;
   id: string;
   timestamp: string;
-
-  type: "text" | "interactive" | "button" | "order" | "location";
-
+  type: WebhookIncomingMessagesType;
   order?:CatalogOrderMessage
-
   text?: { body: string; };
   interactive?: InteractiveMessage;
-
   button?: ButtonMessage;
-
   location?: LocationMessage;
 }
