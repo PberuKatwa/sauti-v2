@@ -90,3 +90,5 @@ export interface IncomingMessages {
   button?: ButtonMessage;
   location?: LocationMessage;
 }
+
+export type UserMessagePayload = string | CatalogOrderMessage | InteractiveMessage | ButtonMessage | LocationMessage;
