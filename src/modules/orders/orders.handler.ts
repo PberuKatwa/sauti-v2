@@ -442,54 +442,22 @@ export class OrdersHandler {
       updateOrder.orderContact = phoneNumber;
       order.order_contact = phoneNumber;
       await this.ordersModel.updateContactAndDelivery(updateOrder);
-
     }
     else if (completionState === "COMPLETE_LOCATION") {
 
+      const { latitude, longitude } = this.textToLocation(userMessage);
+      console.log("LOCATIONNNN", latitude, longitude);
+      console.log("LOCATIONNNN", latitude, longitude);
+      await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
+      order.latitude = latitude;
+      order.longitude = longitude;
     }
-
-    // ─────────────────────────────────────────────────────────
-    // STAGE 5C: HANDLE COMPLETE_SPECIAL_INSTRUCTIONS
-    // ─────────────────────────────────────────────────────────
     else if (completionState === "COMPLETE_SPECIAL_INSTRUCTIONS") {
-      console.log(`[DEBUG] >>> BRANCH: COMPLETE_SPECIAL_INSTRUCTIONS`);
-      console.log(`[DEBUG] Processing special instructions: "${userMessage}"`);
 
       updateOrder.specialInstructions = userMessage;
       order.special_instructions = userMessage;
-      console.log(`[DEBUG] updateOrder updated:`, JSON.stringify(updateOrder, null, 2));
-      console.log(`[DEBUG] order object updated, special_instructions = "${order.special_instructions}"`);
-
-      try {
-        console.log(`[DEBUG] Calling ordersModel.updateContactAndDelivery...`);
-        await this.ordersModel.updateContactAndDelivery(updateOrder);
-        console.log(`[DEBUG] ✅ Database update successful`);
-      } catch (error) {
-        console.error(`[DEBUG] ❌ ERROR updating special instructions:`, error.message);
-        throw error;
-      }
+      await this.ordersModel.updateContactAndDelivery(updateOrder);
     }
-
-    // ─────────────────────────────────────────────────────────
-    // STAGE 5D: NO COMPLETION STATE (INITIAL STATE)
-    // ─────────────────────────────────────────────────────────
-    else {
-      console.log(`[DEBUG] >>> BRANCH: NO_STATE (initial order setup)`);
-      console.log(`[DEBUG] No completion state found, this is first interaction`);
-    }
-
-    // ─────────────────────────────────────────────────────────
-    // STAGE 6: UPDATE CACHE WITH MODIFIED ORDER
-    // ─────────────────────────────────────────────────────────
-    console.log(`[DEBUG] --- STAGE 6: Update Cache ---`);
-    console.log(`[DEBUG] Setting updated order in cache for recipient ${recipientInt}`);
-    console.log(`[DEBUG] Order to cache:`, {
-      id: order.id,
-      order_contact: order.order_contact,
-      latitude: order.latitude,
-      longitude: order.longitude,
-      special_instructions: order.special_instructions
-    });
 
     this.orderCache.setOrder(recipientInt, order);
     console.log(`[DEBUG] ✅ Cache updated`);
