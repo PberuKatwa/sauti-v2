@@ -150,7 +150,6 @@ export class OrderCompletionHandler{
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_SPECIAL_INSTRUCTIONS");
     }
 
-    console.log("specialllllllll", this.orderCache.getOrderCompletionMessage(recipientInt))
     return {
       orderTaskExists: true
     };
