@@ -113,7 +113,7 @@ export class OrderCompletionHandler{
     const recipientInt = parseInt(recipient, 10);
 
     console.log(`[DEBUG] userMessage: "${userMessage}"`);
-    const order = await this.getCachedOrder(recipientInt);
+    let order = await this.getCachedOrder(recipientInt);
 
     if (!order) {
       this.orderCache.clearAll();
@@ -125,43 +125,7 @@ export class OrderCompletionHandler{
       return { orderTaskExists: false };
     }
 
-    const updateOrder: UpdateContactPayload = {
-      orderId: order.id,
-      deliveryType: order.delivery_type,
-      orderContact: order.order_contact,
-      specialInstructions: order.special_instructions
-    };
-
-    const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
-
-    if (completionState === "COMPLETE_CONTACT") {
-
-      const cleanedMessage = userMessage.replace(/\D/g, '');
-      const phoneNumber = parseInt(cleanedMessage, 10);
-
-      updateOrder.orderContact = phoneNumber;
-      order.order_contact = phoneNumber;
-      await this.ordersModel.updateContactAndDelivery(updateOrder);
-    }
-    else if (completionState === "COMPLETE_LOCATION") {
-
-      const { latitude, longitude } = this.textToLocation(userMessage);
-      console.log("LOCATIONNNN", latitude, longitude);
-      console.log("LOCATIONNNN", latitude, longitude);
-      await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
-      order.latitude = latitude;
-      order.longitude = longitude;
-    }
-    else if (completionState === "COMPLETE_SPECIAL_INSTRUCTIONS") {
-
-      updateOrder.specialInstructions = userMessage;
-      order.special_instructions = userMessage;
-      console.log("speciallllll", updateOrder)
-      await this.ordersModel.updateContactAndDelivery(updateOrder);
-    }
-
-    this.orderCache.setOrder(recipientInt, order);
-    console.log(`[DEBUG] ✅ Cache updated`);
+    order = await this.completeOrderField(userMessage, recipientInt, order);
 
     if (!order.order_contact) {
 
