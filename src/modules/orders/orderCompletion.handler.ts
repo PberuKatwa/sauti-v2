@@ -59,6 +59,44 @@ export class OrderCompletionHandler{
     return order;
   }
 
+  private async completeOrderField(
+    userMessage: string,
+    recipient: number,
+    updateOrder: UpdateContactPayload,
+    order: OrderProfile
+  ): Promise<OrderProfile>
+  {
+
+    const completionState = this.orderCache.getOrderCompletionMessage(recipient);
+
+    if (completionState === "COMPLETE_CONTACT") {
+
+      const cleanedMessage = userMessage.replace(/\D/g, '');
+      const phoneNumber = parseInt(cleanedMessage, 10);
+
+      updateOrder.orderContact = phoneNumber;
+      order.order_contact = phoneNumber;
+      await this.ordersModel.updateContactAndDelivery(updateOrder);
+    }
+    else if (completionState === "COMPLETE_LOCATION") {
+
+      const { latitude, longitude } = this.textToLocation(userMessage);
+      await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
+      order.latitude = latitude;
+      order.longitude = longitude;
+    }
+    else if (completionState === "COMPLETE_SPECIAL_INSTRUCTIONS") {
+
+      updateOrder.specialInstructions = userMessage;
+      order.special_instructions = userMessage;
+      await this.ordersModel.updateContactAndDelivery(updateOrder);
+    }
+
+    this.orderCache.setOrder(recipient, order);
+
+    return order;
+  }
+
   public async handleOrderCompletion(
     userMessage: UserMessagePayload,
     recipient: string
@@ -87,8 +125,6 @@ export class OrderCompletionHandler{
     };
 
     const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
-    console.log(`[DEBUG] Current completion state: "${completionState}"`);
-    console.log(`[DEBUG] Completion state type: ${typeof completionState}`);
 
     if (completionState === "COMPLETE_CONTACT") {
 
