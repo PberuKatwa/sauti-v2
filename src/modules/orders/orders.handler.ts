@@ -422,12 +422,6 @@ export class OrdersHandler {
     if (order.latitude && order.longitude && order.order_contact) {
       this.orderCache.clearAll();
     }
-    console.log(`[DEBUG] Order is INCOMPLETE - continuing processing`);
-
-    // ─────────────────────────────────────────────────────────
-    // STAGE 4: PREPARE UPDATE PAYLOAD
-    // ─────────────────────────────────────────────────────────
-    console.log(`[DEBUG] --- STAGE 4: Prepare Update Payload ---`);
 
     const updateOrder: UpdateContactPayload = {
       orderId: order.id,
@@ -435,54 +429,21 @@ export class OrdersHandler {
       orderContact: order.order_contact,
       specialInstructions: order.special_instructions
     };
-    console.log(`[DEBUG] updateOrder payload created:`, JSON.stringify(updateOrder, null, 2));
-
-    // ─────────────────────────────────────────────────────────
-    // STAGE 5: CHECK COMPLETION STATE & PROCESS USER MESSAGE
-    // ─────────────────────────────────────────────────────────
-    console.log(`[DEBUG] --- STAGE 5: Check Completion State ---`);
 
     const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
     console.log(`[DEBUG] Current completion state: "${completionState}"`);
     console.log(`[DEBUG] Completion state type: ${typeof completionState}`);
 
-    // ─────────────────────────────────────────────────────────
-    // STAGE 5A: HANDLE COMPLETE_CONTACT
-    // ─────────────────────────────────────────────────────────
     if (completionState === "COMPLETE_CONTACT") {
-      console.log(`[DEBUG] >>> BRANCH: COMPLETE_CONTACT`);
-      console.log(`[DEBUG] Processing phone number from userMessage: "${userMessage}"`);
 
       const cleanedMessage = userMessage.replace(/\D/g, '');
-      console.log(`[DEBUG] Cleaned digits: "${cleanedMessage}"`);
-      console.log(`[DEBUG] Cleaned length: ${cleanedMessage.length}`);
-
       const phoneNumber = parseInt(cleanedMessage, 10);
-      console.log(`[DEBUG] Parsed phoneNumber: ${phoneNumber}`);
-      console.log(`[DEBUG] Is phoneNumber valid (not NaN)? ${!isNaN(phoneNumber)}`);
-
-      if (isNaN(phoneNumber)) {
-        console.error(`[DEBUG] ❌ ERROR: Failed to parse phone number from "${userMessage}"`);
-      }
 
       updateOrder.orderContact = phoneNumber;
       order.order_contact = phoneNumber;
-      console.log(`[DEBUG] updateOrder updated:`, JSON.stringify(updateOrder, null, 2));
-      console.log(`[DEBUG] order object updated, order_contact = ${order.order_contact}`);
+      await this.ordersModel.updateContactAndDelivery(updateOrder);
 
-      try {
-        console.log(`[DEBUG] Calling ordersModel.updateContactAndDelivery...`);
-        await this.ordersModel.updateContactAndDelivery(updateOrder);
-        console.log(`[DEBUG] ✅ Database update successful`);
-      } catch (error) {
-        console.error(`[DEBUG] ❌ ERROR updating contact:`, error.message);
-        throw error;
-      }
     }
-
-    // ─────────────────────────────────────────────────────────
-    // STAGE 5B: HANDLE COMPLETE_LOCATION
-    // ─────────────────────────────────────────────────────────
     else if (completionState === "COMPLETE_LOCATION") {
 
     }
