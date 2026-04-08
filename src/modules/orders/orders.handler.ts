@@ -51,16 +51,23 @@ export class OrdersHandler {
     }
   }
 
-  public async handleOrderCompletion(recipient: string): Promise<{orderTaskExists: boolean}> {
+  public async handleOrderCompletion(userMessage:string,recipient: string): Promise<{orderTaskExists: boolean}> {
 
     let order: OrderProfile | null = null;
 
     if (this.orderCache.getOrder(parseInt(recipient))) {
-      order = this.orderCache.getOrder(parseInt(recipient));
+
+      order = this.orderCache.getOrder(parseInt(recipient))
+
     } else {
       const client = await this.clientsModel.fetchClientByPhone(parseInt(recipient));
       const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
       this.orderCache.setOrder(parseInt(recipient), currentOrder);
+    }
+
+    if (order.latitude && order.longitude && order.order_contact) {
+      this.orderCache.clearAll()
+      return { orderTaskExists: false };
     }
 
     const updateOrder: UpdateContactPayload = {
@@ -70,6 +77,22 @@ export class OrdersHandler {
       specialInstructions:order.special_instructions
     }
 
+    if (this.orderCache.getOrderCompletionMessage(parseInt(recipient)) === "COMPLETE_CONTACT") {
+
+      const phoneNumber = parseInt(userMessage.replace(/\D/g, ''), 10);
+      updateOrder.orderContact = phoneNumber;
+      await this.ordersModel.updateContactAndDelivery(updateOrder);
+    }
+    else if (this.orderCache.getOrderCompletionMessage(parseInt(recipient)) === "COMPLETE_LOCATION") {
+      console.log("we founddddd locationnnn", userMessage);
+      console.log("we founddddd locationnnn", userMessage);
+
+    }
+    else if (this.orderCache.getOrderCompletionMessage(parseInt(recipient)) === "COMPLETE_SPECIAL_INSTRUCTIONS") {
+
+      updateOrder.specialInstructions = userMessage;
+      await this.ordersModel.updateContactAndDelivery(updateOrder);
+    }
 
     if (!order.order_contact) {
 
@@ -99,23 +122,6 @@ export class OrdersHandler {
       )
 
       this.orderCache.setOrderCompletionMessage(parseInt(recipient), "COMPLETE_LOCATION")
-
-    }
-    else if (!order.delivery_type) {
-
-      this.whatsappService.sendText(
-        `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.
-        Please specify your delivery time.
-
-        Reply with:
-        • "No" for immediate delivery
-        OR
-        • A scheduled time and date (e.g., 10am 12 May)`,
-        recipient
-      )
-
-      this.orderCache.setOrderCompletionMessage(parseInt(recipient), "COMPLETE_DELIVERY_TYPE")
-
 
     }
     else if (!order.special_instructions) {

@@ -37,7 +37,7 @@ export class OrderCacheService {
     return this.completionCache.set(phoneNumber.toString(), completeType);
   }
 
-  getOrderCompletionMessage(phoneNumber: number) {
+  getOrderCompletionMessage(phoneNumber: number):OrderCompleteType {
     return this.completionCache.get(phoneNumber.toString());
   }
 
