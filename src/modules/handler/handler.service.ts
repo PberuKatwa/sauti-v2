@@ -1,6 +1,6 @@
 import { Inject,Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
-import { CatalogOrderMessage, IncomingMessages, StatusesValue, WebhookType, WhatsappWebhook } from "../../types/whatsapp.webhook";
+import { CatalogOrderMessage, IncomingMessages, StatusesValue, UserMessagePayload, WebhookType, WhatsappWebhook } from "../../types/whatsapp.webhook";
 import { WhatsappWebhookSchema } from "../../validators/webhook.schema";
 import { WhatsappReply } from "../../types/reply.types";
 import { IntentDetectorService } from "../intent/intent.detector";
@@ -57,7 +57,7 @@ export class HandlerService{
   }
 
   private extractMessageAndRecepient(messages: IncomingMessages[]): {
-    userMessage: string;
+    userMessage: UserMessagePayload;
     recipient: string;
   } {
     try {
@@ -68,7 +68,7 @@ export class HandlerService{
       const msg = messages[0];
       const sender = msg.from;
 
-      let userMessage: string | null = null;
+      let userMessage: UserMessagePayload | string |null = null;
 
       if (msg.type === "text") {
         userMessage = msg.text?.body;
@@ -86,7 +86,7 @@ export class HandlerService{
       }
 
       else if (msg.type === "location") {
-        userMessage = `${msg.location}`
+        userMessage = msg.location;
       }
 
       if (!userMessage) {
@@ -121,11 +121,7 @@ export class HandlerService{
 
   }
 
-  private async processMessage(messages: IncomingMessages[]):Promise< {
-    userMessage:string,
-    intent: BestIntent,
-    recipient:string
-  }> {
+  private async processMessage(messages: IncomingMessages[]): Promise<void> {
     try {
 
       const { userMessage, recipient } = this.extractMessageAndRecepient(messages);
@@ -135,25 +131,7 @@ export class HandlerService{
         recipient:recipient
       })
 
-      if (!this.ordersHandler.handleOrderCompletion(userMessage, recipient)) {
-
-        const intent:BestIntent = {
-          id: 0,
-          name: "",
-          description: "",
-          userMessage: "",
-          entity: "",
-          score: 0,
-          phrase_tokens: [""],
-          organisation_tokens: [""],
-        }
-
-        return {
-          userMessage,
-          recipient,
-          intent
-        }
-      }
+      if (!this.ordersHandler.handleOrderCompletion(userMessage, recipient)) return;
 
       const intentsFile = loadIntentsFromFile();
       this.intentDetector.setup(intentsFile, STOP_WORDS);
@@ -170,11 +148,7 @@ export class HandlerService{
       }
 
       this.logger.info(`Successfully handled message.`);
-      return {
-        userMessage:userMessage,
-        intent:intentResult,
-        recipient:recipient
-      }
+      return
     } catch (error) {
       throw error;
     }
@@ -190,19 +164,12 @@ export class HandlerService{
     }
   }
 
-  public async processWhatsappWebhook(payload: WhatsappWebhook): Promise<WhatsappReply> {
+  public async processWhatsappWebhook(payload: WhatsappWebhook): Promise<void> {
     try {
 
       this.logger.warn(`Attempting to process whatsapp webhook`)
 
       const { type, data } = this.extractWhatsappWebhookType(payload);
-
-      const result: WhatsappReply = {
-        type,
-        userMessage:"",
-        intent: null,
-        recipient: null
-      };
 
       if (type === "MESSAGE") {
 
@@ -211,15 +178,10 @@ export class HandlerService{
         const msg = messages[0];
         if (msg.type === "order") {
           await this.processCatalogOrder(msg.order, msg.from);
-          return result
+          return
         }
 
-        const { intent, recipient, userMessage } = await this.processMessage(messages);
-
-        result.intent = intent;
-        result.userMessage = userMessage;
-        result.recipient = recipient;
-
+        await this.processMessage(messages);
       } else if (type === "STATUS") {
 
         const statuses = data.entry?.[0]?.changes?.[0]?.value.statuses;
@@ -228,7 +190,7 @@ export class HandlerService{
       }
 
       this.logger.info(`Successfully processed whatsapp webhook`)
-      return result;
+      return ;
     } catch (error) {
       throw error;
     }

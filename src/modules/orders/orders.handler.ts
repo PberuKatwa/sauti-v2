@@ -6,7 +6,7 @@ import { BestIntent } from "../../validators/bestIntent.schema";
 import { ClientModel } from "../client/client.model";
 import { ProductsHandler, catalog } from "../products/products.handler";
 import { OrderItem, OrderProfile, UpdateContactPayload } from "../../types/orders.types";
-import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
+import {  CatalogOrderMessage, UserMessagePayload } from "../../types/whatsapp.webhook";
 import { CatalogService } from "../products/catalog.service";
 import { ConfigService } from "@nestjs/config";
 import { ProductsModel } from "../products/products.model";
@@ -52,7 +52,7 @@ export class OrdersHandler {
   }
 
   public async handleOrderCompletion(
-    userMessage: string,
+    userMessage: UserMessagePayload,
     recipient: string
   ): Promise<{ orderTaskExists: boolean }> {
 
