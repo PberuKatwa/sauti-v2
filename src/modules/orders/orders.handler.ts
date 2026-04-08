@@ -81,7 +81,10 @@ export class OrdersHandler {
 
       const phoneNumber = parseInt(userMessage.replace(/\D/g, ''), 10);
       updateOrder.orderContact = phoneNumber;
+      order.order_contact = phoneNumber;
       await this.ordersModel.updateContactAndDelivery(updateOrder);
+
+
     }
     else if (this.orderCache.getOrderCompletionMessage(parseInt(recipient)) === "COMPLETE_LOCATION") {
       console.log("we founddddd locationnnn", userMessage);
@@ -91,8 +94,11 @@ export class OrdersHandler {
     else if (this.orderCache.getOrderCompletionMessage(parseInt(recipient)) === "COMPLETE_SPECIAL_INSTRUCTIONS") {
 
       updateOrder.specialInstructions = userMessage;
+      order.special_instructions = userMessage;
       await this.ordersModel.updateContactAndDelivery(updateOrder);
     }
+
+    this.orderCache.setOrder(parseInt(recipient), order);
 
     if (!order.order_contact) {
 
