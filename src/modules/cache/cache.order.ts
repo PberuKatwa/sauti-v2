@@ -7,15 +7,10 @@ export type OrderCompleteType =
   | 'COMPLETE_DELIVERY_TYPE'
   | 'COMPLETE_SPECIAL_INSTRUCTIONS';
 
-// Track which fields are completed for an order
-export type OrderCompletionState = {
-  [K in OrderCompleteType]?: boolean;
-};
-
 @Injectable()
 export class OrderCacheService {
   private orderCache: Map<string, OrderProfile> = new Map();
-  private completionCache: Map<string, OrderCompletionState> = new Map();
+  private completionCache: Map<string, OrderCompleteType> = new Map();
 
   setOrder(phoneNumber: number, order: OrderProfile): void {
     this.orderCache.set(phoneNumber.toString(), order);

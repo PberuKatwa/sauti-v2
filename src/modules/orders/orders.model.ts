@@ -190,8 +190,8 @@ export class OrdersModel {
 
     const pool = this.pgConfig.getPool();
     await pool.query(query, [
-      orderContact,
-      deliveryType,
+      orderContact ||null,
+      deliveryType || null,
       specialInstructions || null,
       orderId
     ]);

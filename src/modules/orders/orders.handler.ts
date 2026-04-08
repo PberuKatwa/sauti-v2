@@ -5,7 +5,7 @@ import { OrdersModel } from "./orders.model";
 import { BestIntent } from "../../validators/bestIntent.schema";
 import { ClientModel } from "../client/client.model";
 import { ProductsHandler, catalog } from "../products/products.handler";
-import { OrderItem, OrderProfile } from "../../types/orders.types";
+import { OrderItem, OrderProfile, UpdateContactPayload } from "../../types/orders.types";
 import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
 import { CatalogService } from "../products/catalog.service";
 import { ConfigService } from "@nestjs/config";
@@ -13,7 +13,7 @@ import { ProductsModel } from "../products/products.model";
 import { OrderCacheService } from "../cache/cache.order";
 
 @Injectable()
-export class OrdersHandler{
+export class OrdersHandler {
 
   private readonly catalogId: string;
 
@@ -23,22 +23,22 @@ export class OrdersHandler{
     private readonly ordersModel: OrdersModel,
     private readonly clientsModel: ClientModel,
     private readonly productsHandler: ProductsHandler,
-    private readonly productsModel:ProductsModel,
+    private readonly productsModel: ProductsModel,
     private readonly catalogService: CatalogService,
     private readonly configService: ConfigService,
-    private readonly orderCache:OrderCacheService
+    private readonly orderCache: OrderCacheService
   ) {
     this.catalogId = this.configService.get<string>("catalogId");
   };
 
-  private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
-    'CREATE_ORDER': (msg,recipient) => this.handleCreateOrder(msg,recipient),
+  private readonly intentMap: Record<string, (msg: string, recipient: string) => Promise<any>> = {
+    'CREATE_ORDER': (msg, recipient) => this.handleCreateOrder(msg, recipient),
     'GET_ALL_ORDERS': (msg, recipient) => this.handleGetAllOrders(msg, recipient),
     'GET_ORDER': (msg, recipient) => this.handleGetOrder(msg, recipient),
-    'GET_ORDER_STATUS': (msg,recipient) => this.handleGetOrderStatus(msg,recipient)
+    'GET_ORDER_STATUS': (msg, recipient) => this.handleGetOrderStatus(msg, recipient)
   };
 
-  public async handleIntent(intent: BestIntent, recipient:string):Promise<void> {
+  public async handleIntent(intent: BestIntent, recipient: string): Promise<void> {
     try {
 
       const handler = this.intentMap[intent.name];
@@ -51,7 +51,7 @@ export class OrdersHandler{
     }
   }
 
-  public async handleOrderCompletion(recipient: string) {
+  public async handleOrderCompletion(recipient: string): Promise<{orderTaskExists: boolean}> {
 
     let order: OrderProfile | null = null;
 
@@ -61,6 +61,13 @@ export class OrdersHandler{
       const client = await this.clientsModel.fetchClientByPhone(parseInt(recipient));
       const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
       this.orderCache.setOrder(parseInt(recipient), currentOrder);
+    }
+
+    const updateOrder: UpdateContactPayload = {
+      orderId: order.id,
+      deliveryType: order.delivery_type,
+      orderContact: order.order_contact,
+      specialInstructions:order.special_instructions
     }
 
     if (!order.order_contact) {
@@ -74,6 +81,10 @@ export class OrdersHandler{
     }
     else if (!order.special_instructions) {
 
+    }
+
+    return {
+      orderTaskExists:true
     }
 
   }

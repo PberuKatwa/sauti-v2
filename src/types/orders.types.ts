@@ -38,8 +38,8 @@ export interface CreateOrderPayload {
 
 export interface UpdateContactPayload {
   orderId: number;
-  orderContact: number;
-  deliveryType: 'scheduled' | 'immediate';
+  orderContact?: number;
+  deliveryType?: 'scheduled' | 'immediate';
   specialInstructions?: string;
 }
 
