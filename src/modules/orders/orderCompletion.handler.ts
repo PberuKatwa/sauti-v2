@@ -36,26 +36,21 @@ export class OrderCompletionHandler{
     return { latitude, longitude };
   }
 
-  private async getCachedOrder(recipient: string):Promise<OrderProfile | null> {
+  private async getCachedOrder(recipient: number):Promise<OrderProfile | null> {
 
     let order: OrderProfile | null = null;
-    const recipientInt = parseInt(recipient, 10);
 
-    const cachedOrder = this.orderCache.getOrder(recipientInt);
+    const cachedOrder = this.orderCache.getOrder(recipient);
 
     if (cachedOrder) {
       order = cachedOrder;
     } else {
 
-      const client = await this.clientsModel.fetchClientByPhone(recipientInt);
+      const client = await this.clientsModel.fetchClientByPhone(recipient);
       const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
 
-      this.orderCache.setOrder(recipientInt, currentOrder);
+      this.orderCache.setOrder(recipient, currentOrder);
       order = currentOrder;
-    }
-
-    if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
-      this.orderCache.clearAll()
     }
 
     return order;
@@ -66,28 +61,14 @@ export class OrderCompletionHandler{
     recipient: string
   ): Promise<{ orderTaskExists: boolean }> {
 
-    console.log(`[DEBUG] userMessage: "${userMessage}"`);
-
-    let order: OrderProfile | null = null;
     const recipientInt = parseInt(recipient, 10);
 
-    const cachedOrder = this.orderCache.getOrder(recipientInt);
-    console.log(`[DEBUG] cachedOrder result:`, cachedOrder ? 'FOUND' : 'NOT FOUND');
-    console.log(`[DEBUG] cachedOrder value:`, JSON.stringify(cachedOrder, null, 2));
+    console.log(`[DEBUG] userMessage: "${userMessage}"`);
+    const order = await this.getCachedOrder(recipientInt);
 
-    if (cachedOrder) {
-      order = cachedOrder;
-    } else {
-      console.log(`[DEBUG] Cache MISS - fetching from database`);
-
-      const client = await this.clientsModel.fetchClientByPhone(recipientInt);
-      if (!client) return { orderTaskExists: false };
-
-      const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
-      if (!currentOrder) return { orderTaskExists: false };
-
-      this.orderCache.setOrder(recipientInt, currentOrder);
-      order = currentOrder;
+    if (!order) {
+      this.orderCache.clearAll()
+      return { orderTaskExists: false };
     }
 
     if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
