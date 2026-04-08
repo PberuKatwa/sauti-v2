@@ -5,9 +5,10 @@ import { WhatsappModule } from "../whatsapp/whatsapp.module";
 import { OrdersHandler } from "./orders.handler";
 import { ClientModule } from "../client/client.module";
 import { ProductsModule } from "../products/products.module";
+import { CacheModule } from "../cache/cache.module";
 
 @Module({
-  imports: [ ClientModule, ProductsModule, WhatsappModule],
+  imports: [ ClientModule, ProductsModule, WhatsappModule, CacheModule],
   providers:[OrdersModel, OrdersHandler],
   controllers:[OrdersController],
   exports: [OrdersModel, OrdersHandler]

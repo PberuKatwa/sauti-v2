@@ -88,12 +88,12 @@ export class OrdersModel {
     return "orders";
   }
 
-  async checkIncompleteOrders(clientId:number): Promise<OrderProfile> {
+  async getIncompleteOrders(clientId:number): Promise<OrderProfile> {
 
     if (!clientId) throw new Error(`Please provide a client id`);
     const pendingStatuses = ['pending_location', 'pending_contact', 'pending_delivery_type'];
 
-    const checkQuery = `
+    const query = `
       SELECT
         id,
         order_number,
@@ -118,7 +118,7 @@ export class OrdersModel {
     `;
 
     const pool = this.pgConfig.getPool();
-    const result = await pool.query(checkQuery, [clientId, pendingStatuses]);
+    const result = await pool.query(query, [clientId, pendingStatuses]);
     const existingOrder:OrderProfile = result.rows[0];
 
     return existingOrder;

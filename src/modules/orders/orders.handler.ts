@@ -24,7 +24,8 @@ export class OrdersHandler{
     private readonly productsHandler: ProductsHandler,
     private readonly productsModel:ProductsModel,
     private readonly catalogService: CatalogService,
-    private readonly configService:ConfigService
+    private readonly configService: ConfigService,
+    // private readonly
   ) {
     this.catalogId = this.configService.get<string>("catalogId");
   };
@@ -50,6 +51,9 @@ export class OrdersHandler{
   }
 
   public async handleOrderCompletion(recipient: string) {
+
+    const client = await this.clientsModel.fetchClientByPhone(parseInt(recipient));
+    const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
 
   }
 
