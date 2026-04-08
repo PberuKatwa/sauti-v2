@@ -47,7 +47,10 @@ export class OrderCompletionHandler{
     } else {
 
       const client = await this.clientsModel.fetchClientByPhone(recipient);
+      if (!client) return null;
+
       const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
+      if (!currentOrder) return null;
 
       this.orderCache.setOrder(recipient, currentOrder);
       order = currentOrder;
@@ -67,12 +70,12 @@ export class OrderCompletionHandler{
     const order = await this.getCachedOrder(recipientInt);
 
     if (!order) {
-      this.orderCache.clearAll()
+      this.orderCache.clearAll();
       return { orderTaskExists: false };
     }
 
     if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
-      this.orderCache.clearAll()
+      this.orderCache.clearAll();
       return { orderTaskExists: false };
     }
 
