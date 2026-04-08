@@ -58,12 +58,24 @@ export interface InteractiveButtonMessage {
 }
 
 export interface InteractiveListMessage extends InteractiveButtonMessage{
-  id: string;
-  title: string;
+  description?: string;
 }
 
 export interface InteractiveMessage {
-  description?: string;
+  button_reply?: InteractiveButtonMessage;
+  list_reply?: InteractiveListMessage;
+}
+
+export interface LocationMessage {
+  latitude: number;
+  longitude: number;
+  name?: string;
+  address?: string;
+}
+
+export interface ButtonMessage {
+  payload: string;
+  text: string;
 }
 
 export interface IncomingMessages {
@@ -75,33 +87,10 @@ export interface IncomingMessages {
 
   order?:CatalogOrderMessage
 
-  text?: {
-    body: string;
-  };
+  text?: { body: string; };
+  interactive?: InteractiveMessage;
 
-  interactive?: {
-    button_reply?: {
-      id: string;
-      title: string;
-    };
+  button?: ButtonMessage;
 
-    list_reply?: {
-      id: string;
-      title: string;
-      description?: string;
-    };
-  };
-
-  button?: {
-    payload: string;
-    text: string;
-  };
-
-  // Add location field
-  location?: {
-    latitude: number;
-    longitude: number;
-    name?: string;        // Optional: location name if shared
-    address?: string;     // Optional: address if shared
-  };
+  location?: LocationMessage;
 }
