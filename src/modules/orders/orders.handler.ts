@@ -370,6 +370,291 @@ export class OrdersHandler {
     };
   }
 
+  private textToLocation(text: string): { latitude: number; longitude: number } | null {
+    const match = text.match(/^LAT:([-]?\d+\.\d+),LNG:([-]?\d+\.\d+)$/);
+
+    if (!match) {
+      console.error(`[ERROR] Invalid location format: "${text}"`);
+      return null;
+    }
+
+    const latitude = parseFloat(match[1]);
+    const longitude = parseFloat(match[2]);
+
+    if (isNaN(latitude) || isNaN(longitude)) {
+      console.error(`[ERROR] Failed to parse numbers from: "${text}"`);
+      return null;
+    }
+
+    return { latitude, longitude };
+  }
+
+  public async handleOrderCompletion2(
+    userMessage: UserMessagePayload,
+    recipient: string
+  ): Promise<{ orderTaskExists: boolean }> {
+
+    console.log(`[DEBUG] userMessage: "${userMessage}"`);
+
+    let order: OrderProfile | null = null;
+    const recipientInt = parseInt(recipient, 10);
+
+    const cachedOrder = this.orderCache.getOrder(recipientInt);
+    console.log(`[DEBUG] cachedOrder result:`, cachedOrder ? 'FOUND' : 'NOT FOUND');
+    console.log(`[DEBUG] cachedOrder value:`, JSON.stringify(cachedOrder, null, 2));
+
+    if (cachedOrder) {
+      order = cachedOrder;
+    } else {
+      console.log(`[DEBUG] Cache MISS - fetching from database`);
+
+      const client = await this.clientsModel.fetchClientByPhone(recipientInt);
+
+      if (!client) {
+        return { orderTaskExists: false };
+      }
+
+      const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
+
+      if (!currentOrder) {
+        return { orderTaskExists: false };
+      }
+
+      this.orderCache.setOrder(recipientInt, currentOrder);
+      order = currentOrder;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 3: CHECK IF ORDER IS ALREADY COMPLETE
+    // ─────────────────────────────────────────────────────────
+    console.log(`[DEBUG] --- STAGE 3: Order Completion Check ---`);
+    console.log(`[DEBUG] Checking order fields:`, {
+      latitude: order?.latitude,
+      longitude: order?.longitude,
+      order_contact: order?.order_contact,
+      has_latitude: !!order?.latitude,
+      has_longitude: !!order?.longitude,
+      has_order_contact: !!order?.order_contact
+    });
+
+    if (order.latitude && order.longitude && order.order_contact) {
+      console.log(`[DEBUG] ✅ Order is COMPLETE (all fields present)`);
+      console.log(`[DEBUG] Clearing all cache and returning orderTaskExists: false`);
+      this.orderCache.clearAll();
+      console.log(`[DEBUG] Cache cleared`);
+      return { orderTaskExists: false };
+    }
+    console.log(`[DEBUG] Order is INCOMPLETE - continuing processing`);
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 4: PREPARE UPDATE PAYLOAD
+    // ─────────────────────────────────────────────────────────
+    console.log(`[DEBUG] --- STAGE 4: Prepare Update Payload ---`);
+
+    const updateOrder: UpdateContactPayload = {
+      orderId: order.id,
+      deliveryType: order.delivery_type,
+      orderContact: order.order_contact,
+      specialInstructions: order.special_instructions
+    };
+    console.log(`[DEBUG] updateOrder payload created:`, JSON.stringify(updateOrder, null, 2));
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 5: CHECK COMPLETION STATE & PROCESS USER MESSAGE
+    // ─────────────────────────────────────────────────────────
+    console.log(`[DEBUG] --- STAGE 5: Check Completion State ---`);
+
+    const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
+    console.log(`[DEBUG] Current completion state: "${completionState}"`);
+    console.log(`[DEBUG] Completion state type: ${typeof completionState}`);
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 5A: HANDLE COMPLETE_CONTACT
+    // ─────────────────────────────────────────────────────────
+    if (completionState === "COMPLETE_CONTACT") {
+      console.log(`[DEBUG] >>> BRANCH: COMPLETE_CONTACT`);
+      console.log(`[DEBUG] Processing phone number from userMessage: "${userMessage}"`);
+
+      const cleanedMessage = userMessage.replace(/\D/g, '');
+      console.log(`[DEBUG] Cleaned digits: "${cleanedMessage}"`);
+      console.log(`[DEBUG] Cleaned length: ${cleanedMessage.length}`);
+
+      const phoneNumber = parseInt(cleanedMessage, 10);
+      console.log(`[DEBUG] Parsed phoneNumber: ${phoneNumber}`);
+      console.log(`[DEBUG] Is phoneNumber valid (not NaN)? ${!isNaN(phoneNumber)}`);
+
+      if (isNaN(phoneNumber)) {
+        console.error(`[DEBUG] ❌ ERROR: Failed to parse phone number from "${userMessage}"`);
+      }
+
+      updateOrder.orderContact = phoneNumber;
+      order.order_contact = phoneNumber;
+      console.log(`[DEBUG] updateOrder updated:`, JSON.stringify(updateOrder, null, 2));
+      console.log(`[DEBUG] order object updated, order_contact = ${order.order_contact}`);
+
+      try {
+        console.log(`[DEBUG] Calling ordersModel.updateContactAndDelivery...`);
+        await this.ordersModel.updateContactAndDelivery(updateOrder);
+        console.log(`[DEBUG] ✅ Database update successful`);
+      } catch (error) {
+        console.error(`[DEBUG] ❌ ERROR updating contact:`, error.message);
+        throw error;
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 5B: HANDLE COMPLETE_LOCATION
+    // ─────────────────────────────────────────────────────────
+    else if (completionState === "COMPLETE_LOCATION") {
+
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 5C: HANDLE COMPLETE_SPECIAL_INSTRUCTIONS
+    // ─────────────────────────────────────────────────────────
+    else if (completionState === "COMPLETE_SPECIAL_INSTRUCTIONS") {
+      console.log(`[DEBUG] >>> BRANCH: COMPLETE_SPECIAL_INSTRUCTIONS`);
+      console.log(`[DEBUG] Processing special instructions: "${userMessage}"`);
+
+      updateOrder.specialInstructions = userMessage;
+      order.special_instructions = userMessage;
+      console.log(`[DEBUG] updateOrder updated:`, JSON.stringify(updateOrder, null, 2));
+      console.log(`[DEBUG] order object updated, special_instructions = "${order.special_instructions}"`);
+
+      try {
+        console.log(`[DEBUG] Calling ordersModel.updateContactAndDelivery...`);
+        await this.ordersModel.updateContactAndDelivery(updateOrder);
+        console.log(`[DEBUG] ✅ Database update successful`);
+      } catch (error) {
+        console.error(`[DEBUG] ❌ ERROR updating special instructions:`, error.message);
+        throw error;
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 5D: NO COMPLETION STATE (INITIAL STATE)
+    // ─────────────────────────────────────────────────────────
+    else {
+      console.log(`[DEBUG] >>> BRANCH: NO_STATE (initial order setup)`);
+      console.log(`[DEBUG] No completion state found, this is first interaction`);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 6: UPDATE CACHE WITH MODIFIED ORDER
+    // ─────────────────────────────────────────────────────────
+    console.log(`[DEBUG] --- STAGE 6: Update Cache ---`);
+    console.log(`[DEBUG] Setting updated order in cache for recipient ${recipientInt}`);
+    console.log(`[DEBUG] Order to cache:`, {
+      id: order.id,
+      order_contact: order.order_contact,
+      latitude: order.latitude,
+      longitude: order.longitude,
+      special_instructions: order.special_instructions
+    });
+
+    this.orderCache.setOrder(recipientInt, order);
+    console.log(`[DEBUG] ✅ Cache updated`);
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 7: DETERMINE NEXT REQUIRED FIELD & SEND PROMPT
+    // ─────────────────────────────────────────────────────────
+    console.log(`[DEBUG] --- STAGE 7: Determine Next Field ---`);
+    console.log(`[DEBUG] Checking missing fields:`, {
+      has_order_contact: !!order.order_contact,
+      has_latitude: !!order.latitude,
+      has_longitude: !!order.longitude,
+      has_special_instructions: !!order.special_instructions
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 7A: NEED CONTACT
+    // ─────────────────────────────────────────────────────────
+    if (!order.order_contact) {
+      console.log(`[DEBUG] >>> PROMPT: Requesting CONTACT (order_contact is missing)`);
+
+      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} has been placed successfully. To ensure smooth delivery, please provide the recipient's phone number. Kindly reply with only the phone number (e.g., 07XXXXXXXX).`;
+      console.log(`[DEBUG] WhatsApp message prepared:`, message.substring(0, 50) + '...');
+
+      try {
+        console.log(`[DEBUG] Calling whatsappService.sendText to ${recipient}`);
+        await this.whatsappService.sendText(message, recipient);
+        console.log(`[DEBUG] ✅ WhatsApp message sent`);
+      } catch (error) {
+        console.error(`[DEBUG] ❌ ERROR sending WhatsApp message:`, error.message);
+      }
+
+      console.log(`[DEBUG] Setting completion state to COMPLETE_CONTACT`);
+      this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_CONTACT");
+      console.log(`[DEBUG] ✅ Completion state set`);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 7B: NEED LOCATION
+    // ─────────────────────────────────────────────────────────
+    else if (!order.latitude || !order.longitude) {
+      console.log(`[DEBUG] >>> PROMPT: Requesting LOCATION (lat/lng missing)`);
+      console.log(`[DEBUG] latitude: ${order.latitude}, longitude: ${order.longitude}`);
+
+      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete. Please share your delivery location via WhatsApp. To do this: 1. Tap the attachment 📎 icon 2. Select "Location" 3. Send your current location. This helps us deliver accurately.`;
+      console.log(`[DEBUG] WhatsApp message prepared:`, message.substring(0, 50) + '...');
+
+      try {
+        console.log(`[DEBUG] Calling whatsappService.sendText to ${recipient}`);
+        await this.whatsappService.sendText(message, recipient);
+        console.log(`[DEBUG] ✅ WhatsApp message sent`);
+      } catch (error) {
+        console.error(`[DEBUG] ❌ ERROR sending WhatsApp message:`, error.message);
+      }
+
+      console.log(`[DEBUG] Setting completion state to COMPLETE_LOCATION`);
+      this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_LOCATION");
+      console.log(`[DEBUG] ✅ Completion state set`);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 7C: NEED SPECIAL INSTRUCTIONS
+    // ─────────────────────────────────────────────────────────
+    else if (!order.special_instructions) {
+      console.log(`[DEBUG] >>> PROMPT: Requesting SPECIAL_INSTRUCTIONS`);
+
+      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete. Do you have any special instructions? (e.g., message on the card, delivery notes) Reply with your instructions or type "No" if none.`;
+      console.log(`[DEBUG] WhatsApp message prepared:`, message.substring(0, 50) + '...');
+
+      try {
+        console.log(`[DEBUG] Calling whatsappService.sendText to ${recipient}`);
+        await this.whatsappService.sendText(message, recipient);
+        console.log(`[DEBUG] ✅ WhatsApp message sent`);
+      } catch (error) {
+        console.error(`[DEBUG] ❌ ERROR sending WhatsApp message:`, error.message);
+      }
+
+      console.log(`[DEBUG] Setting completion state to COMPLETE_SPECIAL_INSTRUCTIONS`);
+      this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_SPECIAL_INSTRUCTIONS");
+      console.log(`[DEBUG] ✅ Completion state set`);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 7D: ALL FIELDS COMPLETE (SHOULDN'T REACH HERE)
+    // ─────────────────────────────────────────────────────────
+    else {
+      console.warn(`[DEBUG] ⚠️ WARNING: Reached prompt stage but all fields appear complete!`);
+      console.warn(`[DEBUG] This should have been caught in Stage 3`);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // STAGE 8: RETURN
+    // ─────────────────────────────────────────────────────────
+    console.log(`[DEBUG] --- STAGE 8: Return ---`);
+    console.log(`[DEBUG] Returning: { orderTaskExists: true }`);
+    console.log(`[DEBUG] ==========================================`);
+    console.log(`[DEBUG] handleOrderCompletion COMPLETED`);
+    console.log(`[DEBUG] ==========================================`);
+
+    return {
+      orderTaskExists: true
+    };
+  }
+
   private async handleCreateOrder(userMessage: string, recipient: string) {
 
     const client = await this.clientsModel.createClient({ phoneNumber: parseInt(recipient) });

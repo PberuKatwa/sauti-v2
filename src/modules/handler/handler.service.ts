@@ -68,7 +68,7 @@ export class HandlerService{
       const msg = messages[0];
       const sender = msg.from;
 
-      let userMessage: UserMessagePayload | string |null = null;
+      let userMessage: string |null = null;
 
       if (msg.type === "text") {
         userMessage = msg.text?.body;
@@ -86,7 +86,9 @@ export class HandlerService{
       }
 
       else if (msg.type === "location") {
-        userMessage = msg.location;
+        const lat = msg.location.latitude.toFixed(8);
+        const lng = msg.location.longitude.toFixed(8);
+        userMessage = `LAT:${lat},LNG:${lng}`;
       }
 
       if (!userMessage) {
@@ -121,7 +123,7 @@ export class HandlerService{
 
   }
 
-  private async processMessage(messages: IncomingMessages[]): Promise<void> {
+  private async processIntentMessage(messages: IncomingMessages[]): Promise<void> {
     try {
 
       const { userMessage, recipient } = this.extractMessageAndRecepient(messages);
@@ -171,17 +173,19 @@ export class HandlerService{
 
       const { type, data } = this.extractWhatsappWebhookType(payload);
 
+
       if (type === "MESSAGE") {
 
         const messages = data.entry?.[0]?.changes?.[0]?.value.messages;
 
         const msg = messages[0];
+
         if (msg.type === "order") {
           await this.processCatalogOrder(msg.order, msg.from);
           return
         }
 
-        await this.processMessage(messages);
+        await this.processIntentMessage(messages);
       } else if (type === "STATUS") {
 
         const statuses = data.entry?.[0]?.changes?.[0]?.value.statuses;
