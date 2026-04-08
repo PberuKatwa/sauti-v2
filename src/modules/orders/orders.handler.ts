@@ -70,16 +70,65 @@ export class OrdersHandler {
       specialInstructions:order.special_instructions
     }
 
+
     if (!order.order_contact) {
+
+      this.whatsappService.sendText(
+        `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} has been placed successfully.
+        To ensure smooth delivery, please provide the recipient’s phone number.
+        Kindly reply with only the phone number (e.g., 07XXXXXXXX).`,
+        recipient
+      )
+
+      this.orderCache.setOrderCompletionMessage(parseInt(recipient), "COMPLETE_CONTACT")
 
     }
     else if (!order.latitude || !order.longitude) {
 
+      this.whatsappService.sendText(
+        `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.
+        Please share your delivery location via WhatsApp.
+
+        To do this:
+        1. Tap the attachment 📎 icon
+        2. Select "Location"
+        3. Send your current location
+
+        This helps us deliver accurately.`,
+        recipient
+      )
+
+      this.orderCache.setOrderCompletionMessage(parseInt(recipient), "COMPLETE_LOCATION")
+
     }
     else if (!order.delivery_type) {
 
+      this.whatsappService.sendText(
+        `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.
+        Please specify your delivery time.
+
+        Reply with:
+        • "No" for immediate delivery
+        OR
+        • A scheduled time and date (e.g., 10am 12 May)`,
+        recipient
+      )
+
+      this.orderCache.setOrderCompletionMessage(parseInt(recipient), "COMPLETE_DELIVERY_TYPE")
+
+
     }
     else if (!order.special_instructions) {
+
+      this.whatsappService.sendText(
+        `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.
+        Do you have any special instructions? (e.g., message on the card, delivery notes)
+
+        Reply with your instructions or type "No" if none.`,
+        recipient
+      )
+
+      this.orderCache.setOrderCompletionMessage(parseInt(recipient), "COMPLETE_SPECIAL_INSTRUCTIONS")
 
     }
 
