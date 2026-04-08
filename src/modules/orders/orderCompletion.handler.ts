@@ -62,10 +62,16 @@ export class OrderCompletionHandler{
   private async completeOrderField(
     userMessage: string,
     recipient: number,
-    updateOrder: UpdateContactPayload,
     order: OrderProfile
   ): Promise<OrderProfile>
   {
+
+    const updateOrder: UpdateContactPayload = {
+      orderId: order.id,
+      deliveryType: order.delivery_type,
+      orderContact: order.order_contact,
+      specialInstructions: order.special_instructions
+    };
 
     const completionState = this.orderCache.getOrderCompletionMessage(recipient);
 
@@ -78,6 +84,7 @@ export class OrderCompletionHandler{
       order.order_contact = phoneNumber;
       await this.ordersModel.updateContactAndDelivery(updateOrder);
     }
+
     else if (completionState === "COMPLETE_LOCATION") {
 
       const { latitude, longitude } = this.textToLocation(userMessage);
@@ -85,6 +92,7 @@ export class OrderCompletionHandler{
       order.latitude = latitude;
       order.longitude = longitude;
     }
+
     else if (completionState === "COMPLETE_SPECIAL_INSTRUCTIONS") {
 
       updateOrder.specialInstructions = userMessage;
