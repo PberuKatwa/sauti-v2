@@ -409,36 +409,18 @@ export class OrdersHandler {
       console.log(`[DEBUG] Cache MISS - fetching from database`);
 
       const client = await this.clientsModel.fetchClientByPhone(recipientInt);
-
       if (!client) return { orderTaskExists: false };
 
       const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
-
       if (!currentOrder) return { orderTaskExists: false };
 
       this.orderCache.setOrder(recipientInt, currentOrder);
       order = currentOrder;
     }
 
-    // ─────────────────────────────────────────────────────────
-    // STAGE 3: CHECK IF ORDER IS ALREADY COMPLETE
-    // ─────────────────────────────────────────────────────────
-    console.log(`[DEBUG] --- STAGE 3: Order Completion Check ---`);
-    console.log(`[DEBUG] Checking order fields:`, {
-      latitude: order?.latitude,
-      longitude: order?.longitude,
-      order_contact: order?.order_contact,
-      has_latitude: !!order?.latitude,
-      has_longitude: !!order?.longitude,
-      has_order_contact: !!order?.order_contact
-    });
 
     if (order.latitude && order.longitude && order.order_contact) {
-      console.log(`[DEBUG] ✅ Order is COMPLETE (all fields present)`);
-      console.log(`[DEBUG] Clearing all cache and returning orderTaskExists: false`);
       this.orderCache.clearAll();
-      console.log(`[DEBUG] Cache cleared`);
-      return { orderTaskExists: false };
     }
     console.log(`[DEBUG] Order is INCOMPLETE - continuing processing`);
 
