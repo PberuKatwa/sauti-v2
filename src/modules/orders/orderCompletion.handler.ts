@@ -36,6 +36,31 @@ export class OrderCompletionHandler{
     return { latitude, longitude };
   }
 
+  private async getCachedOrder(recipient: string):Promise<OrderProfile | null> {
+
+    let order: OrderProfile | null = null;
+    const recipientInt = parseInt(recipient, 10);
+
+    const cachedOrder = this.orderCache.getOrder(recipientInt);
+
+    if (cachedOrder) {
+      order = cachedOrder;
+    } else {
+
+      const client = await this.clientsModel.fetchClientByPhone(recipientInt);
+      const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
+
+      this.orderCache.setOrder(recipientInt, currentOrder);
+      order = currentOrder;
+    }
+
+    if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
+      this.orderCache.clearAll()
+    }
+
+    return order;
+  }
+
   public async handleOrderCompletion(
     userMessage: UserMessagePayload,
     recipient: string
