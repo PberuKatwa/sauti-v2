@@ -462,100 +462,43 @@ export class OrdersHandler {
     this.orderCache.setOrder(recipientInt, order);
     console.log(`[DEBUG] ✅ Cache updated`);
 
-    // ─────────────────────────────────────────────────────────
-    // STAGE 7: DETERMINE NEXT REQUIRED FIELD & SEND PROMPT
-    // ─────────────────────────────────────────────────────────
-    console.log(`[DEBUG] --- STAGE 7: Determine Next Field ---`);
-    console.log(`[DEBUG] Checking missing fields:`, {
-      has_order_contact: !!order.order_contact,
-      has_latitude: !!order.latitude,
-      has_longitude: !!order.longitude,
-      has_special_instructions: !!order.special_instructions
-    });
-
-    // ─────────────────────────────────────────────────────────
-    // STAGE 7A: NEED CONTACT
-    // ─────────────────────────────────────────────────────────
     if (!order.order_contact) {
-      console.log(`[DEBUG] >>> PROMPT: Requesting CONTACT (order_contact is missing)`);
 
-      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} has been placed successfully. To ensure smooth delivery, please provide the recipient's phone number. Kindly reply with only the phone number (e.g., 07XXXXXXXX).`;
-      console.log(`[DEBUG] WhatsApp message prepared:`, message.substring(0, 50) + '...');
+      const message = `
+        Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} has been placed successfully.\n
+        To ensure smooth delivery, please provide the recipient's phone number.
+        Kindly reply with only the phone number (e.g., 07XXXXXXXX).`;
 
-      try {
-        console.log(`[DEBUG] Calling whatsappService.sendText to ${recipient}`);
-        await this.whatsappService.sendText(message, recipient);
-        console.log(`[DEBUG] ✅ WhatsApp message sent`);
-      } catch (error) {
-        console.error(`[DEBUG] ❌ ERROR sending WhatsApp message:`, error.message);
-      }
+      await this.whatsappService.sendText(message, recipient);
 
-      console.log(`[DEBUG] Setting completion state to COMPLETE_CONTACT`);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_CONTACT");
-      console.log(`[DEBUG] ✅ Completion state set`);
     }
 
-    // ─────────────────────────────────────────────────────────
-    // STAGE 7B: NEED LOCATION
-    // ─────────────────────────────────────────────────────────
     else if (!order.latitude || !order.longitude) {
-      console.log(`[DEBUG] >>> PROMPT: Requesting LOCATION (lat/lng missing)`);
-      console.log(`[DEBUG] latitude: ${order.latitude}, longitude: ${order.longitude}`);
 
-      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete. Please share your delivery location via WhatsApp. To do this: 1. Tap the attachment 📎 icon 2. Select "Location" 3. Send your current location. This helps us deliver accurately.`;
-      console.log(`[DEBUG] WhatsApp message prepared:`, message.substring(0, 50) + '...');
-
-      try {
-        console.log(`[DEBUG] Calling whatsappService.sendText to ${recipient}`);
-        await this.whatsappService.sendText(message, recipient);
-        console.log(`[DEBUG] ✅ WhatsApp message sent`);
-      } catch (error) {
-        console.error(`[DEBUG] ❌ ERROR sending WhatsApp message:`, error.message);
-      }
-
-      console.log(`[DEBUG] Setting completion state to COMPLETE_LOCATION`);
+      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.
+        Please share your delivery location via WhatsApp.
+        To do this:\n
+        1. Tap the attachment 📎 icon\n
+        2. Select "Location"\n
+        3. Send your current location.\n
+        This helps us deliver accurately.`;
+      await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_LOCATION");
-      console.log(`[DEBUG] ✅ Completion state set`);
+
     }
 
-    // ─────────────────────────────────────────────────────────
-    // STAGE 7C: NEED SPECIAL INSTRUCTIONS
-    // ─────────────────────────────────────────────────────────
     else if (!order.special_instructions) {
-      console.log(`[DEBUG] >>> PROMPT: Requesting SPECIAL_INSTRUCTIONS`);
 
-      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete. Do you have any special instructions? (e.g., message on the card, delivery notes) Reply with your instructions or type "No" if none.`;
-      console.log(`[DEBUG] WhatsApp message prepared:`, message.substring(0, 50) + '...');
+      const message =
+        `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.
+        Do you have any special instructions? (e.g., message on the card, delivery notes)
+        Reply with your instructions or type "No" if none.
+        `;
 
-      try {
-        console.log(`[DEBUG] Calling whatsappService.sendText to ${recipient}`);
-        await this.whatsappService.sendText(message, recipient);
-        console.log(`[DEBUG] ✅ WhatsApp message sent`);
-      } catch (error) {
-        console.error(`[DEBUG] ❌ ERROR sending WhatsApp message:`, error.message);
-      }
-
-      console.log(`[DEBUG] Setting completion state to COMPLETE_SPECIAL_INSTRUCTIONS`);
+      await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_SPECIAL_INSTRUCTIONS");
-      console.log(`[DEBUG] ✅ Completion state set`);
     }
-
-    // ─────────────────────────────────────────────────────────
-    // STAGE 7D: ALL FIELDS COMPLETE (SHOULDN'T REACH HERE)
-    // ─────────────────────────────────────────────────────────
-    else {
-      console.warn(`[DEBUG] ⚠️ WARNING: Reached prompt stage but all fields appear complete!`);
-      console.warn(`[DEBUG] This should have been caught in Stage 3`);
-    }
-
-    // ─────────────────────────────────────────────────────────
-    // STAGE 8: RETURN
-    // ─────────────────────────────────────────────────────────
-    console.log(`[DEBUG] --- STAGE 8: Return ---`);
-    console.log(`[DEBUG] Returning: { orderTaskExists: true }`);
-    console.log(`[DEBUG] ==========================================`);
-    console.log(`[DEBUG] handleOrderCompletion COMPLETED`);
-    console.log(`[DEBUG] ==========================================`);
 
     return {
       orderTaskExists: true
