@@ -86,6 +86,27 @@ export class OrderCompletionHandler{
     }
   }
 
+  private async completeOrderLocation(
+    userMessage: string,
+    recipient: number,
+    order:OrderProfile,
+    updateOrder: UpdateContactPayload
+  ):Promise<OrderProfile> {
+    try {
+
+      const { latitude, longitude } = this.textToLocation(userMessage);
+      await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
+      order.latitude = latitude;
+      order.longitude = longitude;
+
+      return order;
+    } catch (error) {
+      const message = `Dear user you submitted an invalid location for ORDER-NUMBER-${order.order_number}.\n1. Tap the attachment 📎 icon\n2. Select "Location"\n3. Send your current location.\n.`;
+      await this.whatsappService.sendText(message, recipient.toString());
+      return null;
+    }
+  }
+
   private async completeOrderField(
     userMessage: string,
     recipient: number,
