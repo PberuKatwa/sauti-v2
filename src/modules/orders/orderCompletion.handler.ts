@@ -60,10 +60,6 @@ export class OrderCompletionHandler{
     return order;
   }
 
-  private fieldUpdateMap(map: OrderCompleteType) {
-
-  }
-
   private readonly fieldCompletionMap: Record<OrderCompleteType, (
     userMessage: string,
     recipient: number,
