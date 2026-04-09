@@ -211,9 +211,21 @@ export class OrderCompletionHandler{
       return false
     }
 
-    order = await this.completeOrderField(userMessage, recipientInt, order);
+    const updateOrder: UpdateContactPayload = {
+      orderId: order.id,
+      deliveryType: order.delivery_type,
+      orderContact: order.order_contact,
+      specialInstructions: order.special_instructions
+    };
+
+    const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
+
+    const handler = this.fieldCompletionMap[completionState]
+    order = await handler(userMessage, recipientInt, order, updateOrder);
 
     if (!order) return true;
+
+    // order = await this.completeOrderField(userMessage, recipientInt, order);
 
     if (!order.order_contact) {
 
