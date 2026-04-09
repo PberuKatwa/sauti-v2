@@ -10,6 +10,7 @@ import { ProductsHandler } from "../products/products.handler";
 import { OrdersHandler } from "../orders/orders.handler";
 import { CustomerCareHandler } from "../customerCare/care.handler";
 import { PaymentsHandler } from "../payments/payments.handler";
+import { OrderCompletionHandler } from "../orders/orderCompletion.handler";
 
 const STOP_WORDS = new Set([
   'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been',
@@ -26,6 +27,7 @@ export class HandlerService{
     private readonly intentDetector: IntentDetectorService,
     private readonly productsHandler: ProductsHandler,
     private readonly ordersHandler: OrdersHandler,
+    private readonly orderCompletionHandler:OrderCompletionHandler,
     private readonly customerCareHandler: CustomerCareHandler,
     private readonly paymentsHandler:PaymentsHandler
   ) { };
@@ -133,7 +135,9 @@ export class HandlerService{
         recipient:recipient
       })
 
-      if (!this.ordersHandler.handleOrderCompletion2(userMessage, recipient)) return;
+      // if (!this.ordersHandler.handleOrderCompletion2(userMessage, recipient)) return;
+      if (!this.orderCompletionHandler.handleOrderCompletion(userMessage, recipient)) return;
+
 
       const intentsFile = loadIntentsFromFile();
       this.intentDetector.setup(intentsFile, STOP_WORDS);
