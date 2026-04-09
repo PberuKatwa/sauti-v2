@@ -64,6 +64,18 @@ export class OrderCompletionHandler{
 
   }
 
+  private readonly fieldCompletionMap: Record<OrderCompleteType, (
+    userMessage: string,
+    recipient: number,
+    order: OrderProfile,
+    updateOrder: UpdateContactPayload
+  ) => Promise<any>> = {
+    'COMPLETE_CONTACT': (userMessage, recipient, order, updateOrder)=> this.completeOrderContact(userMessage, recipient, order, updateOrder),
+    'COMPLETE_LOCATION': (userMessage, recipient, order, updateOrder)=> this.completeOrderLocation(userMessage, recipient, order, updateOrder),
+    'COMPLETE_SPECIAL_INSTRUCTIONS': (userMessage, recipient, order, updateOrder) => this.completeOrderSpecialInstructions(userMessage, recipient, order, updateOrder),
+    'COMPLETE_DELIVERY_TYPE': (userMessage, recipient, order, updateOrder)=> this.completeOrderSpecialInstructions(userMessage, recipient, order, updateOrder),
+  };
+
   private async completeOrderContact(
     userMessage: string,
     recipient: number,
@@ -115,10 +127,9 @@ export class OrderCompletionHandler{
   ):Promise<OrderProfile> {
     try {
 
-      const { latitude, longitude } = this.textToLocation(userMessage);
-      await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
-      order.latitude = latitude;
-      order.longitude = longitude;
+      updateOrder.specialInstructions = userMessage;
+      order.special_instructions = userMessage;
+      await this.ordersModel.updateContactAndDelivery(updateOrder);
 
       return order;
     } catch (error) {
