@@ -107,6 +107,27 @@ export class OrderCompletionHandler{
     }
   }
 
+  private async completeOrderSpecialInstructions(
+    userMessage: string,
+    recipient: number,
+    order:OrderProfile,
+    updateOrder: UpdateContactPayload
+  ):Promise<OrderProfile> {
+    try {
+
+      const { latitude, longitude } = this.textToLocation(userMessage);
+      await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
+      order.latitude = latitude;
+      order.longitude = longitude;
+
+      return order;
+    } catch (error) {
+      const message = `Dear user you submitted an invalid instructions for ORDER-NUMBER-${order.order_number}.Please provide a basic text.`;
+      await this.whatsappService.sendText(message, recipient.toString());
+      return null;
+    }
+  }
+
   private async completeOrderField(
     userMessage: string,
     recipient: number,
