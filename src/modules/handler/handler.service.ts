@@ -139,7 +139,6 @@ export class HandlerService{
       const orderCompletionResult = await this.orderCompletionHandler.handleOrderCompletion(userMessage, recipient);
       if (orderCompletionResult) return;
 
-
       const intentsFile = loadIntentsFromFile();
       this.intentDetector.setup(intentsFile, STOP_WORDS);
       const intentResult = await this.intentDetector.getFinalIntent(userMessage);
