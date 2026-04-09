@@ -1,12 +1,13 @@
+import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { OrderProfile, UpdateContactPayload } from "../../types/orders.types";
 import { UserMessagePayload } from "../../types/whatsapp.webhook";
-import { OrderCacheService } from "../cache/cache.order";
+import { OrderCacheService, OrderCompleteType } from "../cache/cache.order";
 import { ClientModel } from "../client/client.model";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { OrdersModel } from "./orders.model";
 
-
+@Injectable()
 export class OrderCompletionHandler{
   constructor(
     private readonly logger: AppLogger,
@@ -59,11 +60,37 @@ export class OrderCompletionHandler{
     return order;
   }
 
+  private fieldUpdateMap(map: OrderCompleteType) {
+
+  }
+
+  private async completeOrderContact(
+    userMessage: string,
+    recipient: number,
+    order:OrderProfile,
+    updateOrder: UpdateContactPayload
+  ):Promise<OrderProfile> {
+    try {
+      const cleanedMessage = userMessage.replace(/\D/g, '');
+      const phoneNumber = parseInt(cleanedMessage, 10);
+
+      updateOrder.orderContact = phoneNumber;
+      order.order_contact = phoneNumber;
+      await this.ordersModel.updateContactAndDelivery(updateOrder);
+
+      return order
+    } catch (error) {
+      const message = `Dear user you submitted an invalid phone number for ORDER-NUMBER-${order.order_number}.\n the format should be ( 07XXXXXXXX).`;
+      await this.whatsappService.sendText(message, recipient.toString());
+      return null;
+    }
+  }
+
   private async completeOrderField(
     userMessage: string,
     recipient: number,
     order: OrderProfile
-  ): Promise<OrderProfile>
+  ): Promise<OrderProfile | null>
   {
 
     const updateOrder: UpdateContactPayload = {
@@ -86,11 +113,17 @@ export class OrderCompletionHandler{
     }
 
     else if (completionState === "COMPLETE_LOCATION") {
+      try {
+        const { latitude, longitude } = this.textToLocation(userMessage);
+        await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
+        order.latitude = latitude;
+        order.longitude = longitude;
+      } catch (error) {
+        const message = `Dear user you submitted an invalid location for ORDER-NUMBER-${order.order_number}.\n1. Tap the attachment 📎 icon\n2. Select "Location"\n3. Send your current location.\n.`;
+        await this.whatsappService.sendText(message, recipient.toString());
+        return null;
+      }
 
-      const { latitude, longitude } = this.textToLocation(userMessage);
-      await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
-      order.latitude = latitude;
-      order.longitude = longitude;
     }
 
     else if (completionState === "COMPLETE_SPECIAL_INSTRUCTIONS") {
@@ -108,7 +141,7 @@ export class OrderCompletionHandler{
   public async handleOrderCompletion(
     userMessage: UserMessagePayload,
     recipient: string
-  ): Promise<{ orderTaskExists: boolean }> {
+  ): Promise<boolean> {
 
     const recipientInt = parseInt(recipient, 10);
 
@@ -117,15 +150,17 @@ export class OrderCompletionHandler{
 
     if (!order) {
       this.orderCache.clearAll();
-      return { orderTaskExists: false };
+      return false
     }
 
     if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
       this.orderCache.clearAll();
-      return { orderTaskExists: false };
+      return false
     }
 
     order = await this.completeOrderField(userMessage, recipientInt, order);
+
+    if (!order) return true;
 
     if (!order.order_contact) {
 
@@ -150,9 +185,7 @@ export class OrderCompletionHandler{
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_SPECIAL_INSTRUCTIONS");
     }
 
-    return {
-      orderTaskExists: true
-    };
+    return true;
   }
 
 }

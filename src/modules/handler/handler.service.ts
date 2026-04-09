@@ -136,7 +136,8 @@ export class HandlerService{
       })
 
       // if (!this.ordersHandler.handleOrderCompletion2(userMessage, recipient)) return;
-      if (!this.orderCompletionHandler.handleOrderCompletion(userMessage, recipient)) return;
+      const orderCompletionResult = await this.orderCompletionHandler.handleOrderCompletion(userMessage, recipient);
+      if (orderCompletionResult) return;
 
 
       const intentsFile = loadIntentsFromFile();
