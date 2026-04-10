@@ -171,17 +171,22 @@ export class OrderCompletionHandler{
 
     const recipientInt = parseInt(recipient, 10);
 
-    console.log(`[DEBUG] userMessage: "${userMessage}"`);
+    this.logger.info(`Handling order completion for recipient: ${recipientInt}`);
+
     let order = await this.getCachedOrder(recipientInt);
 
     if (!order) {
+      this.logger.warn(`No cached order found for recipient: ${recipientInt}. Clearing cache.`);
       this.orderCache.clearAll();
-      return false
+      return false;
     }
 
+    this.logger.info(`Order found: id=${order.id}, order_number=${order.order_number}`);
+
     if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
+      this.logger.info(`Order ${order.order_number} already complete. Clearing cache.`);
       this.orderCache.clearAll();
-      return false
+      return false;
     }
 
     const updateOrder: UpdateContactPayload = {
@@ -194,35 +199,46 @@ export class OrderCompletionHandler{
     const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
 
     if (completionState) {
-      const handler = this.fieldCompletionMap[completionState]
+      this.logger.info(`Processing completion step: ${completionState} for order ${order.order_number}`);
+
+      const handler = this.fieldCompletionMap[completionState];
       order = await handler(userMessage, recipientInt, order, updateOrder);
+
+      if (!order) {
+        this.logger.warn(`Handler returned null for step ${completionState}, stopping flow.`);
+        return true;
+      }
     }
 
-
-    if (!order) return true;
-
+    // === NEXT REQUIRED STEP ===
     if (!order.order_contact) {
+      this.logger.info(`Requesting contact for order ${order.order_number}`);
 
-      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} has been placed successfully.\nTo ensure smooth delivery, please provide the recipient's phone number.Kindly reply with only the phone number (e.g., 07XXXXXXXX).`;
+      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} has been placed successfully.\nTo ensure smooth delivery, please provide the recipient's phone number. Kindly reply with only the phone number (e.g., 07XXXXXXXX).`;
+
       await this.whatsappService.sendText(message, recipient);
-
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_CONTACT");
     }
 
     else if (!order.latitude || !order.longitude) {
+      this.logger.info(`Requesting location for order ${order.order_number}`);
 
-      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.Please share your delivery location via WhatsApp.To do this:\n1. Tap the attachment 📎 icon\n2. Select "Location"\n3. Send your current location.\nThis helps us deliver accurately.`;
+      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete. Please share your delivery location via WhatsApp.\nTap 📎 → Location → Send your current location.`;
+
       await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_LOCATION");
-
     }
 
     else if (!order.special_instructions) {
+      this.logger.info(`Requesting special instructions for order ${order.order_number}`);
 
-      const message =`Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.Do you have any special instructions? (e.g., message on the card, delivery notes).Reply with your instructions or type "No" if none.`;
+      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete. Do you have any special instructions?\nReply with your instructions or type "No" if none.`;
+
       await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_SPECIAL_INSTRUCTIONS");
     }
+
+    this.logger.info(`Order completion flow processed for order ${order.order_number}`);
 
     return true;
   }
