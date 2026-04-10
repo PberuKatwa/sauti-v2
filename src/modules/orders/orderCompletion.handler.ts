@@ -37,7 +37,7 @@ export class OrderCompletionHandler{
     return { latitude, longitude };
   }
 
-  private validatePhone(input: string): { valid: boolean; phone?: number } {
+  private validatePhone(input: string): { isValid: boolean; phone?: number } {
     let cleaned = input.trim().replace(/[^\d+]/g, '');
     let normalized: string | null = null;
 
@@ -54,12 +54,12 @@ export class OrderCompletionHandler{
     }
 
     if (!normalized) {
-      return { valid: false };
+      return { isValid: false };
     }
     const numeric = Number(normalized.replace('+', ''));
 
     return {
-      valid: true,
+      isValid: true,
       phone: numeric,
     };
   }
@@ -106,6 +106,9 @@ export class OrderCompletionHandler{
     updateOrder: UpdateContactPayload
   ):Promise<OrderProfile> {
     try {
+
+      const {  } = this.validatePhone(userMessage);
+
       const cleanedMessage = userMessage.replace(/\D/g, '');
       const phoneNumber = parseInt(cleanedMessage, 10);
 
