@@ -107,13 +107,12 @@ export class OrderCompletionHandler{
   ):Promise<OrderProfile> {
     try {
 
-      const {  } = this.validatePhone(userMessage);
+      const { isValid, phone } = this.validatePhone(userMessage);
 
-      const cleanedMessage = userMessage.replace(/\D/g, '');
-      const phoneNumber = parseInt(cleanedMessage, 10);
+      if (!isValid) throw new Error(`Phone number is invalid`);
 
-      updateOrder.orderContact = phoneNumber;
-      order.order_contact = phoneNumber;
+      updateOrder.orderContact = phone;
+      order.order_contact = phone;
       await this.ordersModel.updateContactAndDelivery(updateOrder);
 
       return order
