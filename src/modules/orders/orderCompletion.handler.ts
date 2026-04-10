@@ -138,7 +138,7 @@ export class OrderCompletionHandler{
 
       return order;
     } catch (error) {
-      const message = `Dear user you submitted an invalid location for ORDER-NUMBER-${order.order_number}.\n1. Tap the attachment 📎 icon\n2. Select "Location"\n3. Send your current location.\n.`;
+      const message = `Invalid location for ORDER-${order.order_number}.\nTap 📎 → Location → Send your current location.`;
       await this.whatsappService.sendText(message, recipient.toString());
       return null;
     }
@@ -158,7 +158,7 @@ export class OrderCompletionHandler{
 
       return order;
     } catch (error) {
-      const message = `Dear user you submitted an invalid instructions for ORDER-NUMBER-${order.order_number}.Please provide a basic text.`;
+      const message = `Invalid instructions for ORDER-${order.order_number}. Enter special instructions for your order(3.g message on card) or reply "no" if none.`;
       await this.whatsappService.sendText(message, recipient.toString());
       return null;
     }
