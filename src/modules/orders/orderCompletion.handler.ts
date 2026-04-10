@@ -117,7 +117,7 @@ export class OrderCompletionHandler{
 
       return order
     } catch (error) {
-      const message = `Dear user you submitted an invalid phone number for ORDER-NUMBER-${order.order_number}.\n the format should be ( 07XXXXXXXX).`;
+      const message = `Invalid phone number: ${userMessage} for ORDER-${order.order_number}. Use format 07XXXXXXXX for example 0722123456.`;
       await this.whatsappService.sendText(message, recipient.toString());
       return null;
     }
@@ -184,8 +184,6 @@ export class OrderCompletionHandler{
       return false
     }
 
-    console.log("orderrrrrr", order)
-
     const updateOrder: UpdateContactPayload = {
       orderId: order.id,
       deliveryType: order.delivery_type,
@@ -194,8 +192,6 @@ export class OrderCompletionHandler{
     };
 
     const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
-
-    console.log("completion stateee", completionState)
 
     if (completionState) {
       const handler = this.fieldCompletionMap[completionState]
