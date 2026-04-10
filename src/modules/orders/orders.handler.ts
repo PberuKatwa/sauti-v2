@@ -278,7 +278,7 @@ export class OrdersHandler {
 
   }
 
-  private async sendOrder(recipient: string, order: OrderProfile) {
+  public async sendOrder(recipient: string, order: OrderProfile) {
 
     const itemSummary = order.items
       .map((item: any) => `• ${item.name} (x${item.quantity})`)

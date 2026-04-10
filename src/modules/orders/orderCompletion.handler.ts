@@ -6,6 +6,7 @@ import { OrderCacheService, OrderCompleteType } from "../cache/cache.order";
 import { ClientModel } from "../client/client.model";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { OrdersModel } from "./orders.model";
+import { OrdersHandler } from "./orders.handler";
 
 @Injectable()
 export class OrderCompletionHandler{
@@ -14,7 +15,8 @@ export class OrderCompletionHandler{
     private readonly whatsappService: WhatsappService,
     private readonly ordersModel: OrdersModel,
     private readonly clientsModel: ClientModel,
-    private readonly orderCache: OrderCacheService
+    private readonly orderCache: OrderCacheService,
+    private readonly orderHandler:OrdersHandler
   ) {
   };
 
@@ -239,6 +241,10 @@ export class OrderCompletionHandler{
     }
 
     this.logger.info(`Order completion flow processed for order ${order.order_number}`);
+
+    if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
+      await this.orderHandler.sendOrder(recipient, order);
+    }
 
     return true;
   }
