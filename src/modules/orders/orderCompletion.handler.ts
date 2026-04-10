@@ -37,6 +37,33 @@ export class OrderCompletionHandler{
     return { latitude, longitude };
   }
 
+  private validatePhone(input: string): { valid: boolean; phone?: number } {
+    let cleaned = input.trim().replace(/[^\d+]/g, '');
+    let normalized: string | null = null;
+
+    if (/^0\d{9}$/.test(cleaned)) {
+      normalized = '+254' + cleaned.slice(1);
+    }
+
+    else if (/^254\d{9}$/.test(cleaned)) {
+      normalized = '+' + cleaned;
+    }
+
+    else if (/^\+254\d{9}$/.test(cleaned)) {
+      normalized = cleaned;
+    }
+
+    if (!normalized) {
+      return { valid: false };
+    }
+    const numeric = Number(normalized.replace('+', ''));
+
+    return {
+      valid: true,
+      phone: numeric,
+    };
+  }
+
   private async getCachedOrder(recipient: number):Promise<OrderProfile | null> {
 
     let order: OrderProfile | null = null;
