@@ -135,58 +135,6 @@ export class OrderCompletionHandler{
     }
   }
 
-  private async completeOrderField(
-    userMessage: string,
-    recipient: number,
-    order: OrderProfile
-  ): Promise<OrderProfile | null>
-  {
-
-    const updateOrder: UpdateContactPayload = {
-      orderId: order.id,
-      deliveryType: order.delivery_type,
-      orderContact: order.order_contact,
-      specialInstructions: order.special_instructions
-    };
-
-    const completionState = this.orderCache.getOrderCompletionMessage(recipient);
-
-    if (completionState === "COMPLETE_CONTACT") {
-
-      const cleanedMessage = userMessage.replace(/\D/g, '');
-      const phoneNumber = parseInt(cleanedMessage, 10);
-
-      updateOrder.orderContact = phoneNumber;
-      order.order_contact = phoneNumber;
-      await this.ordersModel.updateContactAndDelivery(updateOrder);
-    }
-
-    else if (completionState === "COMPLETE_LOCATION") {
-      try {
-        const { latitude, longitude } = this.textToLocation(userMessage);
-        await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
-        order.latitude = latitude;
-        order.longitude = longitude;
-      } catch (error) {
-        const message = `Dear user you submitted an invalid location for ORDER-NUMBER-${order.order_number}.\n1. Tap the attachment 📎 icon\n2. Select "Location"\n3. Send your current location.\n.`;
-        await this.whatsappService.sendText(message, recipient.toString());
-        return null;
-      }
-
-    }
-
-    else if (completionState === "COMPLETE_SPECIAL_INSTRUCTIONS") {
-
-      updateOrder.specialInstructions = userMessage;
-      order.special_instructions = userMessage;
-      await this.ordersModel.updateContactAndDelivery(updateOrder);
-    }
-
-    this.orderCache.setOrder(recipient, order);
-
-    return order;
-  }
-
   public async handleOrderCompletion(
     userMessage: UserMessagePayload,
     recipient: string
@@ -207,6 +155,8 @@ export class OrderCompletionHandler{
       return false
     }
 
+    console.log("orderrrrrr", order)
+
     const updateOrder: UpdateContactPayload = {
       orderId: order.id,
       deliveryType: order.delivery_type,
@@ -216,12 +166,15 @@ export class OrderCompletionHandler{
 
     const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
 
-    const handler = this.fieldCompletionMap[completionState]
-    order = await handler(userMessage, recipientInt, order, updateOrder);
+    console.log("completion stateee", completionState)
+
+    if (completionState) {
+      const handler = this.fieldCompletionMap[completionState]
+      order = await handler(userMessage, recipientInt, order, updateOrder);
+    }
+
 
     if (!order) return true;
-
-    // order = await this.completeOrderField(userMessage, recipientInt, order);
 
     if (!order.order_contact) {
 
