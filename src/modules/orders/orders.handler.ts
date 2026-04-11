@@ -460,12 +460,12 @@ export class OrdersHandler {
   private async sendOrderTracking(recipient: string, order: OrderProfile) {
     const steps = [
       {
-        key: "pending",
+        key: "pending_delivery",
         title: "🌸 Preparing Your Flowers",
         description: "Our florist is carefully arranging your bouquet."
       },
       {
-        key: "pending_delivery",
+        key: "enroute",
         title: "🚚 Currently being delivered",
         description: `Rider: John Kamau\nPhone: +254 712 345 678`
       },
