@@ -225,7 +225,7 @@ export class OrderCompletionHandler{
     else if (!order.latitude || !order.longitude) {
       this.logger.info(`Requesting location for order ${order.order_number}`);
 
-      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete. Please share your delivery location via WhatsApp.\nTap 📎 → Location → Send your current location.`;
+      const message = `Your contact has been successfully updated for ORDER-NUMBER-${order.order_number}. Please share your delivery location via WhatsApp.\nTap 📎 → Location → Send your current location.`;
 
       await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_LOCATION");
@@ -234,7 +234,7 @@ export class OrderCompletionHandler{
     else if (!order.special_instructions) {
       this.logger.info(`Requesting special instructions for order ${order.order_number}`);
 
-      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete. Do you have any special instructions?\nReply with your instructions or type "No" if none.`;
+      const message = `You're contact and location has been successfully updated for ORDER-NUMBER-${order.order_number}. Do you have any special instructions?\nReply with your instructions or type "No" if none.`;
 
       await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_SPECIAL_INSTRUCTIONS");
