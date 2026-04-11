@@ -119,7 +119,7 @@ export class OrderCompletionHandler{
 
       return order
     } catch (error) {
-      const message = `Invalid phone number: ${userMessage} for *ORDER-${order.order_number}*. Use format *07XXXXXXXX* for example *0722123456*.`;
+      const message = `Invalid phone number: ${userMessage} for *ORDER-${order.order_number}*.\n Use format *07XXXXXXXX* for example *0722123456*.`;
       await this.whatsappService.sendText(message, recipient.toString());
       return null;
     }
@@ -160,7 +160,7 @@ export class OrderCompletionHandler{
 
       return order;
     } catch (error) {
-      const message = `Invalid instructions for *ORDER-${order.order_number}*. Enter special instructions for your order(e.g message on card) or reply "no" if none.`;
+      const message = `Invalid instructions for *ORDER-${order.order_number}*.\n Enter special instructions for your order(e.g message on card) or reply "no" if none.`;
       await this.whatsappService.sendText(message, recipient.toString());
       return null;
     }
@@ -216,7 +216,7 @@ export class OrderCompletionHandler{
     if (!order.order_contact) {
       this.logger.info(`Requesting contact for order ${order.order_number}`);
 
-      const message = `Hi there! 💜 Your order *ORDER-${order.order_number}* has been placed successfully.\nTo ensure smooth delivery, please provide the recipient's phone number.\n Kindly reply with only the phone number *(e.g., 07XXXXXXXX)*.`;
+      const message = `Hi there! 💜 Your order *ORDER-${order.order_number}* has been placed successfully.\nPlease provide the *recipient's phone number*.\nKindly reply with only the phone number *(e.g., 07XXXXXXXX)*.`;
 
       await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_CONTACT");
@@ -225,7 +225,7 @@ export class OrderCompletionHandler{
     else if (!order.latitude || !order.longitude) {
       this.logger.info(`Requesting location for order ${order.order_number}`);
 
-      const message = `Your recipient contact has been successfully updated for *ORDER-${order.order_number}*. Please share your delivery location via WhatsApp.\n*Tap 📎 → Location → Send your current location.*`;
+      const message = `Your recipient contact has been successfully updated for *ORDER-${order.order_number}*.\n Please share your delivery location via WhatsApp.\n*Tap 📎 → Location → Send your current location.*`;
 
       await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_LOCATION");
@@ -234,7 +234,7 @@ export class OrderCompletionHandler{
     else if (!order.special_instructions) {
       this.logger.info(`Requesting special instructions for order ${order.order_number}`);
 
-      const message = `You're contact and location has been successfully updated for *ORDER-${order.order_number}*. Do you have any special instructions(*eg message written on a card, or arrangement*)?\nReply with your instructions or type "No" if none.`;
+      const message = `You're contact and location has been successfully updated for *ORDER-${order.order_number}*.\n Do you have any special instructions(*eg message written on a card, or arrangement*)?\nReply with your instructions or type "No" if none.`;
 
       await this.whatsappService.sendText(message, recipient);
       this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_SPECIAL_INSTRUCTIONS");
@@ -244,6 +244,7 @@ export class OrderCompletionHandler{
 
     if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
       await this.ordersModel.updateStatus({ orderId: order.id, status: "pending_delivery" });
+      order.delivery_status = "pending_delivery";
       await this.orderHandler.sendOrder(recipient, order);
     }
 
