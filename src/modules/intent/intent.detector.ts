@@ -53,8 +53,6 @@ export class IntentDetectorService {
       usedIndices: Set<number>,
       isExactMatch: boolean
     } {
-      console.log('--- STARTING SCORE ---');
-      console.log('Input Message Tokens:', stemmedTokens);
 
       const messageIndex: Record<string, number[]> = {};
       stemmedTokens.forEach((token, idx) => {
@@ -69,7 +67,6 @@ export class IntentDetectorService {
         const phraseTokenized = this.tokenize(phrase).stemmedTokens;
         if (phraseTokenized.length === 0 || matchedTokens.includes(phrase)) continue;
 
-        // console.log(`PHRASEEEEEE`, phraseTokenized)
         const potentialIndices: number[] = [];
         let allWordsPresent = true;
 
@@ -87,8 +84,6 @@ export class IntentDetectorService {
 
         if (allWordsPresent) {
           potentialIndices.forEach(idx => usedTokenIndices.add(idx));
-
-          console.log(`✅ [EXACT MATCH] Phrase: "${phrase}" | Awarding: ${this.SCORES.EXACT_PHRASE}`);
 
           return {
             matchedTokens: [phrase],
@@ -119,18 +114,11 @@ export class IntentDetectorService {
           const partialScore =
             this.SCORES.EXACT_PHRASE * matchRatio * this.SCORES.PARTIAL_PHRASE_MULTIPLIER;
 
-          console.log(`⚠️  [PARTIAL MATCH] Phrase: "${phrase}"`);
-          console.log(`   - Intersection: ${intersectionCount}/${phraseTokenized.length}`);
-          console.log(`   - Points Added: ${partialScore.toFixed(2)}`);
-
           newlyMatchedIndices.forEach(idx => usedTokenIndices.add(idx));
           currScore += partialScore;
           matchedTokens.push(phrase);
         }
       }
-
-      console.log(`🏁 [FINAL RESULT] Total Score: ${currScore} | Tokens: [${matchedTokens}]`);
-      console.log('--- END SCORE ---');
 
       return {
         matchedTokens,
@@ -146,8 +134,6 @@ export class IntentDetectorService {
   public processIntent(message: string): BestIntent {
     const { stemmedTokens, originalTokens } = this.tokenize(message);
 
-    console.log("stemmedTokens", stemmedTokens);
-
     let bestIntent: BestIntent = this.getInitialBestIntent();
 
     for (const intent of this.intents) {
@@ -158,15 +144,11 @@ export class IntentDetectorService {
       let matchedOrganisationTokens: string[] = [];
       let matchedPhraseTokens: string[] = [];
 
-      console.log(`CURRENT INTENTTTTTT`, intent.name)
-
       // Organisation Token Matching
       if (intent.organisation_tokens) {
 
         const { matchedTokens, phraseScore, usedIndices, isExactMatch } =
           this.scoreTokensInverted(usedTokenIndices,intent.organisation_tokens, stemmedTokens);
-
-        console.log("founddddd organisationnn", matchedTokens, phraseScore, usedIndices, isExactMatch)
 
         if (isExactMatch) {
           return {
@@ -192,7 +174,6 @@ export class IntentDetectorService {
         const { matchedTokens, phraseScore, usedIndices, isExactMatch } =
           this.scoreTokensInverted(usedTokenIndices,intent.phrase_tokens, stemmedTokens);
 
-        // console.log("PHRASEEEEEEEEEE", matchedTokens, phraseScore, usedIndices, isExactMatch)
 
         if (isExactMatch) {
           return {
@@ -213,7 +194,6 @@ export class IntentDetectorService {
       }
 
       if (score > bestIntent.score) {
-        console.log(`NEW LEADER: ${intent.name}`, bestIntent);
 
         bestIntent = {
           id: intent.id,
@@ -233,7 +213,7 @@ export class IntentDetectorService {
       bestIntent.score < this.SCORES.MIN_THRESHOLD
         ? this.getInitialBestIntent()
         : bestIntent;
-
+    // Final decision logging
     return finalResult;
   }
 
