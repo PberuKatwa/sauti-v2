@@ -4,6 +4,7 @@ import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { BestIntent } from "../../validators/bestIntent.schema";
 import { OrdersModel } from "../orders/orders.model";
 import { ClientModel } from "../client/client.model";
+import { OrderProfile } from "../../types/orders.types";
 
 @Injectable()
 export class PaymentsHandler{
@@ -61,7 +62,7 @@ export class PaymentsHandler{
     await this.whatsappService.sendText(`WERE AT GET_PAYMENT`, recipient);
   }
 
-  private async sendPaymentRequest(recipient: string, order: any) {
+  private async sendPaymentRequest(recipient: string, order: OrderProfile) {
 
     console.log("orderrrrr hereee", )
     const itemSummary = order.items
@@ -76,7 +77,7 @@ export class PaymentsHandler{
         type: "button",
         header: {
           type: "text",
-          text: `Payment Request 💳 | Invoice ${order.invoice_number}`
+          text: `Payment Request 💳 | Invoice ${order.order_number}`
         },
         body: {
           text:
@@ -94,7 +95,7 @@ export class PaymentsHandler{
             `2. Select *Lipa na M-Pesa*\n` +
             `3. Choose *Paybill*\n` +
             `4. Enter Business No: *346976*\n` +
-            `5. Account No: *${order.invoice_number}*\n` +
+            `5. Account No: *${order.order_number}*\n` +
             `6. Enter Amount: *KES ${Number(order.total).toLocaleString()}*\n` +
             `7. Enter your PIN & confirm\n\n` +
 

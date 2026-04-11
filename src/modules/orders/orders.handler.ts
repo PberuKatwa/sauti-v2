@@ -492,7 +492,7 @@ export class OrdersHandler {
         if (index === currentIndex) {
           return (
             `🔵 *${step.title}*\n` +
-          `      ${step.description}` +
+          `\n      ${step.description}` +
             connector
           );
         }
