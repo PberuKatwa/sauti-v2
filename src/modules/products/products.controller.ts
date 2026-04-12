@@ -8,13 +8,15 @@ import type {
   AllProductsApiResponse,
   SingleProductApiResponse,
   SingleProductMinimalApiResponse,
-  AllUnsyncedProductsApiResponse
+  AllUnsyncedProductsApiResponse,
+  FullProduct
 } from "../../types/products.types";
 import { ProductsModel } from "./products.model";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { CurrentUser } from "../users/decorators/user.decorator";
 import { CatalogSync } from "./catalog.sync";
 import { AllMinimalCatalogResponse, MinimalCatalogResponse } from "../../types/catalog.types";
+import { GarageService } from "../garage/garage.service";
 
 @Controller('products')
 @UseGuards(AuthGuard)
@@ -23,7 +25,8 @@ export class ProductsController {
   constructor(
     private readonly logger: AppLogger,
     private readonly products: ProductsModel,
-    private readonly catalogSync:CatalogSync
+    private readonly catalogSync: CatalogSync,
+    private readonly garage:GarageService
   ) { }
 
   @Post('')
@@ -69,6 +72,8 @@ export class ProductsController {
     try {
 
       const payload: CreateProductPayload = req.body;
+      console.log("payloaaaddd0,p", payload)
+
       payload.user_id = currentUser.userId
 
       const product = await this.catalogSync.createCatalogProduct(payload);
@@ -167,12 +172,26 @@ export class ProductsController {
       const page = pageQuery ? parseInt(pageQuery) : 1;
       const limit = limitQuery ? parseInt(limitQuery) : 10;
 
-      const products = await this.products.getAllProducts(page, limit);
+      const { pagination, products } = await this.products.getAllProducts(page, limit);
+
+      const productMap: FullProduct[] = await Promise.all(
+        products.map(
+          async (product: FullProduct) => {
+            if (product.file_url) {
+              product.signed_url = await this.garage.getSignedFileURl(product.file_url);
+            }
+            return product
+          }
+        )
+      );
 
       const response: AllProductsApiResponse = {
         success: true,
         message: `Successfully fetched products`,
-        data: products
+        data: {
+          pagination,
+          products:productMap
+        }
       };
 
       return res.status(200).json(response);

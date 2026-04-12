@@ -29,6 +29,7 @@ export interface FullProduct extends BaseProduct {
   file_url: string | null;
   inventory: number;
   created_at: Date;
+  signed_url: string | null;
   metadata: Record<string, any> | null;
 }
 
