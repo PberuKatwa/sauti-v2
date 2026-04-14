@@ -1,19 +1,26 @@
-import { Controller, Post, Get, Patch, Req, Res, Param, Body } from "@nestjs/common";
+import { Controller, Post, Get, Patch, Req, Res, Param, Body, UseGuards, Query } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
 import { OrdersModel } from "./orders.model";
 import type {
   OrderProfile,
+  OrderStatus,
   CreateOrderPayload,
   UpdateContactPayload,
   UpdateLocationPayload,
   UpdateStatusPayload,
   SingleOrderApiResponse,
-  AllOrdersApiResponse
+  AllOrdersApiResponse,
+  OrderFilters,
+  AllAdminOrdersApiResponse,
+  TotalOrdersCountApiResponse,
+  TotalOrdersValueApiResponse
 } from "../../types/orders.types";
+import { AuthGuard } from "../auth/guards/auth.guard";
 
 @Controller('orders')
+@UseGuards(AuthGuard)
 export class OrdersController {
 
   constructor(
@@ -178,7 +185,7 @@ export class OrdersController {
     }
   }
 
-  @Get(':id')
+  @Get('/individual/:id')
   async fetchOrder(
     @Req() req: Request,
     @Res() res: Response
@@ -267,6 +274,122 @@ export class OrdersController {
     } catch (error) {
 
       this.logger.error(`Error fetching client orders`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+  @Get('admin')
+  async fetchAllOrders(
+    @Query('page') pageQuery: string,
+    @Query('limit') limitQuery: string,
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const page = pageQuery ? parseInt(pageQuery) : 1;
+      const limit = limitQuery ? parseInt(limitQuery) : 10;
+      console.log("pageee", page, "limit", limit)
+
+      const orders = await this.orders.fetchAllOrders(page, limit);
+
+      const response: AllAdminOrdersApiResponse = {
+        success: true,
+        message: `Successfully fetched all orders`,
+        data: orders
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error fetching all orders`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+  @Get('admin/count')
+  async getTotalOrdersCount(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      const statusesParam = req.query.statuses as string | undefined;
+
+      const filters: OrderFilters = {
+        startDate,
+        endDate,
+        statuses: statusesParam ? statusesParam.split(',') as OrderStatus[] : undefined
+      };
+
+      const count = await this.orders.getTotalOrdersCount(filters);
+
+      const response: TotalOrdersCountApiResponse = {
+        success: true,
+        message: `Successfully fetched total orders count`,
+        data: count
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error fetching total orders count`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+  @Get('admin/value')
+  async getTotalOrdersValue(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      const statusesParam = req.query.statuses as string | undefined;
+
+      const filters: OrderFilters = {
+        startDate,
+        endDate,
+        statuses: statusesParam ? statusesParam.split(',') as OrderStatus[] : undefined
+      };
+
+      const totalValue = await this.orders.getTotalOrdersValue(filters);
+
+      const response: TotalOrdersValueApiResponse = {
+        success: true,
+        message: `Successfully fetched total orders value`,
+        data: totalValue
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error fetching total orders value`, error);
 
       const response: ApiResponse = {
         success: false,

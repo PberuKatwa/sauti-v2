@@ -8,7 +8,11 @@ import type {
   CreateOrderPayload,
   UpdateContactPayload,
   UpdateLocationPayload,
-  UpdateStatusPayload
+  UpdateStatusPayload,
+  OrderFilters,
+  AdminOrderRow,
+  AllAdminOrders,
+  OrderStatus
 } from "../../types/orders.types";
 
 @Injectable()
@@ -346,5 +350,121 @@ export class OrdersModel {
     const orders: OrderProfile[] = result.rows;
 
     return orders;
+  }
+
+  async fetchAllOrders(pageInput: number, limitInput: number): Promise<AllAdminOrders> {
+    this.logger.warn(`Attempting to fetch all orders page: ${pageInput}, limit: ${limitInput}`);
+
+    const page = pageInput ? pageInput : 1;
+    const limit = limitInput ? limitInput : 10;
+    const offset = (page - 1) * limit;
+
+    const dataQuery = `
+      SELECT
+        o.id,
+        o.order_number,
+        o.total,
+        o.delivery_status,
+        c.phone_number AS client_phone,
+        o.created_at
+      FROM orders o
+      LEFT JOIN clients c ON o.client_id = c.id
+      WHERE o.status != 'trash'
+      ORDER BY o.created_at DESC
+      LIMIT $1 OFFSET $2;
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*)
+      FROM orders
+      WHERE status != 'trash';
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+    const [dataResult, paginationResult] = await Promise.all([
+      pgPool.query(dataQuery, [limit, offset]),
+      pgPool.query(countQuery)
+    ]);
+
+    const totalCount = parseInt(paginationResult.rows[0].count);
+
+    return {
+      orders: dataResult.rows,
+      pagination: {
+        totalCount,
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    };
+  }
+
+  async getTotalOrdersCount(filters: OrderFilters): Promise<number> {
+    this.logger.warn(`Attempting to fetch total orders count`);
+
+    const conditions: string[] = [];
+    const params: (string | OrderStatus[])[] = [];
+    let paramIndex = 1;
+
+    if (filters.startDate) {
+      conditions.push(`created_at >= $${paramIndex}`);
+      params.push(filters.startDate);
+      paramIndex++;
+    }
+
+    if (filters.endDate) {
+      conditions.push(`created_at <= $${paramIndex}`);
+      params.push(filters.endDate);
+      paramIndex++;
+    }
+
+    if (filters.statuses && filters.statuses.length > 0) {
+      conditions.push(`delivery_status = ANY($${paramIndex})`);
+      params.push(filters.statuses as any);
+      paramIndex++;
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const query = `SELECT COUNT(*) FROM orders ${whereClause};`;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, params);
+
+    return parseInt(result.rows[0].count);
+  }
+
+  async getTotalOrdersValue(filters: OrderFilters): Promise<number> {
+    this.logger.warn(`Attempting to fetch total orders value`);
+
+    const conditions: string[] = [];
+    const params: (string | OrderStatus[])[] = [];
+    let paramIndex = 1;
+
+    if (filters.startDate) {
+      conditions.push(`created_at >= $${paramIndex}`);
+      params.push(filters.startDate);
+      paramIndex++;
+    }
+
+    if (filters.endDate) {
+      conditions.push(`created_at <= $${paramIndex}`);
+      params.push(filters.endDate);
+      paramIndex++;
+    }
+
+    if (filters.statuses && filters.statuses.length > 0) {
+      conditions.push(`delivery_status = ANY($${paramIndex})`);
+      params.push(filters.statuses as any);
+      paramIndex++;
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const query = `SELECT COALESCE(SUM(total), 0) AS total_value FROM orders ${whereClause};`;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, params);
+
+    return parseFloat(result.rows[0].total_value);
   }
 }

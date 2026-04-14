@@ -61,3 +61,39 @@ export interface SingleOrderApiResponse extends ApiResponse {
 export interface AllOrdersApiResponse extends ApiResponse {
   data: OrderProfile[];
 }
+
+export interface OrderFilters {
+  startDate?: string;
+  endDate?: string;
+  statuses?: OrderStatus[];
+}
+
+export interface AdminOrderRow {
+  id: number;
+  order_number: number;
+  total: number;
+  delivery_status: OrderStatus;
+  client_phone: number | null;
+  created_at: string;
+}
+
+export interface AllAdminOrders {
+  orders: AdminOrderRow[];
+  pagination: {
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+  };
+}
+
+export interface AllAdminOrdersApiResponse extends ApiResponse {
+  data: AllAdminOrders;
+}
+
+export interface TotalOrdersCountApiResponse extends ApiResponse {
+  data: number;
+}
+
+export interface TotalOrdersValueApiResponse extends ApiResponse {
+  data: number;
+}
