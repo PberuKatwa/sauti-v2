@@ -3,7 +3,7 @@ import { AuthGuard } from "../auth/guards/auth.guard";
 import { AppLogger } from "../../logger/winston.logger";
 import { Request, Response } from "express";
 import { ApiResponse } from "../../types/api.types";
-import { OrderFilters, OrderStatus, TotalOrdersStatsApiResponse } from "../../types/orders.types";
+import { BaseOrderFilters, OrderStatus, TotalOrdersStatsApiResponse } from "../../types/orders.types";
 import { OrdersModel } from "../orders/orders.model";
 
 @Controller("dashboard")
@@ -26,7 +26,7 @@ export class DashboardController{
   ) {
     try {
 
-      const filters: OrderFilters = {
+      const filters: BaseOrderFilters = {
         startDate,
         endDate,
         statuses: statuses ? statuses.split(',') as OrderStatus[] : undefined

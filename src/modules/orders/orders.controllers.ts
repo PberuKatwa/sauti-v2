@@ -4,18 +4,13 @@ import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
 import { OrdersModel } from "./orders.model";
 import type {
-  OrderProfile,
-  OrderStatus,
   CreateOrderPayload,
   UpdateContactPayload,
   UpdateLocationPayload,
   UpdateStatusPayload,
   SingleOrderApiResponse,
   AllOrdersApiResponse,
-  OrderFilters,
-  AllAdminOrdersApiResponse,
-  TotalOrdersCountApiResponse,
-  TotalOrdersValueApiResponse
+  AllAdminOrdersApiResponse
 } from "../../types/orders.types";
 import { AuthGuard } from "../auth/guards/auth.guard";
 
@@ -288,6 +283,11 @@ export class OrdersController {
   async fetchAllOrders(
     @Query('page') pageQuery: string,
     @Query('limit') limitQuery: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Query('statuses') statuses: string,
     @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
@@ -310,86 +310,6 @@ export class OrdersController {
     } catch (error) {
 
       this.logger.error(`Error fetching all orders`, error);
-
-      const response: ApiResponse = {
-        success: false,
-        message: `${error}`
-      };
-
-      return res.status(500).json(response);
-    }
-  }
-
-  @Get('admin/count')
-  async getTotalOrdersCount(
-    @Req() req: Request,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
-
-      const startDate = req.query.startDate as string | undefined;
-      const endDate = req.query.endDate as string | undefined;
-      const statusesParam = req.query.statuses as string | undefined;
-
-      const filters: OrderFilters = {
-        startDate,
-        endDate,
-        statuses: statusesParam ? statusesParam.split(',') as OrderStatus[] : undefined
-      };
-
-      const count = await this.orders.getTotalOrdersCount(filters);
-
-      const response: TotalOrdersCountApiResponse = {
-        success: true,
-        message: `Successfully fetched total orders count`,
-        data: count
-      };
-
-      return res.status(200).json(response);
-
-    } catch (error) {
-
-      this.logger.error(`Error fetching total orders count`, error);
-
-      const response: ApiResponse = {
-        success: false,
-        message: `${error}`
-      };
-
-      return res.status(500).json(response);
-    }
-  }
-
-  @Get('admin/value')
-  async getTotalOrdersValue(
-    @Req() req: Request,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
-
-      const startDate = req.query.startDate as string | undefined;
-      const endDate = req.query.endDate as string | undefined;
-      const statusesParam = req.query.statuses as string | undefined;
-
-      const filters: OrderFilters = {
-        startDate,
-        endDate,
-        statuses: statusesParam ? statusesParam.split(',') as OrderStatus[] : undefined
-      };
-
-      const totalValue = await this.orders.getTotalOrdersValue(filters);
-
-      const response: TotalOrdersValueApiResponse = {
-        success: true,
-        message: `Successfully fetched total orders value`,
-        data: totalValue
-      };
-
-      return res.status(200).json(response);
-
-    } catch (error) {
-
-      this.logger.error(`Error fetching total orders value`, error);
 
       const response: ApiResponse = {
         success: false,

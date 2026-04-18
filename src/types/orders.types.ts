@@ -62,10 +62,15 @@ export interface AllOrdersApiResponse extends ApiResponse {
   data: OrderProfile[];
 }
 
-export interface OrderFilters {
+export interface BaseOrderFilters {
   startDate?: string;
   endDate?: string;
   statuses?: OrderStatus[];
+}
+
+export interface FullOrderFilters extends BaseOrderFilters {
+  orderNumber?: string;
+  clientPhone?: string;
 }
 
 export interface AdminOrderRow {
@@ -97,12 +102,4 @@ export interface AllAdminOrdersApiResponse extends ApiResponse {
 
 export interface TotalOrdersStatsApiResponse extends ApiResponse {
   data: TotalOrdersStats;
-}
-
-export interface TotalOrdersCountApiResponse extends ApiResponse {
-  data: number;
-}
-
-export interface TotalOrdersValueApiResponse extends ApiResponse {
-  data: number;
 }

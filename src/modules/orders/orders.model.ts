@@ -9,11 +9,12 @@ import type {
   UpdateContactPayload,
   UpdateLocationPayload,
   UpdateStatusPayload,
-  OrderFilters,
+  BaseOrderFilters,
   AdminOrderRow,
   AllAdminOrders,
   OrderStatus,
-  TotalOrdersStats
+  TotalOrdersStats,
+  FullOrderFilters
 } from "../../types/orders.types";
 
 @Injectable()
@@ -353,12 +354,53 @@ export class OrdersModel {
     return orders;
   }
 
-  async fetchAllOrders(pageInput: number, limitInput: number): Promise<AllAdminOrders> {
+  async fetchAllOrders(
+    pageInput: number,
+    limitInput: number,
+    filters: FullOrderFilters
+  ): Promise<AllAdminOrders> {
     this.logger.warn(`Attempting to fetch all orders page: ${pageInput}, limit: ${limitInput}`);
 
     const page = pageInput ? pageInput : 1;
     const limit = limitInput ? limitInput : 10;
     const offset = (page - 1) * limit;
+
+    const conditions: string[] = [`o.status != 'trash'`];
+    const params: (string | number | OrderStatus[])[] = [];
+    let paramIndex = 1;
+
+    // Add filters
+    if (filters?.orderNumber) {
+      conditions.push(`o.order_number ILIKE $${paramIndex}`);
+      params.push(`%${filters.orderNumber}%`);
+      paramIndex++;
+    }
+
+    if (filters?.clientPhone) {
+      conditions.push(`c.phone_number ILIKE $${paramIndex}`);
+      params.push(`%${filters.clientPhone}%`);
+      paramIndex++;
+    }
+
+    if (filters?.startDate) {
+      conditions.push(`o.created_at >= $${paramIndex}`);
+      params.push(filters.startDate);
+      paramIndex++;
+    }
+
+    if (filters?.endDate) {
+      conditions.push(`o.created_at <= $${paramIndex}`);
+      params.push(filters.endDate);
+      paramIndex++;
+    }
+
+    if (filters?.statuses && filters.statuses.length > 0) {
+      conditions.push(`o.delivery_status = ANY($${paramIndex})`);
+      params.push(filters.statuses as any);
+      paramIndex++;
+    }
+
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
     const dataQuery = `
       SELECT
@@ -370,21 +412,25 @@ export class OrdersModel {
         o.created_at
       FROM orders o
       LEFT JOIN clients c ON o.client_id = c.id
-      WHERE o.status != 'trash'
+      ${whereClause}
       ORDER BY o.created_at DESC
-      LIMIT $1 OFFSET $2;
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1};
     `;
 
     const countQuery = `
       SELECT COUNT(*)
-      FROM orders
-      WHERE status != 'trash';
+      FROM orders o
+      LEFT JOIN clients c ON o.client_id = c.id
+      ${whereClause};
     `;
+
+    // Add limit and offset to params for data query
+    const dataParams = [...params, limit, offset];
 
     const pgPool = this.pgConfig.getPool();
     const [dataResult, paginationResult] = await Promise.all([
-      pgPool.query(dataQuery, [limit, offset]),
-      pgPool.query(countQuery)
+      pgPool.query(dataQuery, dataParams),
+      pgPool.query(countQuery, params)
     ]);
 
     const totalCount = parseInt(paginationResult.rows[0].count);
@@ -399,77 +445,7 @@ export class OrdersModel {
     };
   }
 
-  async getTotalOrdersCount(filters: OrderFilters): Promise<number> {
-    this.logger.warn(`Attempting to fetch total orders count`);
-
-    const conditions: string[] = [];
-    const params: (string | OrderStatus[])[] = [];
-    let paramIndex = 1;
-
-    if (filters.startDate) {
-      conditions.push(`created_at >= $${paramIndex}`);
-      params.push(filters.startDate);
-      paramIndex++;
-    }
-
-    if (filters.endDate) {
-      conditions.push(`created_at <= $${paramIndex}`);
-      params.push(filters.endDate);
-      paramIndex++;
-    }
-
-    if (filters.statuses && filters.statuses.length > 0) {
-      conditions.push(`delivery_status = ANY($${paramIndex})`);
-      params.push(filters.statuses as any);
-      paramIndex++;
-    }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-
-    const query = `SELECT COUNT(*) FROM orders ${whereClause};`;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, params);
-
-    return parseInt(result.rows[0].count);
-  }
-
-  async getTotalOrdersValue(filters: OrderFilters): Promise<number> {
-    this.logger.warn(`Attempting to fetch total orders value`);
-
-    const conditions: string[] = [];
-    const params: (string | OrderStatus[])[] = [];
-    let paramIndex = 1;
-
-    if (filters.startDate) {
-      conditions.push(`created_at >= $${paramIndex}`);
-      params.push(filters.startDate);
-      paramIndex++;
-    }
-
-    if (filters.endDate) {
-      conditions.push(`created_at <= $${paramIndex}`);
-      params.push(filters.endDate);
-      paramIndex++;
-    }
-
-    if (filters.statuses && filters.statuses.length > 0) {
-      conditions.push(`delivery_status = ANY($${paramIndex})`);
-      params.push(filters.statuses as any);
-      paramIndex++;
-    }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-
-    const query = `SELECT COALESCE(SUM(total), 0) AS total_value FROM orders ${whereClause};`;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, params);
-
-    return parseFloat(result.rows[0].total_value);
-  }
-
-  async getTotalOrdersStats(filters: OrderFilters): Promise<TotalOrdersStats> {
+  async getTotalOrdersStats(filters: BaseOrderFilters): Promise<TotalOrdersStats> {
     this.logger.warn(`Attempting to fetch total orders stats`);
 
     const conditions: string[] = [];
