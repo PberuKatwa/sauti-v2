@@ -21,14 +21,15 @@ export interface SingleClientApiResponse extends ApiResponse {
   data: ClientProfile;
 }
 
-export interface AllClientsApiResponse extends ApiResponse {
-  data: {
-    clients: ClientProfile[];
-    pagination: {
-      page: number;
-      limit: number;
-      totalCount: number;
-      totalPages: number;
-    };
+export interface AllClients {
+  clients: ClientProfile[];
+  pagination: {
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
   };
+}
+
+export interface AllClientsApiResponse extends ApiResponse {
+  data:AllClients
 }
