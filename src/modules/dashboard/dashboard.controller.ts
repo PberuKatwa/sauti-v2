@@ -40,6 +40,7 @@ export class DashboardController{
         data:stats
       }
 
+      return res.status(200).json(response);
 
     } catch (error) {
       this.logger.error(`Error in getting order stats`, error)
