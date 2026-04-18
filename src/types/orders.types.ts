@@ -95,6 +95,10 @@ export interface AllAdminOrdersApiResponse extends ApiResponse {
   data: AllAdminOrders;
 }
 
+export interface TotalOrdersStatsApiResponse extends ApiResponse {
+  data: TotalOrdersStats;
+}
+
 export interface TotalOrdersCountApiResponse extends ApiResponse {
   data: number;
 }
