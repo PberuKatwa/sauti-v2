@@ -1,8 +1,8 @@
-import { Controller, Inject, Post, Get, Req, Res } from "@nestjs/common";
+import { Controller, Inject, Post, Get, Req, Res, Query } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
-import type { SingleClientApiResponse } from "../../types/client.types";
+import type { SingleClientApiResponse, AllClientsApiResponse } from "../../types/client.types";
 import { ClientModel } from "./client.model";
 import type {
   ClientProfile,
@@ -141,6 +141,41 @@ export class ClientsController {
     } catch (error) {
 
       this.logger.error(`Error fetching client by phone`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+  @Get('')
+  async fetchAllClients(
+    @Query('page') pageQuery: string,
+    @Query('limit') limitQuery: string,
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const page = pageQuery ? parseInt(pageQuery) : 1;
+      const limit = limitQuery ? parseInt(limitQuery) : 10;
+
+      const clients = await this.clients.fetchAllClients(page, limit);
+
+      const response: AllClientsApiResponse = {
+        success: true,
+        message: `Successfully fetched clients`,
+        data: clients
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error fetching clients`, error);
 
       const response: ApiResponse = {
         success: false,

@@ -6,7 +6,8 @@ import { AppLogger } from "../../logger/winston.logger";
 import type {
   ClientProfile,
   CreateClientPayload,
-  UpdateClientPayload
+  UpdateClientPayload,
+  AllClients
 } from "../../types/client.types";
 
 @Injectable()
@@ -169,6 +170,47 @@ export class ClientModel {
     } catch (error) {
       throw error;
     }
+  }
+
+  async fetchAllClients(page: number, limit: number): Promise<AllClients> {
+    this.logger.warn(`Attempting to fetch clients page: ${page}, limit: ${limit}`);
+
+    const offset = (page - 1) * limit;
+
+    const dataQuery = `
+      SELECT
+        id,
+        first_name,
+        last_name,
+        phone_number
+      FROM clients
+      WHERE status != 'trash'
+      ORDER BY created_at DESC
+      LIMIT $1 OFFSET $2;
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*)
+      FROM clients
+      WHERE status != 'trash';
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const [dataResult, paginationResult] = await Promise.all([
+      pool.query(dataQuery, [limit, offset]),
+      pool.query(countQuery)
+    ]);
+
+    const totalCount = parseInt(paginationResult.rows[0].count);
+
+    return {
+      clients: dataResult.rows,
+      pagination: {
+        totalCount,
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    };
   }
 
 }
