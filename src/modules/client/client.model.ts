@@ -229,4 +229,35 @@ export class ClientModel {
     };
   }
 
+  async getTotalClients(startDate?: string, endDate?: string): Promise<number> {
+    this.logger.warn(`Attempting to fetch total clients count`);
+
+    const conditions: string[] = [];
+    const params: string[] = [];
+    let paramIndex = 1;
+
+    if (startDate) {
+      conditions.push(`created_at >= $${paramIndex}`);
+      params.push(startDate);
+      paramIndex++;
+    }
+
+    if (endDate) {
+      conditions.push(`created_at <= $${paramIndex}`);
+      params.push(endDate);
+      paramIndex++;
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const query = `
+      SELECT COUNT(*) FROM clients ${whereClause};
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, params);
+
+    return parseInt(result.rows[0].count);
+  }
+
 }
