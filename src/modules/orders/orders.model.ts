@@ -467,4 +467,48 @@ export class OrdersModel {
 
     return parseFloat(result.rows[0].total_value);
   }
+
+  async getTotalOrdersStats(filters: OrderFilters): Promise<{ count: number; totalValue: number }> {
+    this.logger.warn(`Attempting to fetch total orders stats`);
+
+    const conditions: string[] = [];
+    const params: (string | OrderStatus[])[] = [];
+    let paramIndex = 1;
+
+    if (filters.startDate) {
+      conditions.push(`created_at >= $${paramIndex}`);
+      params.push(filters.startDate);
+      paramIndex++;
+    }
+
+    if (filters.endDate) {
+      conditions.push(`created_at <= $${paramIndex}`);
+      params.push(filters.endDate);
+      paramIndex++;
+    }
+
+    if (filters.statuses && filters.statuses.length > 0) {
+      conditions.push(`delivery_status = ANY($${paramIndex})`);
+      params.push(filters.statuses as any);
+      paramIndex++;
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const query = `
+      SELECT
+        COUNT(*) AS count,
+        COALESCE(SUM(total), 0) AS total_value
+      FROM orders
+      ${whereClause};
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, params);
+
+    return {
+      count: parseInt(result.rows[0].count),
+      totalValue: parseFloat(result.rows[0].total_value),
+    };
+  }
 }
