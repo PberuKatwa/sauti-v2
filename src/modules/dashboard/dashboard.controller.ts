@@ -3,7 +3,7 @@ import { AuthGuard } from "../auth/guards/auth.guard";
 import { AppLogger } from "../../logger/winston.logger";
 import { Request, Response } from "express";
 import { ApiResponse } from "../../types/api.types";
-import { BaseOrderFilters, OrderStatus, TotalOrdersStatsApiResponse } from "../../types/orders.types";
+import { BaseOrderFilters, MonthlyOrderFilter, MonthlyOrdersStatsApiResponse, OrderStatus, TotalOrdersStatsApiResponse } from "../../types/orders.types";
 import { OrdersModel } from "../orders/orders.model";
 
 @Controller("dashboard")
@@ -44,6 +44,42 @@ export class DashboardController{
 
     } catch (error) {
       this.logger.error(`Error in getting order stats`, error)
+
+      const response: ApiResponse = {
+        success: false,
+        message:`${error.message}`
+      }
+
+      return res.status(500).json(response)
+    }
+  }
+
+  @Get("/order/monthly")
+  async getMonthlyStats(
+    @Query('year') year: string,
+    @Query('status') status: string,
+    @Req() req: Request,
+    @Res() res:Response
+  ) {
+    try {
+
+      const filters: MonthlyOrderFilter = {
+        year:parseInt(year),
+        status:status as OrderStatus
+      };
+
+      const stats = await this.orderModel.getMonthlyOrderTotals(filters);
+
+      const response: MonthlyOrdersStatsApiResponse = {
+        success: true,
+        message: "Successfully fetched monthly orders",
+        data:stats
+      }
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+      this.logger.error(`Error in getting monthly order stats`, error)
 
       const response: ApiResponse = {
         success: false,

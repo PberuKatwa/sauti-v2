@@ -14,7 +14,9 @@ import type {
   AllAdminOrders,
   OrderStatus,
   TotalOrdersStats,
-  FullOrderFilters
+  FullOrderFilters,
+  MonthlyOrderFilter,
+  MonthlyOrderStat
 } from "../../types/orders.types";
 
 @Injectable()
@@ -487,5 +489,61 @@ export class OrdersModel {
       count: parseInt(result.rows[0].count),
       totalValue: parseFloat(result.rows[0].total_value),
     };
+  }
+
+  async getMonthlyOrderTotals(filters: MonthlyOrderFilter): Promise<MonthlyOrderStat[]> {
+    const year = filters?.year || new Date().getFullYear();
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    this.logger.warn(`Attempting to fetch monthly order totals for year: ${year}`);
+
+    const conditions: string[] = [`EXTRACT(YEAR FROM created_at) = $1`];
+    const params: (string | number | OrderStatus)[] = [year];
+    let paramIndex = 2;
+
+    if (filters?.status) {
+      conditions.push(`delivery_status = $${paramIndex}`);
+      params.push(filters.status);
+      paramIndex++;
+    }
+
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
+
+    const query = `
+      SELECT
+        EXTRACT(MONTH FROM created_at) AS month,
+        COALESCE(SUM(total), 0) AS total_value,
+        COUNT(*) AS order_count
+      FROM orders
+      ${whereClause}
+      GROUP BY EXTRACT(MONTH FROM created_at);
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, params);
+
+    const monthlyMap = new Map<number, { totalValue: number; orderCount: number }>();
+    for (const row of result.rows) {
+      monthlyMap.set(parseInt(row.month), {
+        totalValue: parseFloat(row.total_value),
+        orderCount: parseInt(row.order_count)
+      });
+    }
+
+    const monthlyStats: MonthlyOrderStat[] = [];
+    for (let m = 1; m <= 12; m++) {
+      const data = monthlyMap.get(m);
+      monthlyStats.push({
+        month: m,
+        monthName: monthNames[m - 1],
+        totalValue: data ? data.totalValue : 0,
+        orderCount: data ? data.orderCount : 0
+      });
+    }
+
+    return monthlyStats;
   }
 }
