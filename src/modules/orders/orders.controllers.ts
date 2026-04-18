@@ -10,7 +10,9 @@ import type {
   UpdateStatusPayload,
   SingleOrderApiResponse,
   AllOrdersApiResponse,
-  AllAdminOrdersApiResponse
+  AllAdminOrdersApiResponse,
+  FullOrderFilters,
+  OrderStatus
 } from "../../types/orders.types";
 import { AuthGuard } from "../auth/guards/auth.guard";
 
@@ -283,8 +285,8 @@ export class OrdersController {
   async fetchAllOrders(
     @Query('page') pageQuery: string,
     @Query('limit') limitQuery: string,
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
+    @Query('orderNumber') orderNumber: string,
+    @Query('clientPhone') clientPhone: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
     @Query('statuses') statuses: string,
@@ -295,9 +297,16 @@ export class OrdersController {
 
       const page = pageQuery ? parseInt(pageQuery) : 1;
       const limit = limitQuery ? parseInt(limitQuery) : 10;
-      console.log("pageee", page, "limit", limit)
 
-      const orders = await this.orders.fetchAllOrders(page, limit);
+      const filters: FullOrderFilters = {
+        orderNumber,
+        clientPhone,
+        startDate,
+        endDate,
+        statuses:statuses ? statuses.split(',') as OrderStatus[] : undefined
+      }
+
+      const orders = await this.orders.fetchAllOrders(page, limit,filters);
 
       const response: AllAdminOrdersApiResponse = {
         success: true,
