@@ -172,10 +172,22 @@ export class ClientModel {
     }
   }
 
-  async fetchAllClients(page: number, limit: number): Promise<AllClients> {
+  async fetchAllClients(page: number, limit: number, phoneFilter?: string): Promise<AllClients> {
     this.logger.warn(`Attempting to fetch clients page: ${page}, limit: ${limit}`);
 
     const offset = (page - 1) * limit;
+
+    const conditions: string[] = [`status != 'trash'`];
+    const params: (string | number)[] = [];
+    let paramIndex = 1;
+
+    if (phoneFilter) {
+      conditions.push(`phone_number::TEXT ILIKE $${paramIndex}`);
+      params.push(`%${phoneFilter}%`);
+      paramIndex++;
+    }
+
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
     const dataQuery = `
       SELECT
@@ -184,21 +196,23 @@ export class ClientModel {
         last_name,
         phone_number
       FROM clients
-      WHERE status != 'trash'
+      ${whereClause}
       ORDER BY created_at DESC
-      LIMIT $1 OFFSET $2;
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1};
     `;
 
     const countQuery = `
       SELECT COUNT(*)
       FROM clients
-      WHERE status != 'trash';
+      ${whereClause};
     `;
+
+    const dataParams = [...params, limit, offset];
 
     const pool = this.pgConfig.getPool();
     const [dataResult, paginationResult] = await Promise.all([
-      pool.query(dataQuery, [limit, offset]),
-      pool.query(countQuery)
+      pool.query(dataQuery, dataParams),
+      pool.query(countQuery, params)
     ]);
 
     const totalCount = parseInt(paginationResult.rows[0].count);

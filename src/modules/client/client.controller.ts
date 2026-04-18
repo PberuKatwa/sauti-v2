@@ -155,6 +155,7 @@ export class ClientsController {
   async fetchAllClients(
     @Query('page') pageQuery: string,
     @Query('limit') limitQuery: string,
+    @Query('phone') phoneQuery: string,
     @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
@@ -163,7 +164,7 @@ export class ClientsController {
       const page = pageQuery ? parseInt(pageQuery) : 1;
       const limit = limitQuery ? parseInt(limitQuery) : 10;
 
-      const clients = await this.clients.fetchAllClients(page, limit);
+      const clients = await this.clients.fetchAllClients(page, limit, phoneQuery);
 
       const response: AllClientsApiResponse = {
         success: true,
