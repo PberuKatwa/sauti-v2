@@ -298,6 +298,8 @@ export class OrdersController {
       const page = pageQuery ? parseInt(pageQuery) : 1;
       const limit = limitQuery ? parseInt(limitQuery) : 10;
 
+      console.log("order numbrt", orderNumber)
+
       const filters: FullOrderFilters = {
         orderNumber,
         clientPhone,

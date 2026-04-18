@@ -371,13 +371,13 @@ export class OrdersModel {
 
     // Add filters
     if (filters?.orderNumber) {
-      conditions.push(`o.order_number ILIKE $${paramIndex}`);
+      conditions.push(`o.order_number::TEXT ILIKE $${paramIndex}`);
       params.push(`%${filters.orderNumber}%`);
       paramIndex++;
     }
 
     if (filters?.clientPhone) {
-      conditions.push(`c.phone_number ILIKE $${paramIndex}`);
+      conditions.push(`c.phone_number::TEXT ILIKE $${paramIndex}`);
       params.push(`%${filters.clientPhone}%`);
       paramIndex++;
     }
