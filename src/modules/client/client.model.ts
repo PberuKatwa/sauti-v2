@@ -177,7 +177,9 @@ export class ClientModel {
 
     const offset = (page - 1) * limit;
 
-    const conditions: string[] = [`status != 'trash'`];
+    // const conditions: string[] = [`status != 'trash'`];
+    const conditions: string[] = [];
+
     const params: (string | number)[] = [];
     let paramIndex = 1;
 
@@ -187,7 +189,7 @@ export class ClientModel {
       paramIndex++;
     }
 
-    const whereClause = `WHERE ${conditions.join(' AND ')}`;
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const dataQuery = `
       SELECT
