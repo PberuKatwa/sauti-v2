@@ -12,7 +12,8 @@ import type {
   OrderFilters,
   AdminOrderRow,
   AllAdminOrders,
-  OrderStatus
+  OrderStatus,
+  TotalOrdersStats
 } from "../../types/orders.types";
 
 @Injectable()
@@ -468,7 +469,7 @@ export class OrdersModel {
     return parseFloat(result.rows[0].total_value);
   }
 
-  async getTotalOrdersStats(filters: OrderFilters): Promise<{ count: number; totalValue: number }> {
+  async getTotalOrdersStats(filters: OrderFilters): Promise<TotalOrdersStats> {
     this.logger.warn(`Attempting to fetch total orders stats`);
 
     const conditions: string[] = [];

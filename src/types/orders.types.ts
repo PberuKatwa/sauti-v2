@@ -86,6 +86,11 @@ export interface AllAdminOrders {
   };
 }
 
+export interface TotalOrdersStats {
+  count: number;
+  totalValue: number
+}
+
 export interface AllAdminOrdersApiResponse extends ApiResponse {
   data: AllAdminOrders;
 }
