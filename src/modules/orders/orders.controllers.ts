@@ -143,7 +143,7 @@ export class OrdersController {
     }
   }
 
-  @Patch(':id/status')
+  @Patch('status/:id/:status')
   async updateStatus(
     @Req() req: Request,
     @Res() res: Response
@@ -151,13 +151,13 @@ export class OrdersController {
     try {
 
       const idParam = req.params.id;
+      const statusParam = req.params.status;
       const orderId = Array.isArray(idParam) ? parseInt(idParam[0]) : parseInt(idParam);
-
-      const { status } = req.body;
+      const status = Array.isArray(statusParam) ? statusParam[0] : statusParam;
 
       const payload: UpdateStatusPayload = {
         orderId,
-        status
+        status: status as OrderStatus
       };
 
       await this.orders.updateStatus(payload);
@@ -297,8 +297,6 @@ export class OrdersController {
 
       const page = pageQuery ? parseInt(pageQuery) : 1;
       const limit = limitQuery ? parseInt(limitQuery) : 10;
-
-      console.log("order numbrt", orderNumber)
 
       const filters: FullOrderFilters = {
         orderNumber,

@@ -410,6 +410,11 @@ export class OrdersModel {
         o.order_number,
         o.total,
         o.delivery_status,
+        o.latitude,
+        o.longitude,
+        o.order_contact,
+        o.delivery_type,
+        o.special_instructions,
         c.phone_number AS client_phone,
         o.created_at
       FROM orders o
