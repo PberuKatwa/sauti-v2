@@ -12,7 +12,8 @@ import type {
   AllOrdersApiResponse,
   AllAdminOrdersApiResponse,
   FullOrderFilters,
-  OrderStatus
+  OrderStatus,
+  AdminOrderRow
 } from "../../types/orders.types";
 import { AuthGuard } from "../auth/guards/auth.guard";
 
@@ -306,12 +307,24 @@ export class OrdersController {
         statuses:statuses ? statuses.split(',') as OrderStatus[] : undefined
       }
 
-      const orders = await this.orders.fetchAllOrders(page, limit,filters);
+      const { orders, pagination } = await this.orders.fetchAllOrders(page, limit, filters);
+
+      const orderMap:AdminOrderRow[] = orders.map(
+        (order: AdminOrderRow) => {
+          if (order.latitude && order.longitude) {
+            order.google_maps_link = `https://www.google.com/maps?q=${order.latitude},${order.longitude}`
+          }
+          return order
+        }
+      )
 
       const response: AllAdminOrdersApiResponse = {
         success: true,
         message: `Successfully fetched all orders`,
-        data: orders
+        data: {
+          orders: orderMap,
+          pagination
+        }
       };
 
       return res.status(200).json(response);

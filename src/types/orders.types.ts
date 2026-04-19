@@ -84,6 +84,7 @@ export interface AdminOrderRow {
   order_contact: number;
   delivery_type: 'scheduled' | 'immediate';
   special_instructions: string;
+  google_maps_link?: string;
   created_at: string;
 }
 
