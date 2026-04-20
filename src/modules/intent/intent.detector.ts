@@ -5,6 +5,7 @@ import { BestIntent, IntentDefinition } from "../../types/intent.types";
 import { IntentGeminiService } from "./intent.gemini";
 import { buildIntentPrompt } from "../../utils/intent.prompt";
 import { addOrganisationToken } from "../../utils/json.utils";
+import { AiService } from './ai.service';
 
 const stemmer = natural.PorterStemmer.stem;
 
@@ -19,7 +20,10 @@ export class IntentDetectorService {
     PARTIAL_PHRASE_MULTIPLIER: 0.5,
   };
 
-  constructor(private readonly geminiService: IntentGeminiService) {}
+  constructor(
+    private readonly geminiService: IntentGeminiService,
+    private readonly aiService:AiService
+  ) { }
 
   public setup(intents: IntentDefinition[], stopWords: Set<string>) {
     this.intents = intents;
@@ -32,7 +36,8 @@ export class IntentDetectorService {
 
       if (intent.name === "UNKNOWN") {
         const prompt = buildIntentPrompt(userMessage);
-        intent = await this.geminiService.getLlmIntent(prompt);
+        // intent = await this.geminiService.getLlmIntent(prompt);
+        intent = await this.aiService.getLlmIntent(prompt);
 
         addOrganisationToken(intent.id, intent.userMessage);
       }
