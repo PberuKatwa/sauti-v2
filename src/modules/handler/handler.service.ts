@@ -193,7 +193,7 @@ export class HandlerService{
       } else if (type === "STATUS") {
 
         const statuses = data.entry?.[0]?.changes?.[0]?.value.statuses;
-        const stat = this.processStatus(statuses);
+        // const stat = this.processStatus(statuses);
 
       }
 
