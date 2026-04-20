@@ -17,7 +17,7 @@ export class AiService {
     apiKey: string
   ) {
     this.client = new OpenAI({
-      apiKey: apiKey,
+      apiKey,
       baseURL: 'https://openrouter.ai/api/v1',
     });
   }
@@ -26,12 +26,17 @@ export class AiService {
     prompt: string,
     model: AiModels
   ): Promise<string> {
+    const start = Date.now();
+
     try {
       if (!prompt.trim()) {
         throw new Error('runPrompt: prompt cannot be empty');
       }
 
-      this.logger.warn(`Using DeepSeek to detect intent`);
+      this.logger.warn('LLM_REQUEST', {
+        model,
+        promptLength: prompt.length,
+      });
 
       const response = await this.client.chat.completions.create({
         model,
@@ -47,22 +52,42 @@ export class AiService {
       const output = response.choices?.[0]?.message?.content;
 
       if (!output) {
-        throw new Error('No response from DeepSeek');
+        throw new Error(`No response from model: ${model}`);
       }
+
+      const duration = Date.now() - start;
+
+      this.logger.info('LLM_RESPONSE', {
+        model,
+        durationMs: duration,
+        outputLength: output.length,
+      });
 
       return output;
     } catch (err: any) {
+      const duration = Date.now() - start;
+
+      this.logger.error('LLM_ERROR', {
+        model,
+        durationMs: duration,
+        message: err.message,
+        code: err.code,
+        stack: err.stack,
+      });
+
       throw new InternalServerErrorException(
-        `DeepSeekService Error: ${err.message}`
+        `AiService Error (${model}): ${err.message}`
       );
     }
   }
 
-  public async getLlmIntent(prompt: string, model: AiModels): Promise<BestIntent>{
+  public async getLlmIntent(
+    prompt: string,
+    model: AiModels
+  ): Promise<BestIntent> {
     try {
       const rawResponse = await this.basicPrompt(prompt, model);
 
-      // 🧼 Clean response (DeepSeek sometimes wraps JSON)
       const cleaned = rawResponse
         .trim()
         .replace(/^```json/i, '')
@@ -70,18 +95,44 @@ export class AiService {
         .replace(/```$/, '')
         .trim();
 
-      const parsed = JSON.parse(cleaned);
+      let parsed;
+
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (err) {
+        this.logger.warn('LLM_JSON_PARSE_FAIL', {
+          model,
+          rawResponse: rawResponse.slice(0, 300), // avoid huge logs
+        });
+        throw new Error('Invalid JSON returned from LLM');
+      }
 
       const result = BestIntentSchema.safeParse(parsed);
 
       if (!result.success) {
+        this.logger.warn('LLM_ZOD_VALIDATION_FAIL', {
+          model,
+          errors: result.error.format(),
+        });
+
         throw new Error(
           `Zod validation failed: ${JSON.stringify(result.error.format())}`
         );
       }
 
+      this.logger.info('LLM_INTENT_SUCCESS', {
+        model,
+        intent: result.data.name,
+        score: result.data.score,
+      });
+
       return result.data as BestIntent;
     } catch (error: any) {
+      this.logger.error('LLM_INTENT_ERROR', {
+        model,
+        message: error.message,
+      });
+
       throw error;
     }
   }
