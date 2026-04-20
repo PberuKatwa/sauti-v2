@@ -8,7 +8,7 @@ import { ProductsModel } from "./products.model";
 
 export interface ProductSection {
   title: string;
-  productIds: string[]; // retailer_ids
+  productIds: string[];
 }
 
 export interface MultiProductMessageOptions {
@@ -36,8 +36,7 @@ export class ProductsHandler{
   };
 
   private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
-    'GET_ALL_PRODUCTS': (msg,recipient) => this.handleGetAllProducts(msg,recipient),
-    'GET_PRODUCT': (msg,recipient) => this.handleGetProduct(msg,recipient)
+    'GET_ALL_PRODUCTS': (msg,recipient) => this.handleGetAllProducts(msg,recipient)
   };
 
   public async handleIntent(intent: BestIntent, recipient:string):Promise<void> {
@@ -94,11 +93,6 @@ export class ProductsHandler{
 
     await this.sendMultiProductMessage(options);
   }
-
-  private async handleGetProduct(userMessage: string, recipient:string) {
-    await this.whatsappService.sendText(`WERE AT GET_PRODUCT`, recipient);
-  }
-
 
    async sendMultiProductMessage(options: MultiProductMessageOptions): Promise<void> {
      const { recipient, catalogId, bodyText, headerText, footerText, sections } = options;

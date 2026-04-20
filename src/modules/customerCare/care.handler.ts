@@ -13,8 +13,7 @@ export class CustomerCareHandler{
 
   private readonly intentMap: Record< string, (msg: string, recipient:string) => Promise<any> > = {
     'GREETING': (msg,recipient) => this.handleGreeting(msg,recipient),
-    'HELP': (msg, recipient) => this.handleHelp(msg, recipient),
-    'COMPLAINT': (msg, recipient) => this.handleComplaint(msg, recipient)
+    'HELP': (msg, recipient) => this.handleHelp(msg, recipient)
   };
 
   public async handleIntent(intent: BestIntent, recipient:string):Promise<void> {
@@ -32,11 +31,6 @@ export class CustomerCareHandler{
 
   private async handleGreeting(userMessage: string, recipient: string) {
     return await this.sendGreeting(recipient);
-  }
-
-  private async handleComplaint(userMessage: string, recipient: string) {
-
-    await this.sendComplaintEscalation(recipient);
   }
 
   private async handleHelp(userMessage: string, recipient: string) {
