@@ -32,7 +32,6 @@ export class OrdersHandler {
   };
 
   private readonly intentMap: Record<string, (msg: string, recipient: string) => Promise<any>> = {
-    'CREATE_ORDER': (msg, recipient) => this.handleCreateOrder(msg, recipient),
     'GET_ALL_ORDERS': (msg, recipient) => this.handleGetAllOrders(msg, recipient),
     'GET_ORDER': (msg, recipient) => this.handleGetOrder(msg, recipient),
     'GET_ORDER_STATUS': (msg, recipient) => this.handleGetOrderStatus(msg, recipient)
@@ -49,153 +48,6 @@ export class OrdersHandler {
     } catch (error) {
       throw error;
     }
-  }
-
-  private textToLocation(text: string): { latitude: number; longitude: number } | null {
-    const match = text.match(/^LAT:([-]?\d+\.\d+),LNG:([-]?\d+\.\d+)$/);
-
-    if (!match) {
-      console.error(`[ERROR] Invalid location format: "${text}"`);
-      return null;
-    }
-
-    const latitude = parseFloat(match[1]);
-    const longitude = parseFloat(match[2]);
-
-    if (isNaN(latitude) || isNaN(longitude)) {
-      console.error(`[ERROR] Failed to parse numbers from: "${text}"`);
-      return null;
-    }
-
-    return { latitude, longitude };
-  }
-
-  public async handleOrderCompletion2(
-    userMessage: UserMessagePayload,
-    recipient: string
-  ): Promise<{ orderTaskExists: boolean }> {
-
-    console.log(`[DEBUG] userMessage: "${userMessage}"`);
-
-    let order: OrderProfile | null = null;
-    const recipientInt = parseInt(recipient, 10);
-
-    const cachedOrder = this.orderCache.getOrder(recipientInt);
-    console.log(`[DEBUG] cachedOrder result:`, cachedOrder ? 'FOUND' : 'NOT FOUND');
-    console.log(`[DEBUG] cachedOrder value:`, JSON.stringify(cachedOrder, null, 2));
-
-    if (cachedOrder) {
-      order = cachedOrder;
-    } else {
-      console.log(`[DEBUG] Cache MISS - fetching from database`);
-
-      const client = await this.clientsModel.fetchClientByPhone(recipientInt);
-      if (!client) return { orderTaskExists: false };
-
-      const currentOrder = await this.ordersModel.getIncompleteOrders(client.id);
-      if (!currentOrder) return { orderTaskExists: false };
-
-      this.orderCache.setOrder(recipientInt, currentOrder);
-      order = currentOrder;
-    }
-
-    if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
-      this.orderCache.clearAll()
-      return { orderTaskExists: false };
-    }
-
-    const updateOrder: UpdateContactPayload = {
-      orderId: order.id,
-      deliveryType: order.delivery_type,
-      orderContact: order.order_contact,
-      specialInstructions: order.special_instructions
-    };
-
-    const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
-    console.log(`[DEBUG] Current completion state: "${completionState}"`);
-    console.log(`[DEBUG] Completion state type: ${typeof completionState}`);
-
-    if (completionState === "COMPLETE_CONTACT") {
-
-      const cleanedMessage = userMessage.replace(/\D/g, '');
-      const phoneNumber = parseInt(cleanedMessage, 10);
-
-      updateOrder.orderContact = phoneNumber;
-      order.order_contact = phoneNumber;
-      await this.ordersModel.updateContactAndDelivery(updateOrder);
-    }
-    else if (completionState === "COMPLETE_LOCATION") {
-
-      const { latitude, longitude } = this.textToLocation(userMessage);
-      console.log("LOCATIONNNN", latitude, longitude);
-      console.log("LOCATIONNNN", latitude, longitude);
-      await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
-      order.latitude = latitude;
-      order.longitude = longitude;
-    }
-    else if (completionState === "COMPLETE_SPECIAL_INSTRUCTIONS") {
-
-      updateOrder.specialInstructions = userMessage;
-      order.special_instructions = userMessage;
-      console.log("speciallllll", updateOrder)
-      await this.ordersModel.updateContactAndDelivery(updateOrder);
-    }
-
-    this.orderCache.setOrder(recipientInt, order);
-    console.log(`[DEBUG] ✅ Cache updated`);
-
-    if (!order.order_contact) {
-
-      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} has been placed successfully.\nTo ensure smooth delivery, please provide the recipient's phone number.Kindly reply with only the phone number (e.g., 07XXXXXXXX).`;
-      await this.whatsappService.sendText(message, recipient);
-
-      this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_CONTACT");
-    }
-
-    else if (!order.latitude || !order.longitude) {
-
-      const message = `Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.Please share your delivery location via WhatsApp.To do this:\n1. Tap the attachment 📎 icon\n2. Select "Location"\n3. Send your current location.\nThis helps us deliver accurately.`;
-      await this.whatsappService.sendText(message, recipient);
-      this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_LOCATION");
-
-    }
-
-    else if (!order.special_instructions) {
-
-      const message =`Hi there! 💜 Your order ORDER-NUMBER-${order.order_number} is almost complete.Do you have any special instructions? (e.g., message on the card, delivery notes).Reply with your instructions or type "No" if none.`;
-      await this.whatsappService.sendText(message, recipient);
-      this.orderCache.setOrderCompletionMessage(recipientInt, "COMPLETE_SPECIAL_INSTRUCTIONS");
-    }
-
-    console.log("specialllllllll", this.orderCache.getOrderCompletionMessage(recipientInt))
-    return {
-      orderTaskExists: true
-    };
-  }
-
-  private async handleCreateOrder(userMessage: string, recipient: string) {
-
-    const client = await this.clientsModel.createClient({ phoneNumber: parseInt(recipient) });
-
-    const match = userMessage.match(/ProductID:(\d+)/);
-    const productId = match ? Number(match[1]) : null;
-
-    if (!productId) return this.productsHandler.sendFullCatalog(recipient);
-
-    const product = catalog.find(item => item.productId === productId);
-    const items:OrderItem[] | [] = product
-      ? [
-          {
-            name: product.name,
-            catalogId:`${product.productId}`,
-            quantity: product.quantity,
-            unitPrice: product.unitPrice
-          }
-        ]
-      : [];
-
-    const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items:items })
-    await this.sendOrderInvoice(recipient, orderCreated)
   }
 
   public async handleCatalogueCreateOrder(catalogMessage:CatalogOrderMessage, recipient:string) {
@@ -257,7 +109,7 @@ export class OrdersHandler {
       currentOrder = await this.ordersModel.fetchLatestOrderByClient(client.id)
     }
 
-    await this.sendOrderInvoice(recipient, currentOrder);
+    await this.sendOrder(recipient, currentOrder);
   }
 
   private async handleGetOrderStatus(userMessage: string, recipient: string) {
@@ -265,7 +117,6 @@ export class OrdersHandler {
     const match = userMessage.match(/ORDER_ID:(\d+)/);
     const orderId = match ? Number(match[1]) : null;
 
-    console.log("helllloooooo", orderId, userMessage)
     let currentOrder = null;
     if (orderId) {
       currentOrder = await this.ordersModel.fetchOrder(orderId);
@@ -339,59 +190,6 @@ export class OrdersHandler {
               type: "reply",
               reply: {
                 id: `track_order_ORDER_${order.id}`,
-                title: "Track Order"
-              }
-            }
-          ]
-        }
-      }
-    };
-
-    await this.whatsappService.callApi(recipient, payload);
-  }
-
-  private async sendOrderInvoice(recipient: string, order: OrderProfile) {
-
-    const itemSummary = order.items
-      .map((item: any) => `• ${item.name} (x${item.quantity})`)
-      .join('\n');
-
-    const payload = {
-      messaging_product: "whatsapp",
-      to: recipient,
-      type: "interactive",
-      interactive: {
-        type: "button",
-        header: {
-          type: "text",
-          text: `Order Confirmation ORDER-${order.order_number}`
-        },
-        body: {
-          text:
-            `Hi there! 💜 Your order has been placed.\n\n` +
-            `*Order Details:*\n${itemSummary}\n\n` +
-            `*Summary:*\n` +
-            `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
-            `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
-            `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
-            `Status: _${order.delivery_status.toUpperCase()}_`
-        },
-        footer: {
-          text: "Thank you for choosing Purple Hearts 🌸"
-        },
-        action: {
-          buttons: [
-            {
-              type: "reply",
-              reply: {
-                id: `pay for order - ORDER_ID:${order.id}`,
-                title: "Pay Now 💳"
-              }
-            },
-            {
-              type: "reply",
-              reply: {
-                id: `where is my order - ORDER_ID:${order.id}`,
                 title: "Track Order"
               }
             }

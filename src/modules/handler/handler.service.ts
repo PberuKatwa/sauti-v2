@@ -2,7 +2,6 @@ import { Inject,Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { CatalogOrderMessage, IncomingMessages, StatusesValue, UserMessagePayload, WebhookType, WhatsappWebhook } from "../../types/whatsapp.webhook";
 import { WhatsappWebhookSchema } from "../../validators/webhook.schema";
-import { WhatsappReply } from "../../types/reply.types";
 import { IntentDetectorService } from "../intent/intent.detector";
 import { BestIntent } from "../../types/intent.types";
 import { loadIntentsFromFile } from "../../utils/intentLoader";
