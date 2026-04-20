@@ -79,7 +79,7 @@
     ]
   },
   {
-    "id": 3,
+    "id": 2,
     "organization_type": "SALES",
     "name": "GET_ALL_ORDERS",
     "description": "Intent triggered when a user wants to retrieve, view, or list all their past or existing orders or invoices.",
@@ -136,7 +136,7 @@
     ]
   },
   {
-    "id": 4,
+    "id": 3,
     "organization_type": "SALES",
     "name": "GET_ORDER",
     "description": "Intent triggered when a user wants to retrieve or view a specific order or invoice by ID, number, or reference.",
@@ -192,7 +192,7 @@
     ]
   },
   {
-    "id": 6,
+    "id": 4,
     "organization_type": "SALES",
     "name": "GET_ORDER_STATUS",
     "description": "Intent triggered when a user wants to check up on the status or delivery progress of a specific order, including tracking, location, and estimated arrival time.",
@@ -248,7 +248,7 @@
     ]
   },
   {
-    "id": 7,
+    "id": 5,
     "organization_type": "SALES",
     "name": "CREATE_PAYMENT",
     "description": "Intent triggered when a user wants to make a payment, checkout, or pay for an order or item.",
@@ -305,7 +305,7 @@
     ]
   },
   {
-    "id": 8,
+    "id": 6,
     "organization_type": "SALES",
     "name": "GET_ALL_PAYMENTS",
     "description": "Intent triggered when a user wants to retrieve, view, or list all payments they have made.",
@@ -360,7 +360,7 @@
     ]
   },
   {
-    "id": 9,
+    "id": 7,
     "organization_type": "SALES",
     "name": "GET_PAYMENT",
     "description": "Intent triggered when a user wants to retrieve or view a specific individual payment record or transaction by ID, reference, or date.",
@@ -416,7 +416,7 @@
     ]
   },
   {
-    "id": 10,
+    "id": 8,
     "organization_type": null,
     "name": "GREETING",
     "description": "Intent triggered when a user initiates a conversation or sends a greeting to begin an interaction.",
@@ -473,7 +473,7 @@
     ]
   },
   {
-    "id": 11,
+    "id": 9,
     "organization_type": null,
     "name": "HELP",
     "description": "Intent triggered when a user requests general assistance, guidance, or wants to understand how to use the system or service.",
@@ -528,7 +528,7 @@
     ]
   },
   {
-    "id": 12,
+    "id": 10,
     "organization_type": null,
     "name": "COMPLAINT",
     "description": "Intent triggered when a user expresses dissatisfaction, frustration, or reports a problem or issue with a product, order, delivery, or service.",

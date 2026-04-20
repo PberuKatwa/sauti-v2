@@ -1,35 +1,25 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { WhatsappService } from "../whatsapp/whatsapp.service";
 import { OrdersModel } from "./orders.model";
 import { BestIntent } from "../../validators/bestIntent.schema";
 import { ClientModel } from "../client/client.model";
-import { ProductsHandler, catalog } from "../products/products.handler";
-import { OrderItem, OrderProfile, UpdateContactPayload } from "../../types/orders.types";
-import {  CatalogOrderMessage, UserMessagePayload } from "../../types/whatsapp.webhook";
-import { CatalogService } from "../products/catalog.service";
+import { OrderItem, OrderProfile } from "../../types/orders.types";
+import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
 import { ConfigService } from "@nestjs/config";
 import { ProductsModel } from "../products/products.model";
-import { OrderCacheService } from "../cache/cache.order";
 
 @Injectable()
 export class OrdersHandler {
-
-  private readonly catalogId: string;
 
   constructor(
     private readonly logger: AppLogger,
     private readonly whatsappService: WhatsappService,
     private readonly ordersModel: OrdersModel,
     private readonly clientsModel: ClientModel,
-    private readonly productsHandler: ProductsHandler,
     private readonly productsModel: ProductsModel,
-    private readonly catalogService: CatalogService,
     private readonly configService: ConfigService,
-    private readonly orderCache: OrderCacheService
-  ) {
-    this.catalogId = this.configService.get<string>("catalogId");
-  };
+  ) {};
 
   private readonly intentMap: Record<string, (msg: string, recipient: string) => Promise<any>> = {
     'GET_ALL_ORDERS': (msg, recipient) => this.handleGetAllOrders(msg, recipient),
