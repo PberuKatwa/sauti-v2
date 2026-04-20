@@ -37,7 +37,7 @@ export class IntentDetectorService {
       if (intent.name === "UNKNOWN") {
         const prompt = buildIntentPrompt(userMessage);
         // intent = await this.geminiService.getLlmIntent(prompt);
-        intent = await this.aiService.getLlmIntent(prompt);
+        intent = await this.aiService.getLlmIntent(prompt,"openai/gpt-4o-mini");
 
         addOrganisationToken(intent.id, intent.userMessage);
       }

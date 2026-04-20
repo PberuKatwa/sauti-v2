@@ -6,6 +6,7 @@ import OpenAI from 'openai';
 import { BestIntent } from '../../types/intent.types';
 import { BestIntentSchema } from '../../validators/bestIntent.schema';
 import { AppLogger } from '../../logger/winston.logger';
+import { AiModels } from '../../types/ai.types';
 
 @Injectable()
 export class AiService {
@@ -23,7 +24,7 @@ export class AiService {
 
   async basicPrompt(
     prompt: string,
-    model: string = 'deepseek/deepseek-chat'
+    model: AiModels
   ): Promise<string> {
     try {
       if (!prompt.trim()) {
@@ -57,9 +58,9 @@ export class AiService {
     }
   }
 
-  public async getLlmIntent(prompt: string): Promise<BestIntent> {
+  public async getLlmIntent(prompt: string, model: AiModels): Promise<BestIntent>{
     try {
-      const rawResponse = await this.basicPrompt(prompt);
+      const rawResponse = await this.basicPrompt(prompt, model);
 
       // 🧼 Clean response (DeepSeek sometimes wraps JSON)
       const cleaned = rawResponse
@@ -69,23 +70,7 @@ export class AiService {
         .replace(/```$/, '')
         .trim();
 
-      let parsed;
-
-      try {
-        parsed = JSON.parse(cleaned);
-      } catch {
-        // 🔁 Retry once if JSON fails (cheap models need this)
-        this.logger.warn('JSON parse failed, retrying once...');
-        const retry = await this.basicPrompt(prompt);
-        parsed = JSON.parse(
-          retry
-            .trim()
-            .replace(/^```json/i, '')
-            .replace(/^```/, '')
-            .replace(/```$/, '')
-            .trim()
-        );
-      }
+      const parsed = JSON.parse(cleaned);
 
       const result = BestIntentSchema.safeParse(parsed);
 
