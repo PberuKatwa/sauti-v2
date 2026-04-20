@@ -36,75 +36,53 @@ export class HandlerService{
     type: WebhookType,
     data:WhatsappWebhook
   } {
-    try {
+    const validatedData = WhatsappWebhookSchema.parse(webhook);
 
-      const validatedData = WhatsappWebhookSchema.parse(webhook);
-      if (!validatedData) throw new Error(`The whatsapp webhook is malformed`);
+    const value = validatedData.entry?.[0]?.changes?.[0]?.value;
 
-      const value = validatedData.entry?.[0]?.changes?.[0]?.value;
+    let type: WebhookType = "UNKNOWN";
+    if (value.messages && value.messages.length > 0) type = "MESSAGE";
+    if (value.statuses && value.statuses.length > 0) type = "STATUS";
 
-      let type: WebhookType = "UNKNOWN";
-      if (value.messages && value.messages.length > 0) type = "MESSAGE";
-      if (value.statuses && value.statuses.length > 0) type = "STATUS";
-
-      this.logger.info(`Successfully extracted webhook type of ${type}.`)
-      return {
-        type: type,
-        data:validatedData
-      };
-
-    } catch (error) {
-      throw error;
-    }
+    return { type, data: validatedData };
   }
 
   private extractMessageAndRecepient(messages: IncomingMessages[]): {
     userMessage: UserMessagePayload;
     recipient: string;
   } {
-    try {
-      if (!messages || messages.length === 0) {
-        throw new Error("No messages received");
-      }
-
-      const msg = messages[0];
-      const sender = msg.from;
-
-      let userMessage: string |null = null;
-
-      if (msg.type === "text") {
-        userMessage = msg.text?.body;
-      }
-
-      else if (msg.type === "button") {
-        userMessage = msg.button?.payload;
-      }
-
-      else if (msg.type === "interactive") {
-        userMessage =
-          msg.interactive?.button_reply?.id ||
-          msg.interactive?.list_reply?.id ||
-          null;
-      }
-
-      else if (msg.type === "location") {
-        const lat = msg.location.latitude.toFixed(8);
-        const lng = msg.location.longitude.toFixed(8);
-        userMessage = `LAT:${lat},LNG:${lng}`;
-      }
-
-      if (!userMessage) {
-        throw new Error(`Unsupported or empty message type: ${msg.type}`);
-      }
-
-      return {
-        userMessage,
-        recipient: sender,
-      };
-
-    } catch (error) {
-      throw error;
+    if (!messages || messages.length === 0) {
+      throw new Error("No messages received");
     }
+
+    const msg = messages[0];
+    const sender = msg.from;
+
+    let userMessage: string |null = null;
+
+    if (msg.type === "text") {
+      userMessage = msg.text?.body;
+    }
+    else if (msg.type === "button") {
+      userMessage = msg.button?.payload;
+    }
+    else if (msg.type === "interactive") {
+      userMessage =
+        msg.interactive?.button_reply?.id ||
+        msg.interactive?.list_reply?.id ||
+        null;
+    }
+    else if (msg.type === "location") {
+      const lat = msg.location.latitude.toFixed(8);
+      const lng = msg.location.longitude.toFixed(8);
+      userMessage = `LAT:${lat},LNG:${lng}`;
+    }
+
+    if (!userMessage) {
+      throw new Error(`Unsupported or empty message type: ${msg.type}`);
+    }
+
+    return { userMessage, recipient: sender };
   }
 
   private readonly intentEntityMap: Record< string, (intent:BestIntent, recipient:string) => Promise<any> > = {
@@ -115,92 +93,71 @@ export class HandlerService{
   };
 
   private async processCatalogOrder(catalogOrder: CatalogOrderMessage, recipient:string) {
-    try {
-
-      this.logger.warn(`Attempting to create order form catalogue items`);
-      return await this.ordersHandler.handleCatalogueCreateOrder(catalogOrder, recipient);
-    } catch (error) {
-      throw error;
-    }
-
+    this.logger.info("Processing catalog order", { recipient });
+    return await this.ordersHandler.handleCatalogueCreateOrder(catalogOrder, recipient);
   }
 
   private async processIntentMessage(messages: IncomingMessages[]): Promise<void> {
+    const { userMessage, recipient } = this.extractMessageAndRecepient(messages);
+
+    this.logger.info("Message extracted", { recipient, type: messages[0].type });
+
+    const orderCompletionResult = await this.orderCompletionHandler.handleOrderCompletion(userMessage, recipient);
+    if (orderCompletionResult) return;
+
+    const intentsFile = loadIntentsFromFile();
+    this.intentDetector.setup(intentsFile, STOP_WORDS);
+    const intentResult = await this.intentDetector.getFinalIntent(userMessage);
+
+    this.logger.info("Intent detected", { intent: intentResult.name, entity: intentResult.entity });
+
     try {
-
-      const { userMessage, recipient } = this.extractMessageAndRecepient(messages);
-
-      this.logger.info(`Successfully extracted user message and recipient`, {
-        userMessage: userMessage,
-        recipient:recipient
-      })
-
-      // if (!this.ordersHandler.handleOrderCompletion2(userMessage, recipient)) return;
-      const orderCompletionResult = await this.orderCompletionHandler.handleOrderCompletion(userMessage, recipient);
-      if (orderCompletionResult) return;
-
-      const intentsFile = loadIntentsFromFile();
-      this.intentDetector.setup(intentsFile, STOP_WORDS);
-      const intentResult = await this.intentDetector.getFinalIntent(userMessage);
-
-      this.logger.info(`Successfully extracted intent:${intentResult.name} passing message to handler`)
-
-      try {
-        const handler = this.intentEntityMap[intentResult.entity];
-        await handler(intentResult, recipient);
-      } catch (error) {
-        this.logger.error(`Error in processing message to handler ${error}`)
-        await this.customerCareHandler.sendHelpMenu(recipient);
-      }
-
-      this.logger.info(`Successfully handled message.`);
-      return
+      const handler = this.intentEntityMap[intentResult.entity];
+      await handler(intentResult, recipient);
     } catch (error) {
-      throw error;
+      this.logger.error("Handler failed, falling back to help menu", {
+        entity: intentResult.entity,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      try {
+        await this.customerCareHandler.sendHelpMenu(recipient);
+      } catch (fallbackError) {
+        this.logger.error("Fallback help menu also failed", {
+          error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
+        });
+      }
     }
   }
 
   private processStatus(statuses: StatusesValue[]) {
-    try {
-
-      return console.log("GET STATUS", statuses)
-
-    } catch (error) {
-      throw error;
-    }
+    this.logger.info("Status update received", { statuses: statuses.map(s => ({ id: s.id, status: s.status })) });
   }
 
   public async processWhatsappWebhook(payload: WhatsappWebhook): Promise<void> {
     try {
-
-      this.logger.warn(`Attempting to process whatsapp webhook`)
-
       const { type, data } = this.extractWhatsappWebhookType(payload);
 
-
       if (type === "MESSAGE") {
-
         const messages = data.entry?.[0]?.changes?.[0]?.value.messages;
-
         const msg = messages[0];
 
         if (msg.type === "order") {
           await this.processCatalogOrder(msg.order, msg.from);
-          return
+          return;
         }
 
         await this.processIntentMessage(messages);
       } else if (type === "STATUS") {
-
         const statuses = data.entry?.[0]?.changes?.[0]?.value.statuses;
-        // const stat = this.processStatus(statuses);
-
+        this.processStatus(statuses);
+      } else {
+        this.logger.warn("Unknown webhook type", { type });
       }
-
-      this.logger.info(`Successfully processed whatsapp webhook`)
-      return ;
     } catch (error) {
-      throw error;
+      this.logger.error("Webhook processing failed", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
     }
   }
 
