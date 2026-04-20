@@ -40,7 +40,6 @@ export class PaymentsHandler{
     const match = userMessage.match(/ORDER_ID:(\d+)/);
     const orderId = match ? Number(match[1]) : null;
 
-    console.log("helllloooooo", orderId, userMessage)
     let currentOrder = null;
     if (orderId) {
       currentOrder = await this.ordersModel.fetchOrder(orderId);
@@ -49,7 +48,6 @@ export class PaymentsHandler{
       currentOrder = await this.ordersModel.fetchLatestOrderByClient(client.id)
     }
 
-    console.log("current orderrrr", currentOrder)
     return await this.sendPaymentRequest(recipient, currentOrder);
   }
 
