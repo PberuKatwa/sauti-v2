@@ -34,7 +34,7 @@ export interface StatusesValue{
 }
 
 export interface ContactsValue{
-  profile:{
+  profile?:{
     name:string;
   };
   wa_id:string;

@@ -10,7 +10,7 @@ const StatusesValueSchema = z.object({
 const ContactsValueSchema = z.object({
   profile: z.object({
     name: z.string(),
-  }),
+  }).optional(),
   wa_id: z.string(),
 });
 
