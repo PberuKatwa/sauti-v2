@@ -40,7 +40,7 @@ export class AiService {
             content: prompt,
           },
         ],
-        temperature: 0, // 🔥 important for consistency
+        temperature: 0,
       });
 
       const output = response.choices?.[0]?.message?.content;

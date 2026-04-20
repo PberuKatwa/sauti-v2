@@ -69,5 +69,6 @@ export const whatsappConfig = (): WhatsappConfig => ({
 });
 
 export const llmConfig = (): LlmConfig =>({
-  geminiApiKey:getEnv(getGlobalEnvironment, "GEMINI_API_KEY"),
+  geminiApiKey: getEnv(getGlobalEnvironment, "GEMINI_API_KEY"),
+  openRouterApiKey:getEnv(getGlobalEnvironment, "OPEN_ROUTER_API_KEY"),
 })

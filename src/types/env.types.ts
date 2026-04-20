@@ -30,6 +30,7 @@ export interface WhatsappConfig{
 
 export interface LlmConfig {
   geminiApiKey: string;
+  openRouterApiKey: string;
 }
 
 export type EnvConfig = PostgresEnv | S3Config | GlobalEnvironment

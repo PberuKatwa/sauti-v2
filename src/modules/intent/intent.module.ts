@@ -7,6 +7,7 @@ import { AppLogger } from "../../logger/winston.logger";
 import { ConfigService } from "@nestjs/config";
 import { PayloadExtractor } from "./payload.extractor";
 import { IntentController } from "./intent.controller";
+import { AiService } from "./ai.service";
 
 @Module({
   providers: [
@@ -20,6 +21,18 @@ import { IntentController } from "./intent.controller";
         const apiKey = config.get<string>("geminiApiKey");
 
         return new IntentGeminiService(logger, apiKey);
+      },
+      inject: [AppLogger, ConfigService],
+    },
+    {
+      provide: AiService,
+      useFactory: function (
+        logger: AppLogger,
+        config: ConfigService
+      ) {
+        const apiKey = config.get<string>("openRouterApiKey");
+
+        return new AiService(logger, apiKey);
       },
       inject: [AppLogger, ConfigService],
     },
