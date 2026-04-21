@@ -29,6 +29,8 @@ export class OrdersHandler {
   public async handleIntent(intent: BestIntent, recipient: string): Promise<void> {
     try {
 
+      this.logger.warn(`Handling orders intent: ${intent.name} for recipient: ${recipient}`);
+
       const handler = this.intentMap[intent.name];
 
       if (!handler) throw new Error(`No handler was found`)
@@ -40,6 +42,8 @@ export class OrdersHandler {
   }
 
   public async handleCatalogueCreateOrder(catalogMessage:CatalogOrderMessage, recipient:string) {
+
+    this.logger.warn(`Creating order from catalogue for recipient: ${recipient}`);
 
     const client = await this.clientsModel.createClient({ phoneNumber: parseInt(recipient) });
 
@@ -75,17 +79,27 @@ export class OrdersHandler {
     )
 
     const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: productItems })
+
+    this.logger.info(`Successfully created catalogue order id: ${orderCreated.id}`);
+
     await this.sendOrder(recipient, orderCreated)
   }
 
   private async handleGetAllOrders(userMessage: string, recipient: string) {
 
+    this.logger.warn(`Fetching all orders for recipient: ${recipient}`);
+
     const client = await this.clientsModel.fetchClientByPhone(parseInt(recipient));
     const orders = await this.ordersModel.fetchClientOrders(client.id);
+
+    this.logger.info(`Retrieved ${orders.length} orders for client: ${client.id}`);
+
     await this.sendOrdersList(recipient, orders);
   }
 
   private async handleGetOrder(userMessage: string, recipient: string) {
+
+    this.logger.warn(`Fetching order for recipient: ${recipient}`);
 
     const match = userMessage.match(/ORDER_ID:(\d+)/);
     const orderId = match ? Number(match[1]) : null;
@@ -97,12 +111,16 @@ export class OrdersHandler {
       const client = await this.clientsModel.fetchClientByPhone(parseInt(recipient));
       currentOrder = await this.ordersModel.fetchLatestOrderByClient(client.id)
     }
+
+    this.logger.info(`Retrieved order id: ${currentOrder.id} for recipient: ${recipient}`);
 
     await this.sendOrder(recipient, currentOrder);
   }
 
   private async handleGetOrderStatus(userMessage: string, recipient: string) {
 
+    this.logger.warn(`Fetching order status for recipient: ${recipient}`);
+
     const match = userMessage.match(/ORDER_ID:(\d+)/);
     const orderId = match ? Number(match[1]) : null;
 
@@ -114,11 +132,15 @@ export class OrdersHandler {
       currentOrder = await this.ordersModel.fetchLatestOrderByClient(client.id)
     }
 
+    this.logger.info(`Retrieved order status: ${currentOrder.delivery_status} for order id: ${currentOrder.id}`);
+
     return await this.sendOrderTracking(recipient, currentOrder);
 
   }
 
   public async sendOrder(recipient: string, order: OrderProfile) {
+
+    this.logger.warn(`Sending order confirmation for order id: ${order.id} to recipient: ${recipient}`);
 
     const itemSummary = order.items
       .map((item: any) => `• ${item.name} (x${item.quantity})`)
@@ -162,6 +184,8 @@ export class OrdersHandler {
         { id: `track_order_ORDER_${order.id}`, title: "Track Order" }
       ]
     });
+
+    this.logger.info(`Successfully sent order confirmation for order id: ${order.id}`);
   }
 
   private async sendOrdersList(recipient:string,orders:OrderProfile[]) {
