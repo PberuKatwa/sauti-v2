@@ -187,35 +187,19 @@ export class OrdersHandler {
       };
     });
 
-    const payload = {
-      messaging_product: "whatsapp",
-      to: recipient,
-      type: "interactive",
-      interactive: {
-        type: "list",
-        header: {
-          type: "text",
-          text: "📦 Your Recent Orders"
-        },
-        body: {
-          text: "Here are your latest orders. Tap one to view details 👇"
-        },
-        footer: {
-          text: "Purple Hearts 💜"
-        },
-        action: {
-          button: "View Orders",
-          sections: [
-            {
-              title: "Recent Orders",
-              rows
-            }
-          ]
+    await this.whatsappService.sendList({
+      recipient,
+      header: "📦 Your Recent Orders",
+      body: "Here are your latest orders. Tap one to view details 👇",
+      footer: "Purple Hearts 💜",
+      buttonText: "View Orders",
+      sections: [
+        {
+          title: "Recent Orders",
+          rows
         }
-      }
-    };
-
-    await this.whatsappService.callApi(recipient, payload);
+      ]
+    });
   }
 
   private async sendOrderTracking(recipient: string, order: OrderProfile) {
@@ -244,12 +228,10 @@ export class OrdersHandler {
         const isLast = index === steps.length - 1;
         const connector = isLast ? "" : "\n┆";
 
-        // ✅ Completed step
         if (index < currentIndex) {
           return `✅ ~${step.title}~${connector}`;
         }
 
-        // 🔵 Current active step
         if (index === currentIndex) {
           return (
             `🔵 *${step.title}*\n` +
@@ -258,54 +240,27 @@ export class OrdersHandler {
           );
         }
 
-        // ⬜ Pending step
         return `⬜ ${step.title}${connector}`;
       })
       .join("\n");
 
-    const payload = {
-      messaging_product: "whatsapp",
-      to: recipient,
-      type: "interactive",
-      interactive: {
-        type: "button",
-        header: {
-          type: "text",
-          text: `🌸 Order Tracking • ORDER-${order.order_number}`
-        },
-        body: {
-          text:
-            `Hi there! 💜\n\n` +
-            `Here's your delivery progress:\n\n` +
-            `${progressText}\n\n` +
-            `━━━━━━━━━━━━━━━\n` +
-            `*Total:* KES ${Number(order.total).toLocaleString()}`
-        },
-        footer: {
-          text: "Purple Hearts 🌸"
-        },
-        action: {
-          buttons: [
-            {
-              type: "reply",
-              reply: {
-                id: `pay for order - ORDER_ID${order.id}`,
-                title: "Pay Now 💳"
-              }
-            },
-            {
-              type: "reply",
-              reply: {
-                id: `show me your products`,
-                title: "View More 🌷"
-              }
-            }
-          ]
-        }
-      }
-    };
+    const body =
+      `Hi there! 💜\n\n` +
+      `Here's your delivery progress:\n\n` +
+      `${progressText}\n\n` +
+      `━━━━━━━━━━━━━━━\n` +
+      `*Total:* KES ${Number(order.total).toLocaleString()}`;
 
-    await this.whatsappService.callApi(recipient, payload);
+    await this.whatsappService.sendButton({
+      recipient,
+      header: `🌸 Order Tracking • ORDER-${order.order_number}`,
+      body,
+      footer: "Purple Hearts 🌸",
+      buttons: [
+        { id: `pay for order - ORDER_ID${order.id}`, title: "Pay Now 💳" },
+        { id: `show me your products`, title: "View More 🌷" }
+      ]
+    });
   }
 
 }
