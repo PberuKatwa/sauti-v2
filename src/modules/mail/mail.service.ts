@@ -1,15 +1,14 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { MailerService } from "@nestjs-modules/mailer";
-import type  { AppLogger } from "src/logger/winston.logger";
-import { APP_LOGGER } from "src/logger/logger.provider";
 import { ConfigService } from "@nestjs/config";
+import { AppLogger } from "../../logger/winston.logger";
 
 @Injectable()
 export class MailService{
 
   constructor(
     private readonly mailerService: MailerService,
-    @Inject(APP_LOGGER) private readonly logger: AppLogger,
+    private readonly logger: AppLogger,
     private readonly configService:ConfigService
   ) {
 
@@ -37,36 +36,17 @@ export class MailService{
     }
   }
 
-  async sendAppointmentEmail(to:string, message:string) {
-    try {
-
-      const clientEmail = await this.mailerService.sendMail({
+  async sendPasswordResetEmail(to: string, resetUrl: string) {
+      return await this.mailerService.sendMail({
         to,
-        subject: 'Welcome to Ardhitech.',
-        template: 'welcome',
-         context: {
-           message:"Thank you for reaching out to ardhitech, well respond shortly",
-           logoUrl: 'https://ardhitech.com/wp-content/uploads/2022/10/ardhitech_logo-.png',
-           year: new Date().getFullYear(),
-         },
-      })
-      const selfTo = this.configService.get<string>('smtpUser')
-
-      const selfEmail = await this.mailerService.sendMail({
-        to: `${selfTo}`,
-        subject: 'Appointment Email',
-        template: 'appointment',
-         context: {
-           message:`Client ${to} has attempted to book an appointment with details:[ ${message} ]`,
-           logoUrl: 'https://ardhitech.com/wp-content/uploads/2022/10/ardhitech_logo-.png',
-           year: new Date().getFullYear(),
-         },
-      })
-
-      return `Successfully sent appointment messages.`
-    } catch (error) {
-      throw error;
-    }
+        subject: 'Reset your password',
+        template: 'password_reset',
+        context: {
+          resetUrl,
+          logoUrl: 'https://elasticbeanstalk-eu-north-1-247860635648.s3.eu-north-1.amazonaws.com/SqcYBLqA_1776769847074.webp',
+          year: new Date().getFullYear(),
+        },
+      });
   }
 
 }
