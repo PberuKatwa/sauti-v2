@@ -13,13 +13,13 @@ import { randomBytes, randomUUID } from 'crypto';
 import { Readable } from 'stream';
 import { ConfigService } from '@nestjs/config';
 import path from 'path';
-import { S3_CLIENT } from './garage.storage';
+import { S3_CLIENT } from './storage.storage';
 import { AppLogger } from '../../logger/winston.logger';
 import type { listFilesRes, keyFileFetchRes } from '../../types/storage.types';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
-export class GarageService {
+export class StorageService {
   private readonly bucket: string;
 
   constructor(
@@ -171,7 +171,7 @@ export class GarageService {
 
     const timestamp = Date.now();
     const ext = path.extname(fileName);
-    const uuid =  randomBytes(7).toString('base64').replace(/[+/=]/g, '').substring(0, 10);
+    const uuid =  randomBytes(7).toString('base64').replace(/[+\/=]/g, '').substring(0, 10);
     const key = `${uuid}_${timestamp}${ext}`;
     return key;
 

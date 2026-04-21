@@ -16,7 +16,7 @@ import { AuthGuard } from "../auth/guards/auth.guard";
 import { CurrentUser } from "../users/decorators/user.decorator";
 import { CatalogSync } from "./catalog.sync";
 import { AllMinimalCatalogResponse, MinimalCatalogResponse } from "../../types/catalog.types";
-import { GarageService } from "../garage/garage.service";
+import { StorageService } from "../storage/storage.service";
 
 @Controller('products')
 @UseGuards(AuthGuard)
@@ -26,7 +26,7 @@ export class ProductsController {
     private readonly logger: AppLogger,
     private readonly products: ProductsModel,
     private readonly catalogSync: CatalogSync,
-    private readonly garage:GarageService
+    private readonly storage:StorageService
   ) { }
 
   @Post('')
@@ -178,7 +178,7 @@ export class ProductsController {
         products.map(
           async (product: FullProduct) => {
             if (product.file_url) {
-              product.signed_url = await this.garage.getSignedFileURl(product.file_url);
+              product.signed_url = await this.storage.getSignedFileURl(product.file_url);
             }
             return product
           }

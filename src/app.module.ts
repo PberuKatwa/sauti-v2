@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { s3Config,postgresEnv,globalConfig, whatsappConfig, llmConfig} from './config';
 import { AppLoggerModule } from './logger/logger.module';
-import { GarageModule } from './modules/garage/garage.module';
+import { StorageModule } from './modules/storage/storage.module';
 import { PostgresModule } from './databases/postgres.module';
 import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
 import { FilesModule } from './modules/files/files.module';
@@ -24,7 +24,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
         isGlobal: true,
       }),
     AppLoggerModule,
-    GarageModule,
+    StorageModule,
     FilesModule,
     PostgresModule,
     AuthModule,

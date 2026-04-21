@@ -3,7 +3,7 @@ import sharp = require('sharp');
 import { Busboy, BusboyConfig, FileInfo } from 'busboy';
 import { Readable } from 'stream';
 import { PassThrough } from 'stream';
-import { GarageService } from "../garage/garage.service";
+import { StorageService } from "../storage/storage.service";
 import type { Response, Request } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
@@ -18,7 +18,7 @@ import { AuthGuard } from "../auth/guards/auth.guard";
 export class FilesController{
 
   constructor(
-    private readonly garageService: GarageService,
+    private readonly storageService: StorageService,
     private readonly logger: AppLogger,
     private readonly files:FilesModel
   ) { }
@@ -77,7 +77,7 @@ export class FilesController{
                 size: newSize
               } as Express.Multer.File;
 
-              const { key } = await this.garageService.uploadFile(mockFile);
+              const { key } = await this.storageService.uploadFile(mockFile);
               const file: File = await this.files.saveFile(currentUser.userId, newFileName, key, newSize, newMimeType);
 
               const response: SingleFileAPiResponse = {
@@ -178,7 +178,7 @@ export class FilesController{
                 size: newSize
               } as Express.Multer.File;
 
-              const { key } = await this.garageService.uploadFile(mockFile);
+              const { key } = await this.storageService.uploadFile(mockFile);
               const file: File = await this.files.saveFile(currentUser.userId, newFileName, key, newSize, newMimeType);
 
               const response: SingleFileAPiResponse = {
@@ -221,7 +221,7 @@ export class FilesController{
 
           if (fileSize > 100 * 1024 * 1024) {
 
-            const key = await this.garageService.uploadMultiPart(fileStream, filename, mimeType);
+            const key = await this.storageService.uploadMultiPart(fileStream, filename, mimeType);
 
             const file2 = await this.files.saveFile(currentUser.userId, filename, key, fileSize, mimeType);
             console.log("fileeee", file2);
@@ -252,7 +252,7 @@ export class FilesController{
               size: fileSize
             } as Express.Multer.File;
 
-            const { key } = await this.garageService.uploadFile(mockFile);
+            const { key } = await this.storageService.uploadFile(mockFile);
 
             const file2 = await this.files.saveFile(currentUser.userId, filename, key, fileSize, mimeType);
             console.log("fileeee", file2);
@@ -284,7 +284,7 @@ export class FilesController{
   @Get()
   async listS3Files( @Res() res:Response ) {
     try {
-      const files = await this.garageService.listFiles()
+      const files = await this.storageService.listFiles()
 
       const response: ApiResponse< Array<any>  > = {
         success: true,
@@ -313,7 +313,7 @@ export class FilesController{
 
     try {
 
-      const file = await this.garageService.fetchFileByKey(key);
+      const file = await this.storageService.fetchFileByKey(key);
 
       res.setHeader('Content-Type', file.contentType || 'application/octet-stream');
       res.setHeader('Content-Length', file.contentLength);
@@ -341,7 +341,7 @@ export class FilesController{
         (resolve, reject) =>{
           busboy.on('file',(name, fileStream, info)=> {
             const { filename, mimeType } = info;
-            this.garageService.uploadMultiPart(fileStream, filename, mimeType)
+            this.storageService.uploadMultiPart(fileStream, filename, mimeType)
               .then(resolve)
               .catch(reject);
           });
