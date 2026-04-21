@@ -8,6 +8,7 @@ import { OrderItem, OrderProfile } from "../../types/orders.types";
 import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
 import { ConfigService } from "@nestjs/config";
 import { ProductsModel } from "../products/products.model";
+import { InteractiveMessageBuilder } from "../../utils/interactiveMessage.builder";
 
 @Injectable()
 export class OrdersHandler {
@@ -19,6 +20,7 @@ export class OrdersHandler {
     private readonly clientsModel: ClientModel,
     private readonly productsModel: ProductsModel,
     private readonly configService: ConfigService,
+    private readonly interactiveBuilder: InteractiveMessageBuilder,
   ) {};
 
   private readonly intentMap: Record<string, (msg: string, recipient: string) => Promise<any>> = {
@@ -136,59 +138,33 @@ export class OrdersHandler {
       ? order.special_instructions
       : "_None_";
 
-    const payload = {
-      messaging_product: "whatsapp",
-      to: recipient,
-      type: "interactive",
-      interactive: {
-        type: "button",
-        header: {
-          type: "text",
-          text: `ORDER-NUMBER=${order.order_number}`
-        },
-        body: {
-          text:
-            `Hi there! 💜 Your order has been placed.\n\n` +
+    const body =
+      `Hi there! 💜 Your order has been placed.\n\n` +
 
-            `*Order Details:*\n${itemSummary}\n\n` +
+      `*Order Details:*\n${itemSummary}\n\n` +
 
-            `*Delivery Information:*\n` +
-            `Type: ${deliveryTypeLabel}\n` +
-            `Contact: ${contactLabel}\n` +
-            `Instructions: ${instructionsLabel}\n\n` +
+      `*Delivery Information:*\n` +
+      `Type: ${deliveryTypeLabel}\n` +
+      `Contact: ${contactLabel}\n` +
+      `Instructions: ${instructionsLabel}\n\n` +
 
-            `*Summary:*\n` +
-            `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
-            `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
-            `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
+      `*Summary:*\n` +
+      `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
+      `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
+      `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
 
-            `Status: _${order.delivery_status.replace(/_/g, " ").toUpperCase()}_`
-        },
-        footer: {
-          text: "Thank you for choosing Purple Hearts 🌸"
-        },
-        action: {
-          buttons: [
-            {
-              type: "reply",
-              reply: {
-                id: `pay_for_order_ORDER_${order.id}`, // internal only
-                title: "Pay Now 💳"
-              }
-            },
-            {
-              type: "reply",
-              reply: {
-                id: `track_order_ORDER_${order.id}`,
-                title: "Track Order"
-              }
-            }
-          ]
-        }
-      }
-    };
+      `Status: _${order.delivery_status.replace(/_/g, " ").toUpperCase()}_`;
 
-    await this.whatsappService.callApi(recipient, payload);
+    await this.interactiveBuilder.sendButton({
+      recipient,
+      header: `ORDER-NUMBER=${order.order_number}`,
+      body,
+      footer: "Thank you for choosing Purple Hearts 🌸",
+      buttons: [
+        { id: `pay_for_order_ORDER_${order.id}`, title: "Pay Now 💳" },
+        { id: `track_order_ORDER_${order.id}`, title: "Track Order" }
+      ]
+    });
   }
 
   private async sendOrdersList(recipient:string,orders:OrderProfile[]) {
