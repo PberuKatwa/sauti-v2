@@ -33,6 +33,14 @@ export interface LlmConfig {
   openRouterApiKey: string;
 }
 
+export interface EmailConfig{
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string,
+  smtpPassword: string;
+}
+
 export type EnvConfig = PostgresEnv | S3Config | GlobalEnvironment
 
 export type SuffixChecker = (value:string,suffix:string) => boolean;

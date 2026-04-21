@@ -7,6 +7,7 @@ import {
   PostgresEnv,
   WhatsappConfig,
   LlmConfig,
+  EmailConfig
 } from "./types/env.types"
 
 const getGlobalEnvironment: GlobalEnvironmentChecker = function (): string {
@@ -71,4 +72,12 @@ export const whatsappConfig = (): WhatsappConfig => ({
 export const llmConfig = (): LlmConfig =>({
   geminiApiKey: getEnv(getGlobalEnvironment, "GEMINI_API_KEY"),
   openRouterApiKey:getEnv(getGlobalEnvironment, "OPEN_ROUTER_API_KEY"),
+})
+
+export const emailConfig = (): EmailConfig => ({
+  smtpHost: getEnv(getGlobalEnvironment, "SMTP_HOST"),
+  smtpPort: parseInt( getEnv(getGlobalEnvironment, "SMTP_PORT")),
+  smtpSecure: getEnv(getGlobalEnvironment, "SMTP_SECURE") === "true",
+  smtpUser: getEnv(getGlobalEnvironment, "SMTP_USER"),
+  smtpPassword: getEnv(getGlobalEnvironment, "SMTP_PASSWORD")
 })
