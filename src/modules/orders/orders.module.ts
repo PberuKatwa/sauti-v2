@@ -7,12 +7,11 @@ import { ClientModule } from "../client/client.module";
 import { ProductsModule } from "../products/products.module";
 import { CacheModule } from "../cache/cache.module";
 import { OrderCompletionHandler } from "./orderCompletion.handler";
-import { InteractiveMessageBuilder } from "../../utils/interactiveMessage.builder";
 
 @Module({
   imports: [ ClientModule, ProductsModule, WhatsappModule, CacheModule],
-  providers: [OrdersModel, OrdersHandler, OrderCompletionHandler, InteractiveMessageBuilder],
+  providers: [OrdersModel, OrdersHandler, OrderCompletionHandler],
   controllers:[OrdersController],
-  exports: [OrdersModel, OrdersHandler, OrderCompletionHandler, InteractiveMessageBuilder]
+  exports: [OrdersModel, OrdersHandler, OrderCompletionHandler]
 })
 export class OrdersModule { };

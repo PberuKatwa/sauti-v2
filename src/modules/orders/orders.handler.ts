@@ -8,7 +8,6 @@ import { OrderItem, OrderProfile } from "../../types/orders.types";
 import {  CatalogOrderMessage } from "../../types/whatsapp.webhook";
 import { ConfigService } from "@nestjs/config";
 import { ProductsModel } from "../products/products.model";
-import { InteractiveMessageBuilder } from "../../utils/interactiveMessage.builder";
 
 @Injectable()
 export class OrdersHandler {
@@ -19,8 +18,6 @@ export class OrdersHandler {
     private readonly ordersModel: OrdersModel,
     private readonly clientsModel: ClientModel,
     private readonly productsModel: ProductsModel,
-    private readonly configService: ConfigService,
-    private readonly interactiveBuilder: InteractiveMessageBuilder,
   ) {};
 
   private readonly intentMap: Record<string, (msg: string, recipient: string) => Promise<any>> = {
@@ -155,7 +152,7 @@ export class OrdersHandler {
 
       `Status: _${order.delivery_status.replace(/_/g, " ").toUpperCase()}_`;
 
-    await this.interactiveBuilder.sendButton({
+    await this.whatsappService.sendButton({
       recipient,
       header: `ORDER-NUMBER=${order.order_number}`,
       body,
