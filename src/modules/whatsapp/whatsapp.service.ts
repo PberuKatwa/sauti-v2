@@ -1,7 +1,14 @@
 import axios, { AxiosError } from "axios";
 import { Inject, Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
-import { WhatsappTemplate, WhatsappText, WhatsappUnionMessage } from "../../types/whatsapp.base";
+import { WhatsappTemplate, WhatsappText } from "../../types/whatsapp.base";
+import {
+  ButtonInteractiveOptions,
+  CatalogMessageOptions,
+  InteractiveMessageTemplate,
+  ListInteractiveOptions,
+  ProductListInteractiveOptions,
+} from "../../types/whatsappInteractive.types";
 
 @Injectable()
 export class WhatsappService{
@@ -84,6 +91,26 @@ export class WhatsappService{
     }
   }
 
+  async sendButton(options: ButtonInteractiveOptions): Promise<void> {
+    const payload = this.buildButton(options);
+    await this.callApi(options.recipient, payload);
+  }
+
+  async sendList(options: ListInteractiveOptions): Promise<void> {
+    const payload = this.buildList(options);
+    await this.callApi(options.recipient, payload);
+  }
+
+  async sendProductList(options: ProductListInteractiveOptions): Promise<void> {
+    const payload = this.buildProductList(options);
+    await this.callApi(options.recipient, payload);
+  }
+
+  async sendCatalogMessage(options: CatalogMessageOptions): Promise<void> {
+    const payload = this.buildCatalogMessage(options);
+    await this.callApi(options.recipient, payload);
+  }
+
   private buildButton(options: ButtonInteractiveOptions): InteractiveMessageTemplate {
     return {
       messaging_product: "whatsapp",
@@ -106,7 +133,7 @@ export class WhatsappService{
     };
   }
 
-  buildList(options: ListInteractiveOptions): InteractiveMessageTemplate {
+  private buildList(options: ListInteractiveOptions): InteractiveMessageTemplate {
     return {
       messaging_product: "whatsapp",
       to: options.recipient,
@@ -133,7 +160,7 @@ export class WhatsappService{
     };
   }
 
-  buildProductList(
+  private buildProductList(
     options: ProductListInteractiveOptions
   ): InteractiveMessageTemplate {
     return {
@@ -160,7 +187,7 @@ export class WhatsappService{
     };
   }
 
-  buildCatalogMessage(
+  private buildCatalogMessage(
     options: CatalogMessageOptions
   ): InteractiveMessageTemplate {
     return {
@@ -177,24 +204,6 @@ export class WhatsappService{
     };
   }
 
-  async sendButton(options: ButtonInteractiveOptions): Promise<void> {
-    const payload = this.buildButton(options);
-    await this.whatsappService.callApi(options.recipient, payload);
-  }
 
-  async sendList(options: ListInteractiveOptions): Promise<void> {
-    const payload = this.buildList(options);
-    await this.whatsappService.callApi(options.recipient, payload);
-  }
-
-  async sendProductList(options: ProductListInteractiveOptions): Promise<void> {
-    const payload = this.buildProductList(options);
-    await this.whatsappService.callApi(options.recipient, payload);
-  }
-
-  async sendCatalogMessage(options: CatalogMessageOptions): Promise<void> {
-    const payload = this.buildCatalogMessage(options);
-    await this.whatsappService.callApi(options.recipient, payload);
-  }
 
 }

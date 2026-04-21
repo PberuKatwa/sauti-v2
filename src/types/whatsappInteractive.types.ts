@@ -1,4 +1,3 @@
-
 export type InteractiveType = "button" | "list" | "product_list" | "catalog_message";
 
 export interface InteractiveButton {
