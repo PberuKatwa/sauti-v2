@@ -25,6 +25,8 @@ export class PaymentsHandler{
   public async handleIntent(intent: BestIntent, recipient:string):Promise<void> {
     try {
 
+      this.logger.warn(`Handling payments intent: ${intent.name} for recipient: ${recipient}`);
+
       const handler = this.intentMap[intent.name];
 
       if (!handler) throw new Error(`No handler was found`)
@@ -37,6 +39,8 @@ export class PaymentsHandler{
 
   private async createPayment(userMessage: string, recipient: string) {
 
+    this.logger.warn(`Creating payment for recipient: ${recipient}`);
+
     const match = userMessage.match(/ORDER_ID:(\d+)/);
     const orderId = match ? Number(match[1]) : null;
 
@@ -48,82 +52,63 @@ export class PaymentsHandler{
       currentOrder = await this.ordersModel.fetchLatestOrderByClient(client.id)
     }
 
+    this.logger.info(`Retrieved order id: ${currentOrder.id} for payment`);
+
     return await this.sendPaymentRequest(recipient, currentOrder);
   }
 
 
   private async handleGetAllPayments(userMessage: string, recipient:string) {
+    this.logger.warn(`Fetching all payments for recipient: ${recipient}`);
     await this.whatsappService.sendText(`GET_ALL_PAYMENTS`, recipient )
   }
 
   private async handleGetPayment(userMessage: string, recipient:string) {
+    this.logger.warn(`Fetching payment for recipient: ${recipient}`);
     await this.whatsappService.sendText(`WERE AT GET_PAYMENT`, recipient);
   }
 
   private async sendPaymentRequest(recipient: string, order: OrderProfile) {
 
-    console.log("orderrrrr hereee", )
+    this.logger.warn(`Sending payment request for order id: ${order.id} to recipient: ${recipient}`);
+
     const itemSummary = order.items
       .map((item: any) => `• ${item.name} (x${item.quantity})`)
       .join('\n');
 
-    const payload = {
-      messaging_product: "whatsapp",
-      to: recipient,
-      type: "interactive",
-      interactive: {
-        type: "button",
-        header: {
-          type: "text",
-          text: `Payment Request 💳 | Invoice ${order.order_number}`
-        },
-        body: {
-          text:
-            `Hi there! 💜 Your order is ready for payment.\n\n` +
+    const body =
+      `Hi there! 💜 Your order is ready for payment.\n\n` +
 
-            `*Order Details:*\n${itemSummary}\n\n` +
+      `*Order Details:*\n${itemSummary}\n\n` +
 
-            `*Summary:*\n` +
-            `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
-            `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
-            `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
+      `*Summary:*\n` +
+      `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
+      `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
+      `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
 
-            `*How to Pay via M-Pesa:*\n` +
-            `1. Go to *M-Pesa*\n` +
-            `2. Select *Lipa na M-Pesa*\n` +
-            `3. Choose *Paybill*\n` +
-            `4. Enter Business No: *346976*\n` +
-            `5. Account No: *${order.order_number}*\n` +
-            `6. Enter Amount: *KES ${Number(order.total).toLocaleString()}*\n` +
-            `7. Enter your PIN & confirm\n\n` +
+      `*How to Pay via M-Pesa:*\n` +
+      `1. Go to *M-Pesa*\n` +
+      `2. Select *Lipa na M-Pesa*\n` +
+      `3. Choose *Paybill*\n` +
+      `4. Enter Business No: *346976*\n` +
+      `5. Account No: *${order.order_number}*\n` +
+      `6. Enter Amount: *KES ${Number(order.total).toLocaleString()}*\n` +
+      `7. Enter your PIN & confirm\n\n` +
 
-            `Once payment is complete, we’ll begin processing your order right away 🌸`
-        },
-        footer: {
-          text: "Thank you for choosing Purple Hearts 🌸"
-        },
-        action: {
-          buttons: [
-            {
-              type: "reply",
-              reply: {
-                id: `show me your products`,
-                title: "View More 🌷"
-              }
-            },
-            {
-              type: "reply",
-              reply: {
-                id: `Can I see all my invoices`,
-                title: "View My Orders 📦"
-              }
-            }
-          ]
-        }
-      }
-    };
+      `Once payment is complete, we'll begin processing your order right away 🌸`;
 
-    await this.whatsappService.callApi(recipient, payload);
+    await this.whatsappService.sendButton({
+      recipient,
+      header: `Payment Request 💳 | Invoice ${order.order_number}`,
+      body,
+      footer: "Thank you for choosing Purple Hearts 🌸",
+      buttons: [
+        { id: `show me your products`, title: "View More 🌷" },
+        { id: `Can I see all my invoices`, title: "View My Orders 📦" }
+      ]
+    });
+
+    this.logger.info(`Successfully sent payment request for order id: ${order.id}`);
   }
 
 }

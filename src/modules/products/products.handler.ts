@@ -5,20 +5,7 @@ import { AppLogger } from "../../logger/winston.logger";
 import { ConfigService } from "@nestjs/config";
 import { PayloadExtractor } from "../intent/payload.extractor";
 import { ProductsModel } from "./products.model";
-
-export interface ProductSection {
-  title: string;
-  productIds: string[];
-}
-
-export interface MultiProductMessageOptions {
-  recipient: string;
-  catalogId: string;
-  bodyText: string;
-  headerText?: string;
-  footerText?: string;
-  sections: ProductSection[];
-}
+import { ProductListInteractiveOptions } from "../../types/whatsappInteractive.types";
 
 @Injectable()
 export class ProductsHandler{
@@ -42,6 +29,8 @@ export class ProductsHandler{
   public async handleIntent(intent: BestIntent, recipient:string):Promise<void> {
     try {
 
+      this.logger.warn(`Handling products intent: ${intent.name} for recipient: ${recipient}`);
+
       const handler = this.intentMap[intent.name];
 
       if (!handler) throw new Error(`No handler was found`)
@@ -53,6 +42,8 @@ export class ProductsHandler{
   }
 
   private async handleGetAllProducts(userMessage: string, recipient: string) {
+
+    this.logger.warn(`Fetching products for recipient: ${recipient}`);
 
     const payload = this.payloadExtractor.extractPayload(userMessage);
 
@@ -70,32 +61,28 @@ export class ProductsHandler{
       }
     )
 
-    const options: MultiProductMessageOptions = {
+    this.logger.info(`Found ${products.length} products for recipient: ${recipient}`);
+
+    await this.sendMultiProductMessage({
       recipient,
       catalogId: this.catalogId,
-
-      headerText: "Our Beautiful Flower Collection 💐",
-
-      bodyText:
+      header: "Our Beautiful Flower Collection 💐",
+      body:
       `Hi there! 🌸\n\n` +
       `Welcome to *Purple Hearts*, view our most loved arrangements.\n\n` +
       `✨ Tap any bouquet to view details or order.\n\n`,
-
-      footerText: "Purple Hearts 💜 - Spreading Love, One Bloom at a Time.",
-
+      footer: "Purple Hearts 💜 - Spreading Love, One Bloom at a Time.",
       sections: [
         {
           title: "🌹 Featured Bouquets",
           productIds: productIds,
         }
       ]
-    };
-
-    await this.sendMultiProductMessage(options);
+    });
   }
 
-   async sendMultiProductMessage(options: MultiProductMessageOptions): Promise<void> {
-     const { recipient, catalogId, bodyText, headerText, footerText, sections } = options;
+   async sendMultiProductMessage(options: ProductListInteractiveOptions): Promise<void> {
+     const { recipient, catalogId, body, header, footer, sections } = options;
 
      const totalProducts = sections.reduce((sum, s) => sum + s.productIds.length, 0);
      if (totalProducts > 30) {
@@ -106,61 +93,30 @@ export class ProductsHandler{
        throw new Error('Multi-product messages support maximum 10 sections');
      }
 
-     const payload = {
-       messaging_product: 'whatsapp',
-       recipient_type: 'individual',
-       to: recipient,
-       type: 'interactive',
-       interactive: {
-         type: 'product_list',
-         ...(headerText && {
-           header: {
-             type: 'text',
-             text: headerText,
-           },
-         }),
-         body: {
-           text: bodyText,
-         },
-         ...(footerText && {
-           footer: {
-             text: footerText,
-           },
-         }),
-         action: {
-           catalog_id: catalogId,
-           sections: sections.map(section => ({
-             title: section.title,
-             product_items: section.productIds.map(id => ({
-               product_retailer_id: id,
-             })),
-           })),
-         },
-       },
-     };
+     this.logger.warn(`Sending product list to recipient: ${recipient}`);
 
-     await this.whatsappService.callApi(recipient, payload);
+     await this.whatsappService.sendProductList({
+       recipient,
+       catalogId,
+       header,
+       body,
+       footer,
+       sections
+     });
+
+     this.logger.info(`Successfully sent product list to recipient: ${recipient}`);
    }
 
   async sendFullCatalog(recipient: string) {
 
-    const payload = {
-      messaging_product: "whatsapp",
-      recipient_type: "individual",
-      to: recipient,
-      type: "interactive",
-      interactive: {
-        type: "catalog_message",
-        body: {
-          text: "Browse our full collection 💐"
-        },
-        action: {
-          name: "catalog_message",
-        }
-      }
-    };
+    this.logger.warn(`Sending full catalog to recipient: ${recipient}`);
 
-    await this.whatsappService.callApi(recipient, payload);
+    await this.whatsappService.sendCatalogMessage({
+      recipient,
+      body: "Browse our full collection 💐"
+    });
+
+    this.logger.info(`Successfully sent full catalog to recipient: ${recipient}`);
   }
 
 
