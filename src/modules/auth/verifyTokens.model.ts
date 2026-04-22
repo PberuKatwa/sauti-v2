@@ -23,6 +23,17 @@ export class VerifyTokens{
       END
       $$;
 
+      CREATE TABLE verify_tokens IF NOT EXISTS(
+        id INTEGER PRIMARY SERIAL,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+
+        token_hash TEXT NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        is_used BOOLEAN DEFAULT FALSE,
+
+        purpose verify_token_purpose DEFAULT 'reset_password',
+        created_at TIMESTAMPTZ CURRENT_TIMESTAMP
+      );
     `
 
   }
