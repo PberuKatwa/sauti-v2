@@ -175,10 +175,9 @@ export class AuthController {
   }
 
   @Post("reset-password/:email")
-  @UseGuards(AuthGuard)
   async resetPassword(
     @Req() req: Request,
-    @Req() res:Response
+    @Res() res: Response
   ) {
     try {
 

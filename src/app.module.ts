@@ -14,6 +14,7 @@ import { CustomerCareModule } from './modules/customerCare/care.module';
 import { ProductsModule } from './modules/products/products.module';
 import { EntryPointModule } from './modules/entryPoints/entry.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { MailModule } from './modules/mail/mail.module';
 
 
 @Module({
@@ -34,7 +35,8 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     CustomerCareModule,
     ProductsModule,
     EntryPointModule,
-    DashboardModule
+    DashboardModule,
+    MailModule
   ]
 })
 export class AppModule implements NestModule{

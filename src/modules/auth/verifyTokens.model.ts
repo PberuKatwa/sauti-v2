@@ -71,10 +71,13 @@ export class VerifyTokens{
     const tokenHash = await bcrypt.hash(token, 10);
     const expiryTime = new Date(Date.now() + 1000 * 60 * 14);
 
+
+
     const pgPool = this.pgConfig.getPool();
     const result = await pgPool.query(query, [user.id, tokenHash, expiryTime, "reset_password"]);
     const verifyToken:BaseVerifyToken = result.rows[0];
     verifyToken.recipientEmail = user.email;
+    verifyToken.token = token;
 
     return verifyToken
   }

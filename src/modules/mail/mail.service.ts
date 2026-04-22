@@ -43,7 +43,7 @@ export class MailService{
         template: 'password_reset',
         context: {
           resetUrl,
-          logoUrl: 'https://elasticbeanstalk-eu-north-1-247860635648.s3.eu-north-1.amazonaws.com/SqcYBLqA_1776769847074.webp',
+          logoUrl: 'https://elasticbeanstalk-eu-north-1-247860635648.s3.eu-north-1.amazonaws.com/1lbYG295g_1776864641158.webp',
           year: new Date().getFullYear(),
         },
       });

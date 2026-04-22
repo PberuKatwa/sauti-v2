@@ -19,7 +19,7 @@ export class AuthService{
     const { token, recipientEmail } = await this.verifyToken.createVerifyToken(email);
     const url = this.configService.get<string>('frontendUrl');
 
-    const resetUrl = `${url}/reset-password/${token}`
+    const resetUrl = `${url}/auth/reset-password/${token}`
 
     await this.mailService.sendPasswordResetEmail(recipientEmail, resetUrl);
   }
