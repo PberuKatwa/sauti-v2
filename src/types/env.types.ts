@@ -2,6 +2,7 @@ export interface GlobalEnvironment{
   environment: string;
   port: string;
   cookieIdName: string;
+  frontendUrl: string;
 }
 
 export interface S3Config{
