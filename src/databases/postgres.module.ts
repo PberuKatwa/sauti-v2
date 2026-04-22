@@ -16,6 +16,7 @@ import { WhatsappModule } from "../modules/whatsapp/whatsapp.module";
 import { AuthModule } from "../modules/auth/auth.module";
 import { ProductsModule } from "../modules/products/products.module";
 import { ProductsModel } from "../modules/products/products.model";
+import { VerifyTokens } from "../modules/auth/verifyTokens.model";
 
 @Global()
 @Module({
@@ -35,7 +36,8 @@ export class PostgresModule implements OnModuleInit {
     private readonly pgGlobals: PostgresGlobals,
     private readonly whatsappConfig: WhatsappConfig,
     private readonly authSession: AuthSessionModel,
-    private readonly products:ProductsModel
+    private readonly products: ProductsModel,
+    private readonly verifyTokens:VerifyTokens
   ) { };
 
   async onModuleInit() {
@@ -50,6 +52,7 @@ export class PostgresModule implements OnModuleInit {
     await this.whatsappConfig.createTable()
     await this.authSession.createTable()
     await this.products.createTable()
+    await this.verifyTokens.createTable()
   }
 
 }

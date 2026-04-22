@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
 
-Injectable()
+@Injectable()
 export class VerifyTokens{
   constructor(
     private readonly logger: AppLogger,
@@ -24,7 +24,7 @@ export class VerifyTokens{
       $$;
 
       CREATE TABLE IF NOT EXISTS verify_tokens(
-        id INTEGER PRIMARY SERIAL,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
 
         token_hash TEXT NOT NULL,
@@ -32,15 +32,16 @@ export class VerifyTokens{
         is_used BOOLEAN DEFAULT FALSE,
 
         purpose verify_token_purpose DEFAULT 'reset_password',
-        created_at TIMESTAMPTZ CURRENT_TIMESTAMP
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       );
     `
 
     const pool = this.pgConfig.getPool();
     await pool.query(query);
 
-    return "verify_tokens"
+    this.logger.info(`Successfully created table`);
 
+    return "verify_tokens"
   }
 
 
