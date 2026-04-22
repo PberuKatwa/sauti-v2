@@ -8,6 +8,7 @@ import { AuthSessionModel } from "./authSession.model";
 import { CookieService } from "./cookies.service";
 import { AuthGuard } from "./guards/auth.guard";
 import { CurrentUser } from "../users/decorators/user.decorator";
+import { AuthService } from "./auth.service";
 
 @Controller('auth')
 export class AuthController {
@@ -16,7 +17,8 @@ export class AuthController {
     private readonly logger: AppLogger,
     private readonly users: UsersModel,
     private readonly authSession: AuthSessionModel,
-    private readonly cookieService:CookieService
+    private readonly cookieService: CookieService,
+    private readonly authService:AuthService
   ) { }
 
   @Post('register')
@@ -172,7 +174,7 @@ export class AuthController {
     }
   }
 
-  @Post("reset-password")
+  @Post("reset-password/:email")
   @UseGuards(AuthGuard)
   async resetPassword(
     @Req() req: Request,
@@ -180,6 +182,17 @@ export class AuthController {
   ) {
     try {
 
+      const emailParam = req.params.email;
+      const email = Array.isArray(emailParam) ? emailParam[0] : emailParam;
+
+      await this.authService.createAndSendResetUrl(email)
+
+      const response: ApiResponse = {
+        success: true,
+        message:"Successfully created and sent email reset url"
+      }
+
+      return res.status(200).json(response)
     } catch (error) {
       this.logger.error(`Error in resetting password`, error);
 
