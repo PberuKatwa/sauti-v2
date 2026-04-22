@@ -1,12 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
+import { UsersModel } from "../users/users.model";
+import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class VerifyTokens{
   constructor(
     private readonly logger: AppLogger,
-    private readonly pgConfig:PostgresConfig
+    private readonly pgConfig: PostgresConfig,
+    private readonly users:UsersModel
   ) { };
 
   async createTable() {
@@ -26,6 +30,7 @@ export class VerifyTokens{
       CREATE TABLE IF NOT EXISTS verify_tokens(
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        status row_status DEFAULT 'active',
 
         token_hash TEXT NOT NULL,
         expires_at TIMESTAMPTZ NOT NULL,
@@ -42,6 +47,34 @@ export class VerifyTokens{
     this.logger.info(`Successfully created table`);
 
     return "verify_tokens"
+  }
+
+  async createVerifyToken(email: string) {
+    if (!email) throw new Error(`no email is was provided`);
+
+    const user = await this.users.findUserByEmail(email);
+    if (!user) throw new Error(`User does not exist, create an account first`);
+
+    const query = `
+      WITH invalidate_old AS (
+        UPDATE verify_tokens
+        SET status = 'trash'
+        WHERE user_id = $1 AND status = 'active'
+      )
+      INSERT INTO verify_tokens(user_id ,token_hash ,expires_at, purpose)
+      VALUES($1,$2,$3,$4)
+      RETURNING id, purpose;
+    `
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = await bcrypt.hash(token, 10);
+    const expiryTime = new Date(Date.now() + 1000 * 60 * 14);
+
+    const pgPool = this.pgConfig.getPool();
+    const verifyToken = await pgPool.query(query, [user.id, tokenHash, expiryTime, "reset_password"]);
+
+
+
   }
 
 
