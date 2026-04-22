@@ -3,12 +3,13 @@ import { UsersModule } from "../users/users.module";
 import { AuthController } from "./auth.controller";
 import { AuthSessionModel } from "./authSession.model";
 import { CookieService } from "./cookies.service";
+import { VerifyTokens } from "./verifyTokens.model";
 
 @Global()
 @Module({
   controllers: [AuthController],
   imports: [UsersModule],
-  providers: [AuthSessionModel, CookieService],
-  exports:[AuthSessionModel, CookieService]
+  providers: [AuthSessionModel, CookieService, AuthSessionModel, VerifyTokens],
+  exports:[AuthSessionModel, CookieService, AuthSessionModel, VerifyTokens]
 })
 export class AuthModule { };

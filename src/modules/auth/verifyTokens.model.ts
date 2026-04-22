@@ -23,7 +23,7 @@ export class VerifyTokens{
       END
       $$;
 
-      CREATE TABLE verify_tokens IF NOT EXISTS(
+      CREATE TABLE IF NOT EXISTS verify_tokens(
         id INTEGER PRIMARY SERIAL,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
 
@@ -35,6 +35,11 @@ export class VerifyTokens{
         created_at TIMESTAMPTZ CURRENT_TIMESTAMP
       );
     `
+
+    const pool = this.pgConfig.getPool();
+    await pool.query(query);
+
+    return "verify_tokens"
 
   }
 
