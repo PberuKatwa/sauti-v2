@@ -73,7 +73,8 @@ export class VerifyTokens{
 
     const pgPool = this.pgConfig.getPool();
     const result = await pgPool.query(query, [user.id, tokenHash, expiryTime, "reset_password"]);
-    const verifyToken = result.rows[0];
+    const verifyToken:BaseVerifyToken = result.rows[0];
+    verifyToken.recipientEmail = user.email;
 
     return verifyToken
   }

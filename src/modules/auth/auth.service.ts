@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { VerifyTokens } from "./verifyTokens.model";
 import { ConfigService } from "@nestjs/config";
+import { MailService } from "../mail/mail.service";
 
 @Injectable()
 export class AuthService{
@@ -9,16 +10,18 @@ export class AuthService{
   constructor(
     private readonly logger: AppLogger,
     private readonly verifyToken: VerifyTokens,
-    private readonly configService:ConfigService
+    private readonly configService: ConfigService,
+    private readonly mailService:MailService
   ){}
 
-  async createAndSendResetUrl(email: string) {
+  async createAndSendResetUrl(email: string):Promise<void> {
 
-    const { token } = await this.verifyToken.createVerifyToken(email);
+    const { token, recipientEmail } = await this.verifyToken.createVerifyToken(email);
     const url = this.configService.get<string>('frontendUrl');
 
     const resetUrl = `${url}/reset-password/${token}`
 
+    await this.mailService.sendPasswordResetEmail(recipientEmail, resetUrl);
   }
 
 }

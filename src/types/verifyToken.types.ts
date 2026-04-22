@@ -4,4 +4,5 @@ export interface BaseVerifyToken {
   id: number;
   token: string;
   purpose: TokenPurpose;
+  recipientEmail:string;
 }
