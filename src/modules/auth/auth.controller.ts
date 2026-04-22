@@ -172,4 +172,24 @@ export class AuthController {
     }
   }
 
+  @Post("reset-password")
+  @UseGuards(AuthGuard)
+  async resetPassword(
+    @Req() req: Request,
+    @Req() res:Response
+  ) {
+    try {
+
+    } catch (error) {
+      this.logger.error(`Error in resetting password`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
 }
