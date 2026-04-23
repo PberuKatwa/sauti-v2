@@ -6,3 +6,11 @@ export interface BaseVerifyToken {
   purpose: TokenPurpose;
   recipientEmail:string;
 }
+
+export interface VerifyTokenProfile {
+  id: number;
+  user_id: number;
+  expires_at: string;
+  is_used: boolean;
+  purpose: TokenPurpose;
+}

@@ -82,6 +82,18 @@ export class VerifyTokens{
     return verifyToken
   }
 
+  async verifyTokenValidity(token: string) {
+
+    if (!token) throw new Error(`No token was provided`);
+
+    const query = `
+      SELECT user_id,status,expires_at,is_used,purpose
+      FROM verify_tokens
+      WHERE token_hash = $1;
+    `
+
+  }
+
 
 
 }
