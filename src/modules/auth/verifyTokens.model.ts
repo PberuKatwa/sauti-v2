@@ -4,7 +4,7 @@ import { PostgresConfig } from "../../databases/postgres.config";
 import { UsersModel } from "../users/users.model";
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { BaseVerifyToken } from "../../types/verifyToken.types";
+import { BaseVerifyToken, TokenMailPayload } from "../../types/verifyToken.types";
 
 @Injectable()
 export class VerifyTokens{
@@ -50,7 +50,7 @@ export class VerifyTokens{
     return "verify_tokens"
   }
 
-  async createVerifyToken(email: string):Promise<BaseVerifyToken> {
+  async createVerifyToken(email: string):Promise<TokenMailPayload> {
     if (!email) throw new Error(`no email is was provided`);
 
     const user = await this.users.findUserByEmail(email);
@@ -91,6 +91,9 @@ export class VerifyTokens{
       FROM verify_tokens
       WHERE token_hash = $1;
     `
+
+    const pgPool = this.pgConfig.getPool();
+    const verifyToken = await pgPool.query(query)
 
   }
 
