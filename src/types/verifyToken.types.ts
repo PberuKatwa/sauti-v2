@@ -7,7 +7,6 @@ export interface BaseVerifyToken {
 }
 
 export interface TokenMailPayload extends BaseVerifyToken {
-  token: string;
   recipientEmail:string;
 }
 

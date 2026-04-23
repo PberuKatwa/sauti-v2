@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
 import { UsersModel } from "../users/users.model";
-import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { BaseVerifyToken, TokenMailPayload } from "../../types/verifyToken.types";
 
@@ -28,12 +27,13 @@ export class VerifyTokens{
       END
       $$;
 
+      CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
       CREATE TABLE IF NOT EXISTS verify_tokens(
-        id SERIAL PRIMARY KEY,
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         status row_status DEFAULT 'active',
 
-        token_hash TEXT NOT NULL,
         expires_at TIMESTAMPTZ NOT NULL,
         is_used BOOLEAN DEFAULT FALSE,
 
@@ -62,34 +62,33 @@ export class VerifyTokens{
         SET status = 'trash'
         WHERE user_id = $1 AND status = 'active'
       )
-      INSERT INTO verify_tokens(user_id ,token_hash ,expires_at, purpose)
-      VALUES($1,$2,$3,$4)
+      INSERT INTO verify_tokens(user_id , expires_at, purpose)
+      VALUES($1,$2,$3)
       RETURNING id, purpose;
     `
 
-    const token = crypto.randomBytes(32).toString('hex');
-    const tokenHash = await bcrypt.hash(token, 10);
     const expiryTime = new Date(Date.now() + 1000 * 60 * 14);
 
-
-
     const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [user.id, tokenHash, expiryTime, "reset_password"]);
-    const verifyToken:BaseVerifyToken = result.rows[0];
-    verifyToken.recipientEmail = user.email;
-    verifyToken.token = token;
+    const result = await pgPool.query(query, [user.id, expiryTime, "reset_password"]);
+    const verifyToken: BaseVerifyToken = result.rows[0];
 
-    return verifyToken
+    const tokenMail:TokenMailPayload = {
+      ...verifyToken,
+      recipientEmail:user.email
+    }
+
+    return tokenMail
   }
 
-  async verifyTokenValidity(token: string) {
+  async verifyTokenValidity(tokenId: string) {
 
-    if (!token) throw new Error(`No token was provided`);
+    if (!tokenId) throw new Error(`No token was provided`);
 
     const query = `
       SELECT user_id,status,expires_at,is_used,purpose
       FROM verify_tokens
-      WHERE token_hash = $1;
+      WHERE token = $1;
     `
 
     const pgPool = this.pgConfig.getPool();
