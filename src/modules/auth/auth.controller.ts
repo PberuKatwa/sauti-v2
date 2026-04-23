@@ -1,4 +1,4 @@
-import { Controller, Inject, Post, Get, Req, Res, UseGuards } from "@nestjs/common";
+import { Controller, Inject, Post, Get, Req, Res, UseGuards, Put } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
@@ -9,6 +9,7 @@ import { CookieService } from "./cookies.service";
 import { AuthGuard } from "./guards/auth.guard";
 import { CurrentUser } from "../users/decorators/user.decorator";
 import { AuthService } from "./auth.service";
+import { VerifyTokens } from "./verifyTokens.model";
 
 @Controller('auth')
 export class AuthController {
@@ -18,7 +19,8 @@ export class AuthController {
     private readonly users: UsersModel,
     private readonly authSession: AuthSessionModel,
     private readonly cookieService: CookieService,
-    private readonly authService:AuthService
+    private readonly authService: AuthService,
+    private readonly verifyModel:VerifyTokens
   ) { }
 
   @Post('register')
@@ -194,6 +196,36 @@ export class AuthController {
       return res.status(200).json(response)
     } catch (error) {
       this.logger.error(`Error in resetting password`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+  @Put("reset-password/:token")
+  async validateResetPassword(
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    try {
+
+      const tokenParam = req.params.token;
+      const token = Array.isArray(tokenParam) ? tokenParam[0] : tokenParam;
+
+      await this.verifyModel.verifyTokenValidity(token);
+
+      const response: ApiResponse = {
+        success: true,
+        message:"Successfully validated reset link"
+      }
+
+      return res.status(200).json(response)
+    } catch (error) {
+      this.logger.error(`Error in validating password reset link`, error);
 
       const response: ApiResponse = {
         success: false,
