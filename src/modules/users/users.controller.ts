@@ -24,7 +24,8 @@ export class UsersController {
   ): Promise<Response> {
     try {
 
-      const { email } = req.body;
+      const emailParam = req.params.emailId;
+      const email = Array.isArray(emailParam) ? emailParam[0] : emailParam;
 
       await this.users.updateEmail(currentUser.userId, email);
 
