@@ -3,7 +3,7 @@ import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
 import { UsersModel } from "../users/users.model";
 import * as crypto from 'crypto';
-import { BaseVerifyToken, TokenMailPayload } from "../../types/verifyToken.types";
+import { BaseVerifyToken, TokenMailPayload, VerifyTokenProfile } from "../../types/verifyToken.types";
 
 @Injectable()
 export class VerifyTokens{
@@ -81,18 +81,31 @@ export class VerifyTokens{
     return tokenMail
   }
 
-  async verifyTokenValidity(tokenId: string) {
+  async verifyTokenValidity(tokenId: string):Promise<void> {
 
     if (!tokenId) throw new Error(`No token was provided`);
 
     const query = `
       SELECT user_id,status,expires_at,is_used,purpose
       FROM verify_tokens
-      WHERE token = $1;
+      WHERE id = $1;
     `
 
     const pgPool = this.pgConfig.getPool();
-    const verifyToken = await pgPool.query(query)
+    const result = await pgPool.query(query, [tokenId]);
+
+    if (result.rowCount === 0) throw new Error(`Reset token is invalid`);
+
+    const verifyToken: VerifyTokenProfile = result.rows[0];
+
+    const now = new Date();
+
+    const isUsed = verifyToken.is_used;
+    const isExpired = new Date(verifyToken.expires_at) < now;
+
+    if (isUsed || isExpired) {
+      throw new Error('Invalid or expired token');
+    }
 
   }
 

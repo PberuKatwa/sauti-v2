@@ -16,10 +16,10 @@ export class AuthService{
 
   async createAndSendResetUrl(email: string):Promise<void> {
 
-    const { token, recipientEmail } = await this.verifyToken.createVerifyToken(email);
+    const { id, recipientEmail } = await this.verifyToken.createVerifyToken(email);
     const url = this.configService.get<string>('frontendUrl');
 
-    const resetUrl = `${url}/auth/reset-password/${token}`
+    const resetUrl = `${url}/auth/reset-password/${id}`
 
     await this.mailService.sendPasswordResetEmail(recipientEmail, resetUrl);
   }
