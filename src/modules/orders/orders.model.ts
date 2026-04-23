@@ -70,6 +70,8 @@ export class OrdersModel {
         order_number INTEGER UNIQUE DEFAULT NEXTVAL('order_number_seq'),
         special_instructions VARCHAR(240),
 
+        rider_phone BIGINT,
+
         items JSONB NOT NULL,
 
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -249,6 +251,24 @@ export class OrdersModel {
     this.logger.info(`Successfully updated status for order: ${orderId}`);
   }
 
+  async updateRiderPhone(orderId:number,phone:number): Promise<void> {
+
+    if (!phone) throw new Error(`No phone number is provided`);
+
+    this.logger.warn(`Attempting to update rider phone ${phone}`);
+
+    const query = `
+      UPDATE orders
+      SET rider_phone = $1
+      WHERE id = $2;
+    `;
+
+    const pool = this.pgConfig.getPool();
+    await pool.query(query, [phone,orderId]);
+
+    this.logger.info(`Successfully updated rider phone for order: ${orderId}`);
+  }
+
   async fetchOrder(orderId: number): Promise<OrderProfile> {
     this.logger.warn(`Attempting to fetch order id: ${orderId}`);
 
@@ -284,6 +304,8 @@ export class OrdersModel {
 
     return order;
   }
+
+
 
   async fetchLatestOrderByClient(clientId: number): Promise<OrderProfile> {
     this.logger.warn(`Attempting to fetch latest order for client id: ${clientId}`);
