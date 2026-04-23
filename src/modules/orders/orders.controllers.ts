@@ -144,6 +144,41 @@ export class OrdersController {
     }
   }
 
+  @Patch(':id/rider-phone/:phone')
+  async updateRiderPhone(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const idParam = req.params.id;
+      const orderId = Array.isArray(idParam) ? parseInt(idParam[0]) : parseInt(idParam);
+
+      const phoneParam = req.params.phone;
+      const phone = Array.isArray(phoneParam) ? parseInt(phoneParam[0]) : parseInt(phoneParam);
+
+      await this.orders.updateRiderPhone(orderId, phone);
+
+      const response: ApiResponse = {
+        success: true,
+        message: `Successfully updated rider phone`
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error updating rider phone`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
   @Patch('status/:id/:status')
   async updateStatus(
     @Req() req: Request,
