@@ -135,6 +135,30 @@ export class UsersModel {
     }
   }
 
+  async updateEmail(userId: number, email: string): Promise<void> {
+    try {
+      this.logger.warn(`Attempting to update email for user: ${userId}`);
+
+      const query = `
+        UPDATE users
+        SET email = $1
+        WHERE id = $2 AND status != 'trash';
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [email, userId]);
+
+      if (result.rowCount === 0) {
+        throw new Error(`User not found`);
+      }
+
+      this.logger.info(`Successfully updated email for user: ${userId}`);
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async validatePassword(email: string, password: string): Promise<AuthUser> {
     try {
       this.logger.warn(`Attempting to login user`);
