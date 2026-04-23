@@ -107,6 +107,13 @@ export class VerifyTokens{
       throw new Error('Invalid or expired token');
     }
 
+    const updateQuery = `
+      UPDATE verify_tokens
+      SET is_used = $1
+      WHERE id = $2;
+    `;
+
+    await pgPool.query(updateQuery, [true, tokenId]);
   }
 
 
