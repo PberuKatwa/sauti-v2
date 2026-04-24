@@ -81,7 +81,7 @@ export class VerifyTokens{
     return tokenMail
   }
 
-  async verifyTokenValidity(tokenId: string):Promise<void> {
+  async verifyTokenValidity(tokenId: string):Promise<VerifyTokenProfile> {
 
     if (!tokenId) throw new Error(`No token was provided`);
 
@@ -107,15 +107,28 @@ export class VerifyTokens{
       throw new Error('Invalid or expired token');
     }
 
+
+
+    return verifyToken;
+  }
+
+  async resetPassword(token: string, password: string) {
+
+    const verifyToken = await this.verifyTokenValidity(token);
+    if(!verifyToken) throw new Error('Invalid or expired token');
+
+    await this.users.resetPassword(verifyToken.user_id, password);
+
     const updateQuery = `
       UPDATE verify_tokens
       SET is_used = $1
       WHERE id = $2;
     `;
 
-    await pgPool.query(updateQuery, [true, tokenId]);
-  }
+    const pgPool = this.pgConfig.getPool();
+    await pgPool.query(updateQuery, [true, token]);
 
+  }
 
 
 }
