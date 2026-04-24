@@ -86,9 +86,12 @@ export class VerifyTokens{
     if (!tokenId) throw new Error(`No token was provided`);
 
     const query = `
-      SELECT user_id,status,expires_at,is_used,purpose
+      SELECT user_id, status, expires_at, is_used, purpose
       FROM verify_tokens
-      WHERE id = $1 AND status != 'trash';
+      WHERE id = $1
+        AND status != 'trash'
+        AND is_used = false
+        AND expires_at > NOW();
     `
 
     const pgPool = this.pgConfig.getPool();
@@ -98,14 +101,14 @@ export class VerifyTokens{
 
     const verifyToken: VerifyTokenProfile = result.rows[0];
 
-    const now = new Date();
+    // const now = new Date();
 
-    const isUsed = verifyToken.is_used;
-    const isExpired = new Date(verifyToken.expires_at) < now;
+    // const isUsed = verifyToken.is_used;
+    // const isExpired = new Date(verifyToken.expires_at) < now;
 
-    if (isUsed || isExpired) {
-      throw new Error('Invalid or expired token');
-    }
+    // if (isUsed || isExpired) {
+    //   throw new Error('Invalid or expired token');
+    // }
 
     return verifyToken;
   }
