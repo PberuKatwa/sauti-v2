@@ -88,7 +88,7 @@ export class VerifyTokens{
     const query = `
       SELECT user_id,status,expires_at,is_used,purpose
       FROM verify_tokens
-      WHERE id = $1;
+      WHERE id = $1 AND status != 'trash';
     `
 
     const pgPool = this.pgConfig.getPool();
@@ -120,7 +120,7 @@ export class VerifyTokens{
     const updateQuery = `
       UPDATE verify_tokens
       SET is_used = $1
-      WHERE id = $2;
+      WHERE id = $2 AND status != 'trash';
     `;
 
     const pgPool = this.pgConfig.getPool();

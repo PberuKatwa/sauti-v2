@@ -176,7 +176,7 @@ export class AuthController {
     }
   }
 
-  @Patch("reset-password/:email")
+  @Patch("forgot-password/:email")
   async forgotPassword(
     @Req() req: Request,
     @Res() res: Response
@@ -206,7 +206,7 @@ export class AuthController {
     }
   }
 
-  @Get("reset-password/:token")
+  @Get("validate-password-token/:token")
   async validateResetPassword(
     @Req() req: Request,
     @Res() res: Response
