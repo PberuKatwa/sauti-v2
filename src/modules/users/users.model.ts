@@ -190,4 +190,35 @@ export class UsersModel {
       throw error;
     }
   }
+
+  async resetPassword(userId: number, password: string): Promise<void> {
+    try {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+      if (!passwordRegex.test(password)) {
+        throw new Error("Password is too weak. It must be at least 8 characters and include uppercase, lowercase, and numbers.");
+      }
+
+      this.logger.warn(`Attempting to reset password for user: ${userId}`);
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const query = `
+        UPDATE users
+        SET password = $1
+        WHERE id = $2 AND status != 'trash'
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, [hashedPassword, userId]);
+
+      if (result.rowCount === 0) {
+        throw new Error(`User not found`);
+      }
+
+      this.logger.info(`Successfully reset password for user: ${userId}`);
+    } catch (error) {
+      throw error;
+    }
+  }
 }

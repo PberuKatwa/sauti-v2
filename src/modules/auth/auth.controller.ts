@@ -1,4 +1,4 @@
-import { Controller, Inject, Post, Get, Req, Res, UseGuards, Put } from "@nestjs/common";
+import { Controller, Inject, Post, Get, Req, Res, UseGuards, Put, Patch } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
@@ -176,7 +176,7 @@ export class AuthController {
     }
   }
 
-  @Post("reset-password/:email")
+  @Patch("reset-password/:email")
   async resetPassword(
     @Req() req: Request,
     @Res() res: Response
@@ -206,7 +206,7 @@ export class AuthController {
     }
   }
 
-  @Put("reset-password/:token")
+  @Get("reset-password/:token")
   async validateResetPassword(
     @Req() req: Request,
     @Res() res: Response
