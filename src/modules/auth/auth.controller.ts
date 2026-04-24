@@ -236,4 +236,35 @@ export class AuthController {
     }
   }
 
+  @Put("reset-password/:token")
+  async resetPassword(
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    try {
+
+      const tokenParam = req.params.token;
+      const token = Array.isArray(tokenParam) ? tokenParam[0] : tokenParam;
+      const { password } = req.body;
+
+      await this.verifyModel.resetPassword(token, password);
+
+      const response: ApiResponse = {
+        success: true,
+        message:"Successfully reset password"
+      }
+
+      return res.status(200).json(response)
+    } catch (error) {
+      this.logger.error(`Error in resetting password`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
 }
