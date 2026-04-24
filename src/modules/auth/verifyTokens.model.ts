@@ -107,8 +107,6 @@ export class VerifyTokens{
       throw new Error('Invalid or expired token');
     }
 
-
-
     return verifyToken;
   }
 
@@ -127,7 +125,6 @@ export class VerifyTokens{
 
     const pgPool = this.pgConfig.getPool();
     await pgPool.query(updateQuery, [true, token]);
-
   }
 
 
