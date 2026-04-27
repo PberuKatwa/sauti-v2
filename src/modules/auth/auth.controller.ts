@@ -43,7 +43,7 @@ export class AuthController {
 
       const response: ProfileApiResponse = {
         success: true,
-        message: `Successfully registered user`,
+        message: `Successfully registered ${firstName}, Wait for admin to activate your account.`,
         data: user
       };
 
