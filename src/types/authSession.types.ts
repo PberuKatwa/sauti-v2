@@ -11,7 +11,7 @@ export interface BaseAuthSession {
 export interface UserAuthSession {
   userId: number;
   sessionId: number;
-  userRole: string;
+  userRole: UserRoles;
 }
 
 export interface RequestWithUser extends Request {
