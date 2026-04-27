@@ -96,6 +96,13 @@ export class AuthController {
     } catch (error) {
       this.logger.error(`Error logging in user`, error);
 
+      if (error.message === "The account is not active, contact the admin to activate your account.") {
+        return res.status(409).json({
+          success: false,
+          message: error.message,
+        });
+      }
+
       const response: ApiResponse = {
         success: false,
         message: `${error}`
