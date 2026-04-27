@@ -17,6 +17,14 @@ export interface UpdateUserPayload{
   lastName: string;
 }
 
+export interface UpdateUserDetailsPayload {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role?: string;
+  status?: string;
+}
+
 export interface AuthUser extends BaseUser {
   id: number;
   email: string;

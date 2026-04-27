@@ -9,7 +9,8 @@ import type {
   CreateUserPayload,
   UpdateUserPayload,
   AuthUser,
-  LoginUser
+  LoginUser,
+  UpdateUserDetailsPayload
 } from "../../types/user.types";
 
 @Injectable()
@@ -241,6 +242,60 @@ export class UsersModel {
       }
 
       this.logger.info(`Successfully reset password for user: ${userId}`);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateUserDetails(userId: number, payload: UpdateUserDetailsPayload): Promise<void> {
+    try {
+      this.logger.warn(`Attempting to update details for user: ${userId}`);
+
+      const { firstName, lastName, email, role, status } = payload;
+      const updates: string[] = [];
+      const values: any[] = [];
+      let paramIndex = 1;
+
+      if (firstName !== undefined) {
+        updates.push(`first_name = $${paramIndex++}`);
+        values.push(firstName);
+      }
+      if (lastName !== undefined) {
+        updates.push(`last_name = $${paramIndex++}`);
+        values.push(lastName);
+      }
+      if (email !== undefined) {
+        updates.push(`email = $${paramIndex++}`);
+        values.push(email);
+      }
+      if (role !== undefined) {
+        updates.push(`role = $${paramIndex++}`);
+        values.push(role);
+      }
+      if (status !== undefined) {
+        updates.push(`status = $${paramIndex++}`);
+        values.push(status);
+      }
+
+      if (updates.length === 0) {
+        throw new Error(`No fields provided for update`);
+      }
+
+      values.push(userId);
+      const query = `
+        UPDATE users
+        SET ${updates.join(', ')}
+        WHERE id = $${paramIndex} AND status != 'trash';
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const result = await pgPool.query(query, values);
+
+      if (result.rowCount === 0) {
+        throw new Error(`User not found`);
+      }
+
+      this.logger.info(`Successfully updated details for user: ${userId}`);
     } catch (error) {
       throw error;
     }
