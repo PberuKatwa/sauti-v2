@@ -11,7 +11,7 @@ import { FilesModel } from "./files.model";
 import { CurrentUser } from "../users/decorators/user.decorator";
 import { SingleFileAPiResponse,File } from "../../types/file.types"
 import { AuthGuard } from "../auth/guards/auth.guard";
-import { UserAuthSession } from "../../types/authSession.types";
+import { BaseAuthSession } from "../../types/authSession.types";
 
 
 @Controller('files')
@@ -25,7 +25,7 @@ export class FilesController{
   ) { }
 
   @Post('upload/images')
-  async handleUpload(@Req() req: Request, @CurrentUser() currentUser: UserAuthSession): Promise<SingleFileAPiResponse> {
+  async handleUpload(@Req() req: Request, @CurrentUser() currentUser: BaseAuthSession): Promise<SingleFileAPiResponse> {
     try {
       const fileSize = parseInt(req.headers['content-length'] || '0');
       const busboy: Busboy = require('busboy')({ headers: req.headers } as BusboyConfig);
@@ -79,7 +79,7 @@ export class FilesController{
               } as Express.Multer.File;
 
               const { key } = await this.storageService.uploadFile(mockFile);
-              const file: File = await this.files.saveFile(currentUser.userId, newFileName, key, newSize, newMimeType);
+              const file: File = await this.files.saveFile(currentUser.user_id, newFileName, key, newSize, newMimeType);
 
               const response: SingleFileAPiResponse = {
                 success: true,
@@ -107,7 +107,7 @@ export class FilesController{
   }
 
   @Post('upload/images/whatsapp')
-  async handleWhatsappUpload(@Req() req: Request,     @CurrentUser() currentUser: UserAuthSession): Promise<SingleFileAPiResponse> {
+  async handleWhatsappUpload(@Req() req: Request,     @CurrentUser() currentUser: BaseAuthSession): Promise<SingleFileAPiResponse> {
     try {
       const fileSize = parseInt(req.headers['content-length'] || '0');
       const busboy: Busboy = require('busboy')({ headers: req.headers } as BusboyConfig);
@@ -180,7 +180,7 @@ export class FilesController{
               } as Express.Multer.File;
 
               const { key } = await this.storageService.uploadFile(mockFile);
-              const file: File = await this.files.saveFile(currentUser.userId, newFileName, key, newSize, newMimeType);
+              const file: File = await this.files.saveFile(currentUser.user_id, newFileName, key, newSize, newMimeType);
 
               const response: SingleFileAPiResponse = {
                 success: true,
@@ -208,7 +208,7 @@ export class FilesController{
   }
 
   @Post('upload/multi-stream')
-  async handleMultiUpload(@Req() req: Request,     @CurrentUser() currentUser: UserAuthSession) {
+  async handleMultiUpload(@Req() req: Request,     @CurrentUser() currentUser: BaseAuthSession) {
 
     const fileSize = parseInt(req.headers['content-length'] || '0');
     const busboy = require('busboy')({ headers: req.headers });
@@ -224,7 +224,7 @@ export class FilesController{
 
             const key = await this.storageService.uploadMultiPart(fileStream, filename, mimeType);
 
-            const file2 = await this.files.saveFile(currentUser.userId, filename, key, fileSize, mimeType);
+            const file2 = await this.files.saveFile(currentUser.user_id, filename, key, fileSize, mimeType);
             console.log("fileeee", file2);
             console.log("fileeee", file2);
 
@@ -255,7 +255,7 @@ export class FilesController{
 
             const { key } = await this.storageService.uploadFile(mockFile);
 
-            const file2 = await this.files.saveFile(currentUser.userId, filename, key, fileSize, mimeType);
+            const file2 = await this.files.saveFile(currentUser.user_id, filename, key, fileSize, mimeType);
             console.log("fileeee", file2);
             console.log("fileeee", file2);
 

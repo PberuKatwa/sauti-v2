@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
-import { BaseAuthSession, RequestWithUser, UserAuthSession } from "../../../types/authSession.types";
+import { BaseAuthSession, RequestWithUser } from "../../../types/authSession.types";
 
 export const CurrentUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): BaseAuthSession => {

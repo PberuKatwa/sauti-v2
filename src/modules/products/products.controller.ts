@@ -17,7 +17,7 @@ import { CurrentUser } from "../users/decorators/user.decorator";
 import { CatalogSync } from "./catalog.sync";
 import { AllMinimalCatalogResponse, MinimalCatalogResponse } from "../../types/catalog.types";
 import { StorageService } from "../storage/storage.service";
-import { UserAuthSession } from "../../types/authSession.types";
+import { BaseAuthSession } from "../../types/authSession.types";
 
 @Controller('products')
 @UseGuards(AuthGuard)
@@ -34,12 +34,12 @@ export class ProductsController {
   async createProduct(
     @Req() req: Request,
     @Res() res: Response,
-    @CurrentUser() currentUser: UserAuthSession
+    @CurrentUser() currentUser: BaseAuthSession
   ): Promise<Response> {
     try {
 
       const payload: CreateProductPayload = req.body;
-      payload.user_id = currentUser.userId
+      payload.user_id = currentUser.user_id
 
       const product = await this.products.createProduct(payload);
 
@@ -68,14 +68,14 @@ export class ProductsController {
   async createCatalogProduct(
     @Req() req: Request,
     @Res() res: Response,
-    @CurrentUser() currentUser: UserAuthSession
+    @CurrentUser() currentUser: BaseAuthSession
   ): Promise<Response> {
     try {
 
       const payload: CreateProductPayload = req.body;
       console.log("payloaaaddd0,p", payload)
 
-      payload.user_id = currentUser.userId
+      payload.user_id = currentUser.user_id
 
       const product = await this.catalogSync.createCatalogProduct(payload);
 

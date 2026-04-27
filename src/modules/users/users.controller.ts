@@ -6,7 +6,7 @@ import { UsersModel } from "./users.model";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { CurrentUser } from "./decorators/user.decorator";
 import type { UserProfile } from "../../types/user.types";
-import { UserAuthSession } from "../../types/authSession.types";
+import { BaseAuthSession } from "../../types/authSession.types";
 
 @Controller('users')
 @UseGuards(AuthGuard)
@@ -21,14 +21,14 @@ export class UsersController {
   async updateEmail(
     @Req() req: Request,
     @Res() res: Response,
-    @CurrentUser() currentUser: UserAuthSession
+    @CurrentUser() currentUser: BaseAuthSession
   ): Promise<Response> {
     try {
 
       const emailParam = req.params.emailId;
       const email = Array.isArray(emailParam) ? emailParam[0] : emailParam;
 
-      await this.users.updateEmail(currentUser.userId, email);
+      await this.users.updateEmail(currentUser.user_id, email);
 
       const response: ApiResponse = {
         success: true,

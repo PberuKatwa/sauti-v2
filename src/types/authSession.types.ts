@@ -8,12 +8,6 @@ export interface BaseAuthSession {
   user_role: UserRoles;
 }
 
-export interface UserAuthSession {
-  userId: number;
-  sessionId: number;
-  userRole: UserRoles;
-}
-
 export interface RequestWithUser extends Request {
   user: BaseAuthSession;
 }

@@ -10,7 +10,7 @@ import { AuthGuard } from "./guards/auth.guard";
 import { CurrentUser } from "../users/decorators/user.decorator";
 import { AuthService } from "./auth.service";
 import { VerifyTokens } from "./verifyTokens.model";
-import { UserAuthSession } from "../../types/authSession.types";
+import { BaseAuthSession } from "../../types/authSession.types";
 
 @Controller('auth')
 export class AuthController {
@@ -121,12 +121,12 @@ export class AuthController {
   @Get('profile')
   @UseGuards(AuthGuard)
   async getProfile(
-    @CurrentUser() currentUser: UserAuthSession,
+    @CurrentUser() currentUser: BaseAuthSession,
     @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
     try {
-      const user: UserProfile = await this.users.findUserById(currentUser.userId);
+      const user: UserProfile = await this.users.findUserById(currentUser.user_id);
 
       const response: ProfileApiResponse = {
         success: true,
