@@ -57,8 +57,6 @@ export class UsersController {
   }
 
   @Put(':userId')
-  @UseGuards(RolesGuard)
-  @Roles('admin')
   async updateUserDetails(
     @Req() req: Request,
     @Res() res: Response,
