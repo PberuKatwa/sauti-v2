@@ -32,9 +32,9 @@ export class AuthGuard implements CanActivate{
       const authSession = await this.authSession.getAuthSession(sessionId);
 
       request['user'] = {
-        userId: authSession.user_id,
-        sessionId: authSession.id,
-        userRole:authSession.user_role
+        user_id: authSession.user_id,
+        id: authSession.id,
+        user_role:authSession.user_role
       };
 
       return true

@@ -166,11 +166,11 @@ export class UsersModel {
       const query = `
         SELECT id, first_name, email, password
         FROM users
-        WHERE email = $1 AND status != 'trash'
+        WHERE email = $1 AND status = $2;
       `;
 
       const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [email]);
+      const result = await pgPool.query(query, [email, 'active']);
 
       if (result.rowCount === 0) throw new Error(`Invalid email or password`);
 

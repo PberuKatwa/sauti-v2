@@ -15,5 +15,5 @@ export interface UserAuthSession {
 }
 
 export interface RequestWithUser extends Request {
-  user: UserAuthSession;
+  user: BaseAuthSession;
 }
