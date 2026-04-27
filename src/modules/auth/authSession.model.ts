@@ -77,12 +77,17 @@ export class AuthSessionModel {
 
       const pgPool = this.pgConfig.getPool();
       const query = `
-        SELECT id, user_id
-        FROM auth_sessions
-        WHERE id = $1
-          AND status != 'trash'
-          AND expires_at > NOW();
+        SELECT
+          s.id,
+          s.user_id,
+          u.role as user_role
+        FROM auth_sessions s
+        LEFT JOIN users u ON s.user_id = u.id
+        WHERE s.id = $1
+          AND s.status != 'trash'
+          AND s.expires_at > NOW();
       `;
+
 
       const result = await pgPool.query(query, [sessionId]);
 

@@ -101,15 +101,6 @@ export class VerifyTokens{
 
     const verifyToken: VerifyTokenProfile = result.rows[0];
 
-    // const now = new Date();
-
-    // const isUsed = verifyToken.is_used;
-    // const isExpired = new Date(verifyToken.expires_at) < now;
-
-    // if (isUsed || isExpired) {
-    //   throw new Error('Invalid or expired token');
-    // }
-
     return verifyToken;
   }
 
