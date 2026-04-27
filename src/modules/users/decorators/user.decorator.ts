@@ -1,8 +1,8 @@
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
-import { BaseAuthSession } from "../../../types/authSession.types";
+import { BaseAuthSession, RequestWithUser, UserAuthSession } from "../../../types/authSession.types";
 
 export const CurrentUser = createParamDecorator(
-  (data: keyof BaseAuthSession, ctx: ExecutionContext): BaseAuthSession | BaseAuthSession[keyof BaseAuthSession] => {
+  (data: keyof UserAuthSession, ctx: ExecutionContext): UserAuthSession | UserAuthSession[keyof UserAuthSession] => {
     const request = ctx.switchToHttp().getRequest<RequestWithUser>();
     const user = request.user;
 

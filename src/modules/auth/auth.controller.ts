@@ -10,6 +10,7 @@ import { AuthGuard } from "./guards/auth.guard";
 import { CurrentUser } from "../users/decorators/user.decorator";
 import { AuthService } from "./auth.service";
 import { VerifyTokens } from "./verifyTokens.model";
+import { UserAuthSession } from "../../types/authSession.types";
 
 @Controller('auth')
 export class AuthController {
@@ -120,7 +121,7 @@ export class AuthController {
   @Get('profile')
   @UseGuards(AuthGuard)
   async getProfile(
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: UserAuthSession,
     @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {

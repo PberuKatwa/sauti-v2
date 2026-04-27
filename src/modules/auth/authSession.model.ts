@@ -9,7 +9,7 @@ export class AuthSessionModel {
   constructor(
     private readonly logger: AppLogger,
     private readonly pgConfig: PostgresConfig
-  ) { }
+  ) { };
 
   async createTable(): Promise<string> {
     try {
