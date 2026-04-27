@@ -186,15 +186,17 @@ export class UsersModel {
       this.logger.warn(`Attempting to login user`);
 
       const query = `
-        SELECT id, first_name, email, password
+        SELECT id, first_name, email, password, status
         FROM users
-        WHERE email = $1 AND status = $2;
+        WHERE email = $1 AND status != 'trash';
       `;
 
       const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [email, 'active']);
+      const result = await pgPool.query(query, [email]);
 
       if (result.rowCount === 0) throw new Error(`Invalid email or password`);
+
+      if( result.rows[0].status !== "active") throw new Error(`The account is not active, contact the admin to activate your account.`)
 
       const user: LoginUser = result.rows[0];
       const isValid = await bcrypt.compare(password, user.password);
