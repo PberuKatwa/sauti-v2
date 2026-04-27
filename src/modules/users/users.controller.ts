@@ -11,8 +11,6 @@ import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/roles/roles.decorator";
 
 @Controller('users')
-@UseGuards(RolesGuard)
-@Roles('admin')
 @UseGuards(AuthGuard)
 export class UsersController {
 
@@ -22,6 +20,8 @@ export class UsersController {
   ) { }
 
   @Patch('status/:userId/:status')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async updateStatus(
     @Req() req: Request,
     @Res() res: Response,
@@ -57,6 +57,8 @@ export class UsersController {
   }
 
   @Put(':userId')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async updateUserDetails(
     @Req() req: Request,
     @Res() res: Response,
@@ -91,6 +93,8 @@ export class UsersController {
   }
 
   @Patch('email/:email')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async updateEmail(
     @Req() req: Request,
     @Res() res: Response,
