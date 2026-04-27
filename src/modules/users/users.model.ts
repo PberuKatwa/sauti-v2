@@ -60,40 +60,37 @@ export class UsersModel {
   }
 
   async createUserWithPassword(payload: CreateUserPayload): Promise<UserProfile> {
-    try {
-      const { firstName, lastName, email, password } = payload;
 
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    const { firstName, lastName, email, password } = payload;
 
-      if (!passwordRegex.test(password)) {
-        throw new Error("Password is too weak. It must be at least 8 characters and include uppercase, lowercase, and numbers.");
-      }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
-      this.logger.warn(`Attempting to create user with name: ${firstName}`);
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const query = `
-        INSERT INTO users (first_name, last_name, email, password)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, first_name, last_name, email, role, created_at
-      `;
-
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [
-        firstName,
-        lastName,
-        email,
-        hashedPassword
-      ]);
-
-      const user: UserProfile = result.rows[0];
-      this.logger.info(`Successfully created user`);
-
-      return user;
-    } catch (error) {
-      throw error;
+    if (!passwordRegex.test(password)) {
+      throw new Error("Password is too weak. It must be at least 8 characters and include uppercase, lowercase, and numbers.");
     }
+
+    this.logger.warn(`Attempting to create user with name: ${firstName}`);
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const query = `
+      INSERT INTO users (first_name, last_name, email, password)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, first_name, last_name, email, role, created_at
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+    const result = await pgPool.query(query, [
+      firstName,
+      lastName,
+      email,
+      hashedPassword
+    ]);
+
+    const user: UserProfile = result.rows[0];
+    this.logger.info(`Successfully created user`);
+
+    return user;
   }
 
   async findUserByEmail(email: string): Promise<UserProfile> {

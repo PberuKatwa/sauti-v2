@@ -48,15 +48,29 @@ export class AuthController {
       };
 
       return res.status(201).json(response);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error registering user`, error);
+
+      if (error.code === '23505') {
+        if (error.constraint === 'users_email_key') {
+          return res.status(409).json({
+            success: false,
+            message: 'User with this email already exists, Wait for the Admin to activate your account',
+          });
+        }
+
+        return res.status(409).json({
+          success: false,
+          message: 'User with this email already exists, Wait for the Admin to activate your account',
+        });
+      }
 
       const response: ApiResponse = {
         success: false,
         message: `${error}`
       };
 
-      return res.status(400).json(response);
+      return res.status(401).json(response);
     }
   }
 
