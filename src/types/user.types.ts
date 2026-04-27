@@ -45,3 +45,14 @@ export interface UserProfile extends BaseUser {
 export interface UserApiResponse extends ApiResponse<BaseUser> { };
 export interface AuthUserApiResponse extends ApiResponse<AuthUser> { };
 export interface ProfileApiResponse extends ApiResponse<UserProfile> { };
+
+export interface AllUsers {
+  users: UserProfile[];
+  pagination: {
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+  };
+}
+
+export interface AllUsersApiResponse extends ApiResponse<AllUsers> { };

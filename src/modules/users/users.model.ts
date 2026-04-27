@@ -10,7 +10,8 @@ import type {
   UpdateUserPayload,
   AuthUser,
   LoginUser,
-  UpdateUserDetailsPayload
+  UpdateUserDetailsPayload,
+  AllUsers
 } from "../../types/user.types";
 
 @Injectable()
@@ -295,6 +296,69 @@ export class UsersModel {
       }
 
       this.logger.info(`Successfully updated details for user: ${userId}`);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAllUsers(pageInput: number, limitInput: number, filters?: { firstName?: string; lastName?: string; email?: string }): Promise<AllUsers> {
+    try {
+      this.logger.warn(`Attempting to fetch users from page:${pageInput} and limit:${limitInput}`);
+
+      const page = pageInput ? pageInput : 1;
+      const limit = limitInput ? limitInput : 10;
+      const offset = (page - 1) * limit;
+
+      let whereClause = `WHERE status != 'trash'`;
+      const queryParams: any[] = [];
+      let paramIndex = 1;
+
+      if (filters?.firstName) {
+        whereClause += ` AND first_name ILIKE $${paramIndex++}`;
+        queryParams.push(`%${filters.firstName}%`);
+      }
+      if (filters?.lastName) {
+        whereClause += ` AND last_name ILIKE $${paramIndex++}`;
+        queryParams.push(`%${filters.lastName}%`);
+      }
+      if (filters?.email) {
+        whereClause += ` AND email ILIKE $${paramIndex++}`;
+        queryParams.push(`%${filters.email}%`);
+      }
+
+      const dataQuery = `
+        SELECT id, first_name, last_name, email, role, status, created_at
+        FROM users
+        ${whereClause}
+        ORDER BY created_at DESC
+        LIMIT $${paramIndex++} OFFSET $${paramIndex++};
+      `;
+
+      const countQuery = `
+        SELECT COUNT(*)
+        FROM users
+        ${whereClause};
+      `;
+
+      const pgPool = this.pgConfig.getPool();
+      const [dataResult, paginationResult] = await Promise.all([
+        pgPool.query(dataQuery, [...queryParams, limit, offset]),
+        pgPool.query(countQuery, queryParams)
+      ]);
+
+      const totalCount = parseInt(paginationResult.rows[0].count);
+
+      this.logger.info(`Successfully fetched ${totalCount} users`);
+
+      return {
+        users: dataResult.rows,
+        pagination: {
+          totalCount: totalCount,
+          currentPage: page,
+          totalPages: Math.ceil(totalCount / limit)
+        }
+      };
+
     } catch (error) {
       throw error;
     }
