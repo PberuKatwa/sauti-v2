@@ -17,6 +17,7 @@ import { CurrentUser } from "../users/decorators/user.decorator";
 import { CatalogSync } from "./catalog.sync";
 import { AllMinimalCatalogResponse, MinimalCatalogResponse } from "../../types/catalog.types";
 import { StorageService } from "../storage/storage.service";
+import { UserAuthSession } from "../../types/authSession.types";
 
 @Controller('products')
 @UseGuards(AuthGuard)
@@ -33,7 +34,7 @@ export class ProductsController {
   async createProduct(
     @Req() req: Request,
     @Res() res: Response,
-    @CurrentUser() currentUser:any
+    @CurrentUser() currentUser: UserAuthSession
   ): Promise<Response> {
     try {
 
@@ -67,7 +68,7 @@ export class ProductsController {
   async createCatalogProduct(
     @Req() req: Request,
     @Res() res: Response,
-    @CurrentUser() currentUser:any
+    @CurrentUser() currentUser: UserAuthSession
   ): Promise<Response> {
     try {
 

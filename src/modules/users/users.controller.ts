@@ -6,6 +6,7 @@ import { UsersModel } from "./users.model";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { CurrentUser } from "./decorators/user.decorator";
 import type { UserProfile } from "../../types/user.types";
+import { UserAuthSession } from "../../types/authSession.types";
 
 @Controller('users')
 @UseGuards(AuthGuard)
@@ -20,7 +21,7 @@ export class UsersController {
   async updateEmail(
     @Req() req: Request,
     @Res() res: Response,
-    @CurrentUser() currentUser: any
+    @CurrentUser() currentUser: UserAuthSession
   ): Promise<Response> {
     try {
 

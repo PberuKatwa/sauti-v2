@@ -182,7 +182,7 @@ Or at method level for specific protection.
 async handler(
   @Req() req: Request,
   @Res() res: Response,
-  @CurrentUser() currentUser: any
+  @CurrentUser() currentUser: UserAuthSession
 ): Promise<Response> {
   // currentUser.userId available
 }
