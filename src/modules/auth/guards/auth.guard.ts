@@ -33,7 +33,8 @@ export class AuthGuard implements CanActivate{
 
       request['user'] = {
         userId: authSession.user_id,
-        sessionId: authSession.id
+        sessionId: authSession.id,
+        userRole:authSession.user_role
       };
 
       return true
