@@ -33,7 +33,7 @@ export class UsersModel {
           last_name TEXT NOT NULL,
           email TEXT NOT NULL UNIQUE,
           password VARCHAR NOT NULL,
-          status row_status DEFAULT 'active',
+          status row_status DEFAULT 'pending',
           role user_role DEFAULT 'demo',
           created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
