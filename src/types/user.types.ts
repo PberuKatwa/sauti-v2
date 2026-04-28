@@ -1,4 +1,5 @@
 import type { ApiResponse } from "./api.types";
+import { UserRoles } from "./authSession.types";
 
 export interface BaseUser {
   first_name: string;
@@ -28,6 +29,8 @@ export interface UpdateUserDetailsPayload {
 export interface AuthUser extends BaseUser {
   id: number;
   email: string;
+  first_name: string;
+  role: UserRoles;
 };
 
 export interface LoginUser extends AuthUser {

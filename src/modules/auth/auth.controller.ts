@@ -84,7 +84,9 @@ export class AuthController {
 
       const user: AuthUser = await this.users.validatePassword(email, password);
       const authSession = await this.authSession.createAuthSession(user.id);
-      this.cookieService.setAuthCookie(res,authSession.id)
+      this.cookieService.setAuthCookie(res, authSession.id)
+
+      console.log("userrrrr", user);
 
       const response: AuthUserApiResponse = {
         success: true,

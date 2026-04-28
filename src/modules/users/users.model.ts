@@ -187,7 +187,7 @@ export class UsersModel {
       this.logger.warn(`Attempting to login user`);
 
       const query = `
-        SELECT id, first_name, email, password, status
+        SELECT id, first_name, email, password, status, role
         FROM users
         WHERE email = $1 AND status != 'trash';
       `;
@@ -209,7 +209,8 @@ export class UsersModel {
       return {
         id: user.id,
         first_name: user.first_name,
-        email: user.email
+        email: user.email,
+        role:user.role
       };
     } catch (error) {
       throw error;
