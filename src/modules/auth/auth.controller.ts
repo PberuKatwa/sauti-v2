@@ -86,8 +86,6 @@ export class AuthController {
       const authSession = await this.authSession.createAuthSession(user.id);
       this.cookieService.setAuthCookie(res, authSession.id)
 
-      console.log("userrrrr", user);
-
       const response: AuthUserApiResponse = {
         success: true,
         message: `Successfully logged in`,
