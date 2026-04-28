@@ -115,8 +115,9 @@ export class UsersController {
 
       const userIdParam = req.params.userId;
       const userId = Array.isArray(userIdParam) ? parseInt(userIdParam[0]) : parseInt(userIdParam);
+      payload.userId = userId;
 
-      await this.users.updateUserDetails(userId, payload);
+      await this.users.updateUserDetails(payload);
 
       const response: ApiResponse = {
         success: true,

@@ -11,7 +11,8 @@ import type {
   AuthUser,
   LoginUser,
   UpdateUserDetailsPayload,
-  AllUsers
+  AllUsers,
+  BaseUserFilters
 } from "../../types/user.types";
 
 @Injectable()
@@ -248,11 +249,11 @@ export class UsersModel {
     }
   }
 
-  async updateUserDetails(userId: number, payload: UpdateUserDetailsPayload): Promise<void> {
+  async updateUserDetails(payload: UpdateUserDetailsPayload): Promise<void> {
     try {
-      this.logger.warn(`Attempting to update details for user: ${userId}`);
+      const { firstName, lastName, email, role, status, userId } = payload;
 
-      const { firstName, lastName, email, role, status } = payload;
+      this.logger.warn(`Attempting to update details for user: ${userId}`);
       const updates: string[] = [];
       const values: any[] = [];
       let paramIndex = 1;
@@ -302,7 +303,7 @@ export class UsersModel {
     }
   }
 
-  async getAllUsers(pageInput: number, limitInput: number, filters?: { firstName?: string; lastName?: string; email?: string }): Promise<AllUsers> {
+  async getAllUsers(pageInput: number, limitInput: number, filters?: BaseUserFilters): Promise<AllUsers> {
     try {
       this.logger.warn(`Attempting to fetch users from page:${pageInput} and limit:${limitInput}`);
 

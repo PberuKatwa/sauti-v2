@@ -19,6 +19,7 @@ export interface UpdateUserPayload{
 }
 
 export interface UpdateUserDetailsPayload {
+  userId: number;
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -32,6 +33,12 @@ export interface AuthUser extends BaseUser {
   first_name: string;
   role: UserRoles;
 };
+
+export interface BaseUserFilters {
+  firstName?: string;
+  lastName?: string;
+  email?: string
+}
 
 export interface LoginUser extends AuthUser {
   password: string;
