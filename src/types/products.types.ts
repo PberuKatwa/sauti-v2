@@ -67,6 +67,12 @@ export interface ProductPayload {
   metadata: Record<string, any>;
 }
 
+export interface BaseProductFilters {
+  name?: string;
+  brand?: ProductBrands;
+  category?: FlowerProductCategories;
+}
+
 export interface CreateProductPayload extends ProductPayload {
   user_id: number;
 }
