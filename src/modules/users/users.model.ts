@@ -300,6 +300,21 @@ export class UsersModel {
         totalPages: Math.ceil(totalCount / limit)
       }
     };
-
   }
+
+  async trashUser(userId:number): Promise<void>{
+
+    this.logger.warn(`Attempting to trash user ${userId}`)
+
+    const query = `
+      UPDATE users
+      SET status = $1
+      WHERE id= $2 AND status != trash;
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+
+    await pgPool.query(query, ["trash", userId]);
+  }
+
 }

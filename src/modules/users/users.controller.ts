@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Res, Body, Put, Query } from "@nestjs/common";
+import { Controller, Get, Req, Res, Body, Put, Query, Delete } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import { Auth } from "../auth/decorators/auth.decorator";
@@ -107,6 +107,38 @@ export class UsersController {
 
       return res.status(500).json(response);
     }
+  }
+
+  @Delete(":userId")
+  async trashUser(
+    @Req() req: Request,
+    @Res() res:Response
+  ) {
+
+    try {
+
+      const userIdParam = req.params.userId;
+      const userId = Array.isArray(userIdParam) ? parseInt(userIdParam[0]) : parseInt(userIdParam);
+
+      await this.users.trashUser(userId);
+
+      const response: ApiResponse = {
+        success: true,
+        message:"Successfully deleted user"
+      }
+
+      return res.status(200).json(response);
+    } catch (error) {
+      this.logger.error(`Error in deleting user`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+
   }
 
 
