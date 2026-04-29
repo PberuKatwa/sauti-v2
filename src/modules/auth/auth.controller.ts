@@ -103,12 +103,19 @@ export class AuthController {
         });
       }
 
+      // if (error.message === "Email or password provided is invalid") {
+      //   return res.status(404).json({
+      //     success: false,
+      //     message: error.message,
+      //   });
+      // }
+
       const response: ApiResponse = {
         success: false,
         message: `${error}`
       };
 
-      return res.status(401).json(response);
+      return res.status(404).json(response);
     }
   }
 
