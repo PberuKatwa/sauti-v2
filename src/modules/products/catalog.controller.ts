@@ -32,8 +32,6 @@ export class CatalogController{
     try {
 
       const payload: CreateProductPayload = req.body;
-      console.log("payloaaaddd0,p", payload)
-
       payload.user_id = currentUser.user_id
 
       const product = await this.catalogSync.createCatalogProduct(payload);
