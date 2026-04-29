@@ -309,7 +309,7 @@ export class UsersModel {
     const query = `
       UPDATE users
       SET status = $1
-      WHERE id= $2 AND status != trash;
+      WHERE id= $2 AND status != 'trash';
     `;
 
     const pgPool = this.pgConfig.getPool();
