@@ -8,9 +8,10 @@ import { ProductsController } from "./products.controller";
 import { AuthModule } from "../auth/auth.module";
 import { CatalogSync } from "./catalog.sync";
 import { IntentModule } from "../intent/intent.module";
+import { CatalogController } from "./catalog.controller";
 
 @Module({
-  controllers:[ProductsController],
+  controllers: [ProductsController, CatalogController],
   imports: [WhatsappModule, HttpModule, IntentModule],
   providers: [ProductsHandler, CatalogService, ProductsModel, CatalogSync],
   exports: [ProductsHandler, CatalogService, ProductsModel, CatalogSync]
