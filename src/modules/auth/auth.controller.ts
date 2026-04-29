@@ -168,36 +168,6 @@ export class AuthController {
     }
   }
 
-  @Get('profile/email/:email')
-  @UseGuards(AuthGuard)
-  async getProfileByEmail(
-    @Req() req: Request,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
-      const emailParam = req.params.email;
-      const email = Array.isArray(emailParam) ? emailParam[0] : emailParam;
-      const user: UserProfile = await this.users.findUserByEmail(email);
-
-      const response: ProfileApiResponse = {
-        success: true,
-        message: `Successfully fetched user profile by email`,
-        data: user
-      };
-
-      return res.status(200).json(response);
-    } catch (error) {
-      this.logger.error(`Error fetching user profile by email`, error);
-
-      const response: ApiResponse = {
-        success: false,
-        message: `${error}`
-      };
-
-      return res.status(500).json(response);
-    }
-  }
-
   @Patch("forgot-password/:email")
   async forgotPassword(
     @Req() req: Request,
