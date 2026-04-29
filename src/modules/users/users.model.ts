@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import {  Injectable } from "@nestjs/common";
 import { Pool } from "pg";
 import * as bcrypt from 'bcrypt';
 import { PostgresConfig } from "../../databases/postgres.config";
