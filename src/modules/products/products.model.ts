@@ -11,7 +11,8 @@ import {
   CatalogSyncPayload,
   crudSyncMap,
   SyncColumnNames,
-  UnsyncedProducts
+  UnsyncedProducts,
+  BaseProductFilters
 } from "../../types/products.types";
 
 @Injectable()
@@ -131,7 +132,7 @@ export class ProductsModel{
     }
   }
 
-  async getAllProducts(pageInput: number, limitInput: number): Promise<AllProducts> {
+  async getAllProducts(pageInput: number, limitInput: number, filters?: BaseProductFilters): Promise<AllProducts> {
     try {
 
       this.logger.warn(`Attempting to fetch products from page:${pageInput} and limit:${limitInput}`);
@@ -139,6 +140,23 @@ export class ProductsModel{
       const page = pageInput ? pageInput : 1;
       const limit = limitInput ? limitInput : 10;
       const offset = (page - 1) * limit;
+
+      let whereClause = `WHERE p.status != 'trash'`;
+      const queryParams: any[] = [];
+      let paramIndex = 1;
+
+      if (filters?.name) {
+        whereClause += ` AND p.name ILIKE $${paramIndex++}`;
+        queryParams.push(`%${filters.name}%`);
+      }
+      if (filters?.brand) {
+        whereClause += ` AND p.brand = $${paramIndex++}`;
+        queryParams.push(filters.brand);
+      }
+      if (filters?.category) {
+        whereClause += ` AND p.category = $${paramIndex++}`;
+        queryParams.push(filters.category);
+      }
 
       const dataQuery = `
         SELECT
@@ -159,21 +177,21 @@ export class ProductsModel{
           f.file_url as file_url
         FROM products p
         LEFT JOIN files f ON p.file_id = f.id
-        WHERE p.status != 'trash'
+        ${whereClause}
         ORDER BY p.created_at DESC
-        LIMIT $1 OFFSET $2;
+        LIMIT $${paramIndex++} OFFSET $${paramIndex++};
       `;
 
       const countQuery = `
         SELECT COUNT(*)
-        FROM products
-        WHERE status != 'trash';
+        FROM products p
+        ${whereClause};
       `;
 
       const pgPool = this.pgConfig.getPool();
       const [dataResult, paginationResult] = await Promise.all([
-        pgPool.query(dataQuery, [limit, offset]),
-        pgPool.query(countQuery)
+        pgPool.query(dataQuery, [...queryParams, limit, offset]),
+        pgPool.query(countQuery, queryParams)
       ]);
 
       const totalCount = parseInt(paginationResult.rows[0].count);

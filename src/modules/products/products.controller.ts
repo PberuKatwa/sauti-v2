@@ -9,7 +9,8 @@ import type {
   SingleProductApiResponse,
   SingleProductMinimalApiResponse,
   AllUnsyncedProductsApiResponse,
-  FullProduct
+  FullProduct,
+  BaseProductFilters
 } from "../../types/products.types";
 import { ProductsModel } from "./products.model";
 import { AuthGuard } from "../auth/guards/auth.guard";
@@ -103,6 +104,9 @@ export class ProductsController {
   async fetchAllProducts(
     @Query('page') pageQuery: string,
     @Query('limit') limitQuery: string,
+    @Query('name') nameQuery: string,
+    @Query('brand') brandQuery: string,
+    @Query('category') categoryQuery: string,
     @Res() res: Response
   ): Promise<Response> {
     try {
@@ -110,7 +114,12 @@ export class ProductsController {
       const page = pageQuery ? parseInt(pageQuery) : 1;
       const limit = limitQuery ? parseInt(limitQuery) : 10;
 
-      const { pagination, products } = await this.products.getAllProducts(page, limit);
+      const filters: BaseProductFilters = {};
+      if (nameQuery) filters.name = nameQuery;
+      if (brandQuery) filters.brand = brandQuery as BaseProductFilters['brand'];
+      if (categoryQuery) filters.category = categoryQuery as BaseProductFilters['category'];
+
+      const { pagination, products } = await this.products.getAllProducts(page, limit, filters);
 
       const productMap: FullProduct[] = await Promise.all(
         products.map(
