@@ -2,7 +2,7 @@ import { Controller, Inject, Post, Get, Req, Res, UseGuards, Put, Patch } from "
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
-import type { AuthUserApiResponse, ProfileApiResponse, CreateUserPayload, UserProfile, AuthUser  } from "../../types/user.types";
+import type { AuthUserApiResponse, ProfileApiResponse, CreateUserPayload, UserProfile, AuthUser, UserApiResponse  } from "../../types/user.types";
 import { UsersModel } from "../users/users.model";
 import { AuthSessionModel } from "./authSession.model";
 import { CookieService } from "./cookies.service";
@@ -39,9 +39,9 @@ export class AuthController {
         password
       };
 
-      const user: UserProfile = await this.users.createUserWithPassword(payload);
+      const user = await this.users.createUserWithPassword(payload);
 
-      const response: ProfileApiResponse = {
+      const response: UserApiResponse = {
         success: true,
         message: `Successfully registered ${firstName}, Wait for admin to activate your account.`,
         data: user

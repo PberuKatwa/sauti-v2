@@ -4,20 +4,20 @@ import type { UserRoles } from "./authSession.types";
 export type UserStatus = 'active' | 'trash' | 'pending';
 
 export interface BaseUser {
+  id: number;
   first_name: string;
 }
+
+export interface AuthUser extends BaseUser {
+  email: string;
+  role: UserRoles;
+};
 
 export interface CreateUserPayload {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
-}
-
-export interface UpdateUserPayload{
-  id: number;
-  firstName: string;
-  lastName: string;
 }
 
 export interface UpdateUserDetailsPayload {
@@ -28,13 +28,6 @@ export interface UpdateUserDetailsPayload {
   role?: UserRoles;
   status?: UserStatus;
 }
-
-export interface AuthUser extends BaseUser {
-  id: number;
-  email: string;
-  first_name: string;
-  role: UserRoles;
-};
 
 export interface BaseUserFilters {
   firstName?: string;
@@ -47,17 +40,12 @@ export interface LoginUser extends AuthUser {
 }
 
 export interface UserProfile extends BaseUser {
-  id: number;
   last_name: string;
   email: string;
   role: string;
   status: UserStatus;
   created_at: Date;
 }
-
-export interface UserApiResponse extends ApiResponse<BaseUser> { };
-export interface AuthUserApiResponse extends ApiResponse<AuthUser> { };
-export interface ProfileApiResponse extends ApiResponse<UserProfile> { };
 
 export interface AllUsers {
   users: UserProfile[];
@@ -68,4 +56,7 @@ export interface AllUsers {
   };
 }
 
+export interface UserApiResponse extends ApiResponse<BaseUser> { };
+export interface AuthUserApiResponse extends ApiResponse<AuthUser> { };
+export interface ProfileApiResponse extends ApiResponse<UserProfile> { };
 export interface AllUsersApiResponse extends ApiResponse<AllUsers> { };

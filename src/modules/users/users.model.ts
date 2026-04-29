@@ -7,12 +7,12 @@ import { ConfigService } from "@nestjs/config";
 import type {
   UserProfile,
   CreateUserPayload,
-  UpdateUserPayload,
   AuthUser,
   LoginUser,
   UpdateUserDetailsPayload,
   AllUsers,
-  BaseUserFilters
+  BaseUserFilters,
+  BaseUser
 } from "../../types/user.types";
 
 @Injectable()
@@ -61,7 +61,7 @@ export class UsersModel {
     }
   }
 
-  async createUserWithPassword(payload: CreateUserPayload): Promise<UserProfile> {
+  async createUserWithPassword(payload: CreateUserPayload): Promise<BaseUser> {
 
     const { firstName, lastName, email, password } = payload;
 
@@ -78,7 +78,7 @@ export class UsersModel {
     const query = `
       INSERT INTO users (first_name, last_name, email, password)
       VALUES ($1, $2, $3, $4)
-      RETURNING id, first_name, last_name, email, role, status, created_at
+      RETURNING id, first_name
     `;
 
     const pgPool = this.pgConfig.getPool();
@@ -89,30 +89,27 @@ export class UsersModel {
       hashedPassword
     ]);
 
-    const user: UserProfile = result.rows[0];
+    const user: BaseUser = result.rows[0];
     this.logger.info(`Successfully created user`);
 
     return user;
   }
 
   async findUserByEmail(email: string): Promise<UserProfile> {
-    try {
-      this.logger.warn(`Attempting to find user by email: ${email}`);
+    this.logger.warn(`Attempting to find user by email: ${email}`);
 
-      const query = `
-        SELECT id, first_name, last_name, email, role, status, created_at
-        FROM users
-        WHERE email = $1 AND status != 'trash'
-      `;
+    const query = `
+      SELECT id, first_name, last_name, email, role, status, created_at
+      FROM users
+      WHERE email = $1 AND status != 'trash'
+    `;
 
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [email]);
+    const pgPool = this.pgConfig.getPool();
+    const result = await pgPool.query(query, [email]);
 
-      const user: UserProfile = result.rows[0];
-      return user;
-    } catch (error) {
-      throw error;
-    }
+    const user: UserProfile = result.rows[0];
+    return user;
+
   }
 
   async findUserById(id: number): Promise<UserProfile> {
@@ -130,54 +127,6 @@ export class UsersModel {
 
       const user: UserProfile = result.rows[0];
       return user;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async updateEmail(userId: number, email: string): Promise<void> {
-    try {
-      this.logger.warn(`Attempting to update email for user: ${userId}`);
-
-      const query = `
-        UPDATE users
-        SET email = $1
-        WHERE id = $2 AND status != 'trash';
-      `;
-
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [email, userId]);
-
-      if (result.rowCount === 0) {
-        throw new Error(`User not found`);
-      }
-
-      this.logger.info(`Successfully updated email for user: ${userId}`);
-
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async updateStatus(userId: number, status: string): Promise<void> {
-    try {
-      this.logger.warn(`Attempting to update status for user: ${userId}`);
-
-      const query = `
-        UPDATE users
-        SET status = $1
-        WHERE id = $2;
-      `;
-
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [status, userId]);
-
-      if (result.rowCount === 0) {
-        throw new Error(`User not found`);
-      }
-
-      this.logger.info(`Successfully updated status for user: ${userId}`);
-
     } catch (error) {
       throw error;
     }
