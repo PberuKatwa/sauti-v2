@@ -113,23 +113,19 @@ export class UsersModel {
   }
 
   async findUserById(id: number): Promise<UserProfile> {
-    try {
-      this.logger.warn(`Attempting to find user by id: ${id}`);
+    this.logger.warn(`Attempting to find user by id: ${id}`);
 
-      const query = `
-        SELECT id, first_name, last_name, email, role, status, created_at
-        FROM users
-        WHERE id = $1 AND status != 'trash'
-      `;
+    const query = `
+      SELECT id, first_name, last_name, email, role, status, created_at
+      FROM users
+      WHERE id = $1 AND status != 'trash'
+    `;
 
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [id]);
+    const pgPool = this.pgConfig.getPool();
+    const result = await pgPool.query(query, [id]);
 
-      const user: UserProfile = result.rows[0];
-      return user;
-    } catch (error) {
-      throw error;
-    }
+    const user: UserProfile = result.rows[0];
+    return user;
   }
 
   async validatePassword(email: string, password: string): Promise<AuthUser> {
@@ -168,150 +164,142 @@ export class UsersModel {
   }
 
   async resetPassword(userId: number, password: string): Promise<void> {
-    try {
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
-      if (!passwordRegex.test(password)) {
-        throw new Error("Password is too weak. It must be at least 8 characters and include uppercase, lowercase, and numbers.");
-      }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
-      this.logger.warn(`Attempting to reset password for user: ${userId}`);
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const query = `
-        UPDATE users
-        SET password = $1
-        WHERE id = $2 AND status != 'trash'
-      `;
-
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [hashedPassword, userId]);
-
-      if (result.rowCount === 0) {
-        throw new Error(`User not found`);
-      }
-
-      this.logger.info(`Successfully reset password for user: ${userId}`);
-    } catch (error) {
-      throw error;
+    if (!passwordRegex.test(password)) {
+      throw new Error("Password is too weak. It must be at least 8 characters and include uppercase, lowercase, and numbers.");
     }
+
+    this.logger.warn(`Attempting to reset password for user: ${userId}`);
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const query = `
+      UPDATE users
+      SET password = $1
+      WHERE id = $2 AND status != 'trash'
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+    const result = await pgPool.query(query, [hashedPassword, userId]);
+
+    if (result.rowCount === 0) {
+      throw new Error(`User not found`);
+    }
+
+    this.logger.info(`Successfully reset password for user: ${userId}`);
   }
 
   async updateUserDetails(payload: UpdateUserDetailsPayload): Promise<void> {
-    try {
-      const { firstName, lastName, email, role, status, userId } = payload;
 
-      this.logger.warn(`Attempting to update details for user: ${userId}`);
-      const updates: string[] = [];
-      const values: any[] = [];
-      let paramIndex = 1;
+    const { firstName, lastName, email, role, status, userId } = payload;
 
-      if (firstName !== undefined) {
-        updates.push(`first_name = $${paramIndex++}`);
-        values.push(firstName);
-      }
-      if (lastName !== undefined) {
-        updates.push(`last_name = $${paramIndex++}`);
-        values.push(lastName);
-      }
-      if (email !== undefined) {
-        updates.push(`email = $${paramIndex++}`);
-        values.push(email);
-      }
-      if (role !== undefined) {
-        updates.push(`role = $${paramIndex++}`);
-        values.push(role);
-      }
-      if (status !== undefined) {
-        updates.push(`status = $${paramIndex++}`);
-        values.push(status);
-      }
+    this.logger.warn(`Attempting to update details for user: ${userId}`);
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
 
-      if (updates.length === 0) {
-        throw new Error(`No fields provided for update`);
-      }
-
-      values.push(userId);
-      const query = `
-        UPDATE users
-        SET ${updates.join(', ')}
-        WHERE id = $${paramIndex} AND status != 'trash';
-      `;
-
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, values);
-
-      if (result.rowCount === 0) {
-        throw new Error(`User not found`);
-      }
-
-      this.logger.info(`Successfully updated details for user: ${userId}`);
-    } catch (error) {
-      throw error;
+    if (firstName !== undefined) {
+      updates.push(`first_name = $${paramIndex++}`);
+      values.push(firstName);
     }
+    if (lastName !== undefined) {
+      updates.push(`last_name = $${paramIndex++}`);
+      values.push(lastName);
+    }
+    if (email !== undefined) {
+      updates.push(`email = $${paramIndex++}`);
+      values.push(email);
+    }
+    if (role !== undefined) {
+      updates.push(`role = $${paramIndex++}`);
+      values.push(role);
+    }
+    if (status !== undefined) {
+      updates.push(`status = $${paramIndex++}`);
+      values.push(status);
+    }
+
+    if (updates.length === 0) {
+      throw new Error(`No fields provided for update`);
+    }
+
+    values.push(userId);
+    const query = `
+      UPDATE users
+      SET ${updates.join(', ')}
+      WHERE id = $${paramIndex} AND status != 'trash';
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+    const result = await pgPool.query(query, values);
+
+    if (result.rowCount === 0) {
+      throw new Error(`User not found`);
+    }
+
+    this.logger.info(`Successfully updated details for user: ${userId}`);
+
   }
 
   async getAllUsers(pageInput: number, limitInput: number, filters?: BaseUserFilters): Promise<AllUsers> {
-    try {
-      this.logger.warn(`Attempting to fetch users from page:${pageInput} and limit:${limitInput}`);
 
-      const page = pageInput ? pageInput : 1;
-      const limit = limitInput ? limitInput : 10;
-      const offset = (page - 1) * limit;
+    this.logger.warn(`Attempting to fetch users from page:${pageInput} and limit:${limitInput}`);
 
-      let whereClause = `WHERE status != 'trash'`;
-      const queryParams: any[] = [];
-      let paramIndex = 1;
+    const page = pageInput ? pageInput : 1;
+    const limit = limitInput ? limitInput : 10;
+    const offset = (page - 1) * limit;
 
-      if (filters?.firstName) {
-        whereClause += ` AND first_name ILIKE $${paramIndex++}`;
-        queryParams.push(`%${filters.firstName}%`);
-      }
-      if (filters?.lastName) {
-        whereClause += ` AND last_name ILIKE $${paramIndex++}`;
-        queryParams.push(`%${filters.lastName}%`);
-      }
-      if (filters?.email) {
-        whereClause += ` AND email ILIKE $${paramIndex++}`;
-        queryParams.push(`%${filters.email}%`);
-      }
+    let whereClause = `WHERE status != 'trash'`;
+    const queryParams: any[] = [];
+    let paramIndex = 1;
 
-      const dataQuery = `
-        SELECT id, first_name, last_name, email, role, status, created_at
-        FROM users
-        ${whereClause}
-        ORDER BY created_at DESC
-        LIMIT $${paramIndex++} OFFSET $${paramIndex++};
-      `;
-
-      const countQuery = `
-        SELECT COUNT(*)
-        FROM users
-        ${whereClause};
-      `;
-
-      const pgPool = this.pgConfig.getPool();
-      const [dataResult, paginationResult] = await Promise.all([
-        pgPool.query(dataQuery, [...queryParams, limit, offset]),
-        pgPool.query(countQuery, queryParams)
-      ]);
-
-      const totalCount = parseInt(paginationResult.rows[0].count);
-
-      this.logger.info(`Successfully fetched ${totalCount} users`);
-
-      return {
-        users: dataResult.rows,
-        pagination: {
-          totalCount: totalCount,
-          currentPage: page,
-          totalPages: Math.ceil(totalCount / limit)
-        }
-      };
-
-    } catch (error) {
-      throw error;
+    if (filters?.firstName) {
+      whereClause += ` AND first_name ILIKE $${paramIndex++}`;
+      queryParams.push(`%${filters.firstName}%`);
     }
+    if (filters?.lastName) {
+      whereClause += ` AND last_name ILIKE $${paramIndex++}`;
+      queryParams.push(`%${filters.lastName}%`);
+    }
+    if (filters?.email) {
+      whereClause += ` AND email ILIKE $${paramIndex++}`;
+      queryParams.push(`%${filters.email}%`);
+    }
+
+    const dataQuery = `
+      SELECT id, first_name, last_name, email, role, status, created_at
+      FROM users
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT $${paramIndex++} OFFSET $${paramIndex++};
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*)
+      FROM users
+      ${whereClause};
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+    const [dataResult, paginationResult] = await Promise.all([
+      pgPool.query(dataQuery, [...queryParams, limit, offset]),
+      pgPool.query(countQuery, queryParams)
+    ]);
+
+    const totalCount = parseInt(paginationResult.rows[0].count);
+
+    this.logger.info(`Successfully fetched ${totalCount} users`);
+
+    return {
+      users: dataResult.rows,
+      pagination: {
+        totalCount: totalCount,
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    };
+
   }
 }
