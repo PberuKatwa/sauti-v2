@@ -130,6 +130,20 @@ export class UsersController {
 
       this.logger.error(`Error updating user details`, error);
 
+      if (error.code === '23505') {
+        if (error.constraint === 'users_email_key') {
+          return res.status(409).json({
+            success: false,
+            message: 'User with this email already exists',
+          });
+        }
+
+        return res.status(409).json({
+          success: false,
+          message: 'User with this email already exists',
+        });
+      }
+
       const response: ApiResponse = {
         success: false,
         message: `${error}`
