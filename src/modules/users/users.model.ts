@@ -78,7 +78,7 @@ export class UsersModel {
     const query = `
       INSERT INTO users (first_name, last_name, email, password)
       VALUES ($1, $2, $3, $4)
-      RETURNING id, first_name, last_name, email, role, created_at
+      RETURNING id, first_name, last_name, email, role, status, created_at
     `;
 
     const pgPool = this.pgConfig.getPool();
@@ -100,7 +100,7 @@ export class UsersModel {
       this.logger.warn(`Attempting to find user by email: ${email}`);
 
       const query = `
-        SELECT id, first_name, last_name, email, role, created_at
+        SELECT id, first_name, last_name, email, role, status, created_at
         FROM users
         WHERE email = $1 AND status != 'trash'
       `;
@@ -120,7 +120,7 @@ export class UsersModel {
       this.logger.warn(`Attempting to find user by id: ${id}`);
 
       const query = `
-        SELECT id, first_name, last_name, email, role, created_at
+        SELECT id, first_name, last_name, email, role, status, created_at
         FROM users
         WHERE id = $1 AND status != 'trash'
       `;

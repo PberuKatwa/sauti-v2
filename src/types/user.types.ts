@@ -1,5 +1,7 @@
 import type { ApiResponse } from "./api.types";
-import { UserRoles } from "./authSession.types";
+import type { UserRoles } from "./authSession.types";
+
+export type UserStatus = 'active' | 'trash' | 'pending';
 
 export interface BaseUser {
   first_name: string;
@@ -23,8 +25,8 @@ export interface UpdateUserDetailsPayload {
   firstName?: string;
   lastName?: string;
   email?: string;
-  role?: string;
-  status?: string;
+  role?: UserRoles;
+  status?: UserStatus;
 }
 
 export interface AuthUser extends BaseUser {
@@ -49,6 +51,7 @@ export interface UserProfile extends BaseUser {
   last_name: string;
   email: string;
   role: string;
+  status: UserStatus;
   created_at: Date;
 }
 
