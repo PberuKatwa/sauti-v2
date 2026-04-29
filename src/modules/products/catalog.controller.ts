@@ -59,15 +59,19 @@ export class CatalogController{
     }
   }
 
-  @Put('')
+  @Put(':productId')
   async updateCatalogProduct(
     @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
     try {
 
+      const productIdParam = req.params.productId;
+      const productId = Array.isArray(productIdParam) ? parseInt(productIdParam[0]) : parseInt(productIdParam);
+
       const payload: UpdateProductPayload = req.body;
 
+      payload.id = productId;
       await this.catalogSync.updateCatalogProduct(payload);
 
       const response: ApiResponse = {
