@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Req, Res, Query, Param, UseGuards, Delete } from "@nestjs/common";
+import { Controller, Post, Get, Req, Res, Query, Param, UseGuards, Delete, Put } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
@@ -64,83 +64,20 @@ export class ProductsController {
     }
   }
 
-  @Post('catalog')
-  async createCatalogProduct(
-    @Req() req: Request,
-    @Res() res: Response,
-    @CurrentUser() currentUser: BaseAuthSession
-  ): Promise<Response> {
-    try {
-
-      const payload: CreateProductPayload = req.body;
-      console.log("payloaaaddd0,p", payload)
-
-      payload.user_id = currentUser.user_id
-
-      const product = await this.catalogSync.createCatalogProduct(payload);
-
-      const response: MinimalCatalogResponse = {
-        success: true,
-        message: `Successfully created product`,
-        data: product
-      };
-
-      return res.status(200).json(response);
-
-    } catch (error) {
-
-      this.logger.error(`Error creating product`, error);
-
-      const response: ApiResponse = {
-        success: false,
-        message: `${error}`
-      };
-
-      return res.status(500).json(response);
-    }
-  }
-
-  @Post('update')
+  @Put(':productId')
   async updateProduct(
     @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
     try {
 
+      const productIdParam = req.params.productId;
+      const productId = Array.isArray(productIdParam) ? parseInt(productIdParam[0]) : parseInt(productIdParam);
+
       const payload: UpdateProductPayload = req.body;
+      payload.id = productId;
 
       await this.products.updateProduct(payload);
-
-      const response: ApiResponse = {
-        success: true,
-        message: `Successfully updated product`
-      };
-
-      return res.status(200).json(response);
-
-    } catch (error) {
-
-      this.logger.error(`Error updating product`, error);
-
-      const response: ApiResponse = {
-        success: false,
-        message: `${error}`
-      };
-
-      return res.status(500).json(response);
-    }
-  }
-
-  @Post('catalog/update')
-  async updateCatalogProduct(
-    @Req() req: Request,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
-
-      const payload: UpdateProductPayload = req.body;
-
-      await this.catalogSync.updateCatalogProduct(payload);
 
       const response: ApiResponse = {
         success: true,
@@ -200,63 +137,6 @@ export class ProductsController {
     } catch (error) {
 
       this.logger.error(`Error fetching products`, error);
-
-      const response: ApiResponse = {
-        success: false,
-        message: `${error}`
-      };
-
-      return res.status(500).json(response);
-    }
-  }
-
-  @Get('unsynced-products')
-  async fetchUnsyncedProducts(
-    @Req() req: Request,
-    @Res() res:Response
-  ) {
-    try {
-
-      const products = await this.products.getUnsyncedProducts()
-
-      const response: AllUnsyncedProductsApiResponse = {
-        success: true,
-        message: "Successfully fetched unsynced products",
-        data:products
-      }
-
-      return res.status(200).json(response);
-    } catch (error) {
-
-      const response: ApiResponse = {
-        success: false,
-        message:`${error}`
-      }
-
-      this.logger.error(`Error in fetching unsynced products`, error)
-
-      return res.status(500).json(response)
-    }
-  }
-
-  @Post('sync-catalog')
-  async syncCatalogProducts(
-    @Req() req: Request,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
-      const product = await this.catalogSync.syncProducts();
-
-      const response: AllMinimalCatalogResponse = {
-        success: true,
-        message: `Successfully synced products`,
-        data: product
-      };
-
-      return res.status(200).json(response);
-    } catch (error) {
-
-      this.logger.error(`Error in syncing products`, error);
 
       const response: ApiResponse = {
         success: false,
@@ -331,35 +211,4 @@ export class ProductsController {
     }
   }
 
-  @Delete('catalog/:id')
-  async trashCatalogProduct(
-    @Req() req: Request,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
-
-      const idParam = req.params.id;
-      const id = Array.isArray(idParam) ? idParam[0] : idParam;
-
-      await this.catalogSync.deleteCatalogProduct(parseInt(id));
-
-      const response: ApiResponse = {
-        success: true,
-        message: `Successfully trashed product`
-      };
-
-      return res.status(200).json(response);
-
-    } catch (error) {
-
-      this.logger.error(`Error trashing product`, error);
-
-      const response: ApiResponse = {
-        success: false,
-        message: `${error}`
-      };
-
-      return res.status(500).json(response);
-    }
-  }
 }
