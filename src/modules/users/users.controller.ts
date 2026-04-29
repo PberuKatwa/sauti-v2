@@ -1,17 +1,13 @@
-import { Controller, Get, Patch, Req, Res, UseGuards, Body, Put, Query } from "@nestjs/common";
+import { Controller, Get, Req, Res, Body, Put, Query } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
+import { Auth } from "../auth/decorators/auth.decorator";
 import type { ApiResponse } from "../../types/api.types";
 import { UsersModel } from "./users.model";
-import { AuthGuard } from "../auth/guards/auth.guard";
-import { CurrentUser } from "./decorators/user.decorator";
-import type { UserProfile, UpdateUserDetailsPayload, AllUsersApiResponse } from "../../types/user.types";
-import { BaseAuthSession } from "../../types/authSession.types";
-import { RolesGuard } from "../auth/guards/roles.guard";
-import { Roles } from "../auth/decorators/roles.decorator";
+import type { UpdateUserDetailsPayload, AllUsersApiResponse } from "../../types/user.types";
 
 @Controller('users')
-@UseGuards(AuthGuard)
+@Auth('admin')
 export class UsersController {
 
   constructor(
@@ -20,8 +16,6 @@ export class UsersController {
   ) { }
 
   @Get('')
-  @UseGuards(RolesGuard)
-  @Roles('admin')
   async getAllUsers(
     @Query('page') pageQuery: string,
     @Query('limit') limitQuery: string,
@@ -71,8 +65,7 @@ export class UsersController {
   async updateUserDetails(
     @Req() req: Request,
     @Res() res: Response,
-    @Body() payload: UpdateUserDetailsPayload,
-    @CurrentUser() currentUser: BaseAuthSession
+    @Body() payload: UpdateUserDetailsPayload
   ): Promise<Response> {
     try {
 
