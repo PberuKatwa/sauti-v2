@@ -36,6 +36,10 @@ export interface CreateOrderPayload {
   items: OrderItem[];
 }
 
+export interface CreateContactAndOrder extends CreateOrderPayload{
+  clientPhone: number;
+}
+
 export interface UpdateContactPayload {
   orderId: number;
   orderContact?: number;

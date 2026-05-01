@@ -16,6 +16,7 @@ import type {
   AdminOrderRow
 } from "../../types/orders.types";
 import { AuthGuard } from "../auth/guards/auth.guard";
+import { ClientModel } from "../client/client.model";
 
 @Controller('orders')
 @UseGuards(AuthGuard)
@@ -23,8 +24,51 @@ export class OrdersController {
 
   constructor(
     private readonly logger: AppLogger,
-    private readonly orders: OrdersModel
+    private readonly orders: OrdersModel,
+    private readonly clientModel:ClientModel
   ) { }
+
+  @Post('create-client/:clientPhone')
+  async createOrderAndCLient(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const phoneParam = req.params.clientPhone;
+      const phoneNumber = Array.isArray(phoneParam) ? parseInt(phoneParam[0]) : parseInt(phoneParam);
+
+      const client = await this.clientModel.createClient({ phoneNumber });
+
+      const { items } = req.body;
+
+      const payload: CreateOrderPayload = {
+        clientId: client.id,
+        items
+      };
+
+      const order = await this.orders.createOrder(payload);
+
+      const response: SingleOrderApiResponse = {
+        success: true,
+        message: `Successfully created order`,
+        data: order
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error creating order`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
 
   @Post('')
   async createOrder(
