@@ -78,7 +78,7 @@ export class OrdersHandler {
       }
     )
 
-    const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: productItems })
+    const orderCreated = await this.ordersModel.createOrderLimited({ clientId: client.id, items: productItems })
 
     this.logger.info(`Successfully created catalogue order id: ${orderCreated.id}`);
 

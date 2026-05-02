@@ -36,8 +36,9 @@ export interface CreateOrderPayload {
   items: OrderItem[];
 }
 
-export interface CreateContactAndOrder extends CreateOrderPayload{
+export interface CreateContactAndOrder{
   clientPhone: number;
+  items: OrderItem[];
 }
 
 export interface UpdateContactPayload {
@@ -97,6 +98,7 @@ export interface AdminOrderRow {
   order_contact: number;
   delivery_type: 'scheduled' | 'immediate';
   special_instructions: string;
+  rider_phone: number;
   google_maps_link?: string;
   created_at: string;
 }

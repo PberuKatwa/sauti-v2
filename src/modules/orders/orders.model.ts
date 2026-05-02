@@ -184,6 +184,66 @@ export class OrdersModel {
     return order;
   }
 
+  async createOrderLimited(payload: CreateOrderPayload): Promise<OrderProfile> {
+    const { clientId, items } = payload;
+
+    if (!clientId) throw new Error(`Please provide a client id`);
+    if (!items || items.length === 0) throw new Error(`Please provide order items`);
+
+    let subtotal = 0;
+
+    for (const item of items) {
+      subtotal += item.quantity * item.unitPrice;
+    }
+
+    const tax = Math.floor(subtotal * (0.15));
+    const total = subtotal + tax;
+
+    this.logger.warn(`Attempting to create limited order for client: ${clientId}`);
+
+    const query = `
+      WITH existing AS (
+        SELECT COUNT(*) AS cnt
+        FROM orders
+        WHERE client_id = $1
+          AND delivery_status != 'delivered'
+      )
+      INSERT INTO orders (client_id, subtotal, tax, total, items)
+      SELECT $1, $2, $3, $4, $5
+      WHERE (SELECT cnt FROM existing) <= 2
+      RETURNING
+        id,
+        order_number,
+        subtotal,
+        tax,
+        total,
+        delivery_status,
+        order_contact,
+        delivery_type,
+        special_instructions,
+        items;
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, [
+      clientId,
+      subtotal,
+      tax,
+      total,
+      JSON.stringify(items)
+    ]);
+
+    if (result.rowCount === 0) {
+      throw new Error(`Client ${clientId} has more than 2 undelivered orders`);
+    }
+
+    const order: OrderProfile = result.rows[0];
+
+    this.logger.info(`Successfully created limited order id: ${order.id}, order_number: ${order.order_number}`);
+
+    return order;
+  }
+
   async updateContactAndDelivery(payload: UpdateContactPayload): Promise<void> {
 
     const { orderId, orderContact, deliveryType, specialInstructions } = payload;
@@ -490,6 +550,7 @@ export class OrdersModel {
         o.longitude,
         o.order_contact,
         o.delivery_type,
+        o.rider_phone,
         o.special_instructions,
         c.phone_number AS client_phone,
         o.created_at
