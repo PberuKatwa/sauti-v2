@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Req, Res, Param, Body, UseGuards, Query } from "@nestjs/common";
+import { Controller, Post, Get, Patch, Req, Res, Param, Body, UseGuards, Query, Put } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
@@ -8,6 +8,7 @@ import type {
   UpdateContactPayload,
   UpdateLocationPayload,
   UpdateStatusPayload,
+  UpdateOrderPayload,
   SingleOrderApiResponse,
   AllOrdersApiResponse,
   AllAdminOrdersApiResponse,
@@ -252,6 +253,39 @@ export class OrdersController {
     } catch (error) {
 
       this.logger.error(`Error updating order status`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+  @Put(':id')
+  async updateOrder(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const idParam = req.params.id;
+      const orderId = Array.isArray(idParam) ? parseInt(idParam[0]) : parseInt(idParam);
+
+      const payload: UpdateOrderPayload = { ...req.body, orderId };
+      await this.orders.updateOrder(payload);
+
+      const response: ApiResponse = {
+        success: true,
+        message: `Successfully updated order`
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error updating order`, error);
 
       const response: ApiResponse = {
         success: false,

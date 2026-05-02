@@ -49,7 +49,8 @@ export class OrderTripModel{
         delivery_status order_trip_status DEFAULT 'pending_location',
         delivery_cost NUMERIC(10,2),
 
-
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       )
     `
 

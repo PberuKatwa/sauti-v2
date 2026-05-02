@@ -58,6 +58,15 @@ export interface UpdateStatusPayload {
   status: 'pending_location' | 'pending_contact' | 'pending_delivery_type' | 'pending_delivery' | 'enroute' | 'delivered';
 }
 
+export interface UpdateOrderPayload {
+  orderId: number;
+  delivery_status?: OrderStatus;
+  order_contact?: number;
+  delivery_type?: 'scheduled' | 'immediate';
+  special_instructions?: string;
+  rider_phone?: number;
+}
+
 export interface SingleOrderApiResponse extends ApiResponse {
   data: OrderProfile;
 }
