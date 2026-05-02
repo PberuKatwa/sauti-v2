@@ -147,7 +147,7 @@ export class OrdersModel {
       subtotal += item.quantity * item.unitPrice;
     }
 
-    const tax = Math.floor(subtotal * (0.15));
+    const tax = Math.floor(subtotal * (0));
     const total = subtotal + tax;
 
     this.logger.warn(`Attempting to create order for client: ${clientId}`);
@@ -398,6 +398,7 @@ export class OrdersModel {
         delivery_type,
         special_instructions,
         items,
+        rider_phone,
         client_id,
         latitude,
         longitude,
@@ -551,6 +552,7 @@ export class OrdersModel {
         o.order_contact,
         o.delivery_type,
         o.rider_phone,
+        o.items,
         o.special_instructions,
         c.phone_number AS client_phone,
         o.created_at

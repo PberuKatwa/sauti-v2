@@ -27,6 +27,7 @@ export interface OrderProfile extends BaseOrder {
   client_id: number;
   latitude: number | null;
   longitude: number | null;
+  rider_phone: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -99,6 +100,7 @@ export interface AdminOrderRow {
   delivery_type: 'scheduled' | 'immediate';
   special_instructions: string;
   rider_phone: number;
+  items: OrderItem[];
   google_maps_link?: string;
   created_at: string;
 }
