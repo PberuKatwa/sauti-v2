@@ -25,10 +25,12 @@ export class InvoicesModel{
       END
       $$;
 
+      CREATE SEQUENCE IF NOT EXISTS invoice_number_seq START 100;
+
       CREATE TABLE IF NOT EXISTS invoices(
 
         id SERIAL PRIMARY KEY,
-        order_id REFERENCES orders(id) ON DELETE CASCADE,
+        order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
         invoice_number INTEGER NOT NULL UNIQUE DEFAULT NEXTVAL('invoice_number_seq'),
         status row_status DEFAULT 'active',
         payment_status invoice_status DEFAULT 'unpaid',
