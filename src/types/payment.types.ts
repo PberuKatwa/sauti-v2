@@ -42,3 +42,5 @@ export interface AllPayments{
 
 export interface BasePaymentsApiResponse extends ApiResponse<BasePayment> { };
 export interface AllPaymentsApiResponse extends ApiResponse<AllPayments> { };
+export interface SinglePaymentApiResponse extends ApiResponse<PaymentProfile> { };
+export interface PaymentByOrderApiResponse extends ApiResponse<PaymentProfile[]> { };

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
-import { AllPayments, AllPaymentsApiResponse, BasePayment, BasePaymentFilters, CreatePaymentPayload, PaymentSources } from "../../types/payment.types";
+import { AllPayments, AllPaymentsApiResponse, BasePayment, BasePaymentFilters, CreatePaymentPayload, PaymentProfile, PaymentSources } from "../../types/payment.types";
 
 @Injectable()
 export class PaymentsModel{
@@ -126,5 +126,70 @@ export class PaymentsModel{
     };
   }
 
+  async getPayment(id: number): Promise<PaymentProfile> {
+
+    this.logger.warn(`Attempting to fetch payment id: ${id}`);
+
+    const query = `
+      SELECT
+        id,
+        order_id,
+        amount,
+        source,
+        reference,
+        created_at
+      FROM payments
+      WHERE id = $1 AND status != 'trash';
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+    const result = await pgPool.query(query, [id]);
+
+    if (result.rowCount === 0) {
+      throw new Error(`Payment not found`);
+    }
+
+    const payment: PaymentProfile = result.rows[0];
+    return payment;
+  }
+
+  async getPaymentByOrderId(orderId: number): Promise<PaymentProfile[]> {
+
+    this.logger.warn(`Attempting to fetch payment for order id: ${orderId}`);
+
+    const query = `
+      SELECT
+        id,
+        order_id,
+        amount,
+        source,
+        reference,
+        created_at
+      FROM payments
+      WHERE order_id = $1 AND status != 'trash';
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+    const result = await pgPool.query(query, [orderId]);
+
+    const payments: PaymentProfile[] = result.rows;
+    return payments;
+  }
+
+  async trashPayment(id: number): Promise<void> {
+
+    this.logger.warn(`Attempting to trash payment for order id: ${id}`);
+
+    const query = `
+      UPDATE payments
+      SET status = 'trash'
+      WHERE id = $1;
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+    await pgPool.query(query, [id]);
+
+    this.logger.info(`Successfully trashed payment for order id: ${id}`);
+  }
 
 }
