@@ -18,6 +18,7 @@ import { ProductsModule } from "../modules/products/products.module";
 import { ProductsModel } from "../modules/products/products.model";
 import { VerifyTokens } from "../modules/auth/verifyTokens.model";
 import { PaymentsModule } from "../modules/payments/payments.module";
+import { PaymentsModel } from "../modules/payments/payments.model";
 
 @Global()
 @Module({
@@ -39,6 +40,7 @@ export class PostgresModule implements OnModuleInit {
     private readonly authSession: AuthSessionModel,
     private readonly products: ProductsModel,
     private readonly verifyTokens: VerifyTokens,
+    private readonly payments:PaymentsModel
   ) { };
 
   async onModuleInit() {
@@ -54,6 +56,7 @@ export class PostgresModule implements OnModuleInit {
     await this.authSession.createTable()
     await this.products.createTable()
     await this.verifyTokens.createTable()
+    await this.payments.createTable()
   }
 
 }

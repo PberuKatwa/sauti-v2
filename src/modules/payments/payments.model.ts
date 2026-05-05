@@ -16,7 +16,7 @@ export class PaymentsModel{
 
     const query = `
       CREATE TABLE IF NOT EXISTS payments(
-        id PRIMARY SERIAL KEY,
+        id SERIAL PRIMARY KEY,
         order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE SET NULL,
         source VARCHAR(30) NOT NULL,
         reference VARCHAR(30) NOT NULL,
@@ -28,7 +28,12 @@ export class PaymentsModel{
     const pgPool = this.pgConfig.getPool();
     await pgPool.query(query);
 
-    this.logger.info(`Successfully `)
+    this.logger.info(`Successfully created payments table`);
+    return "payments";
+  }
+
+
+  async createPayment() {
 
   }
 
