@@ -99,42 +99,6 @@ export class OrdersModel {
     return "orders";
   }
 
-  async getIncompleteOrders(clientId:number): Promise<OrderProfile> {
-
-    if (!clientId) throw new Error(`Please provide a client id`);
-    const pendingStatuses = ['pending_location', 'pending_contact', 'pending_delivery_type'];
-
-    const query = `
-      SELECT
-        id,
-        order_number,
-        subtotal,
-        tax,
-        total,
-        delivery_status,
-        order_contact,
-        delivery_type,
-        special_instructions,
-        items,
-        client_id,
-        latitude,
-        longitude,
-        created_at,
-        updated_at
-      FROM orders
-      WHERE client_id = $1
-        AND delivery_status = ANY($2)
-      ORDER BY id DESC
-      LIMIT 1;
-    `;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [clientId, pendingStatuses]);
-    const existingOrder:OrderProfile = result.rows[0];
-
-    return existingOrder;
-  }
-
   async createOrder(payload: CreateOrderPayload): Promise<OrderProfile> {
     const { clientId, items } = payload;
 
@@ -147,56 +111,7 @@ export class OrdersModel {
       subtotal += item.quantity * item.unitPrice;
     }
 
-    const tax = Math.floor(subtotal * (0));
-    const total = subtotal + tax;
-
-    this.logger.warn(`Attempting to create order for client: ${clientId}`);
-
-    const query = `
-      INSERT INTO orders (client_id, subtotal, tax, total, items)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING
-        id,
-        order_number,
-        subtotal,
-        tax,
-        total,
-        delivery_status,
-        order_contact,
-        delivery_type,
-        special_instructions,
-        items;
-    `;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [
-      clientId,
-      subtotal,
-      tax,
-      total,
-      JSON.stringify(items)
-    ]);
-
-    const order: OrderProfile = result.rows[0];
-
-    this.logger.info(`Successfully created order id: ${order.id}, order_number: ${order.order_number}`);
-
-    return order;
-  }
-
-  async createOrderLimited(payload: CreateOrderPayload): Promise<OrderProfile> {
-    const { clientId, items } = payload;
-
-    if (!clientId) throw new Error(`Please provide a client id`);
-    if (!items || items.length === 0) throw new Error(`Please provide order items`);
-
-    let subtotal = 0;
-
-    for (const item of items) {
-      subtotal += item.quantity * item.unitPrice;
-    }
-
-    const tax = Math.floor(subtotal * (0.15));
+    const tax = Math.floor(subtotal * (0.0));
     const total = subtotal + tax;
 
     this.logger.warn(`Attempting to create limited order for client: ${clientId}`);
@@ -243,6 +158,44 @@ export class OrdersModel {
 
     return order;
   }
+
+  async getIncompleteOrders(clientId:number): Promise<OrderProfile> {
+
+    if (!clientId) throw new Error(`Please provide a client id`);
+    const pendingStatuses = ['pending_location', 'pending_contact', 'pending_delivery_type'];
+
+    const query = `
+      SELECT
+        id,
+        order_number,
+        subtotal,
+        tax,
+        total,
+        delivery_status,
+        order_contact,
+        delivery_type,
+        special_instructions,
+        items,
+        client_id,
+        latitude,
+        longitude,
+        created_at,
+        updated_at
+      FROM orders
+      WHERE client_id = $1
+        AND delivery_status = ANY($2)
+      ORDER BY id DESC
+      LIMIT 1;
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, [clientId, pendingStatuses]);
+    const existingOrder:OrderProfile = result.rows[0];
+
+    return existingOrder;
+  }
+
+
 
   async updateContactAndDelivery(payload: UpdateContactPayload): Promise<void> {
 
