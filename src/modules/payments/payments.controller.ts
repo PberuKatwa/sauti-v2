@@ -1,11 +1,13 @@
-import { Controller, Post, Get, Req, Res, Delete, Query } from "@nestjs/common";
+import { Controller, Post, Get, Req, Res, Delete, Query, UseGuards } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
 import type { SinglePaymentApiResponse, PaymentByOrderApiResponse, AllPaymentsApiResponse, BasePaymentsApiResponse, CreatePaymentPayload, BasePaymentFilters } from "../../types/payment.types";
 import { PaymentsModel } from "./payments.model";
+import { AuthGuard } from "../auth/guards/auth.guard";
 
 @Controller('payments')
+@UseGuards(AuthGuard)
 export class PaymentsController {
 
   constructor(
