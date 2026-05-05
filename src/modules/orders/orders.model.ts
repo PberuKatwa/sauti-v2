@@ -334,6 +334,69 @@ export class OrdersModel {
     this.logger.info(`Successfully updated rider phone for order: ${orderId}`);
   }
 
+  async completeOrderUpdate(payload: UpdateOrderPayload): Promise<void> {
+    const { orderId, delivery_status, order_contact, delivery_type, special_instructions, rider_phone, latitude, longitude } = payload;
+
+    if (!orderId) throw new Error(`Please provide an order id`);
+
+    this.logger.warn(`Attempting complete update for order: ${orderId}`);
+
+    const updates: string[] = [];
+    const params: (string | number | null)[] = [];
+    let paramIndex = 1;
+
+    if (delivery_status !== undefined) {
+      updates.push(`delivery_status = $${paramIndex}`);
+      params.push(delivery_status);
+      paramIndex++;
+    }
+    if (order_contact !== undefined) {
+      updates.push(`order_contact = $${paramIndex}`);
+      params.push(order_contact);
+      paramIndex++;
+    }
+    if (delivery_type !== undefined) {
+      updates.push(`delivery_type = $${paramIndex}`);
+      params.push(delivery_type);
+      paramIndex++;
+    }
+    if (special_instructions !== undefined) {
+      updates.push(`special_instructions = $${paramIndex}`);
+      params.push(special_instructions);
+      paramIndex++;
+    }
+    if (rider_phone !== undefined) {
+      updates.push(`rider_phone = $${paramIndex}`);
+      params.push(rider_phone);
+      paramIndex++;
+    }
+    if (latitude !== undefined) {
+      updates.push(`latitude = $${paramIndex}`);
+      params.push(latitude);
+      paramIndex++;
+    }
+    if (longitude !== undefined) {
+      updates.push(`longitude = $${paramIndex}`);
+      params.push(longitude);
+      paramIndex++;
+    }
+
+    if (updates.length === 0) throw new Error(`No fields to update`);
+
+    const query = `
+      UPDATE orders
+      SET ${updates.join(',\n          ')}
+      WHERE id = $${paramIndex};
+    `;
+
+    params.push(orderId);
+
+    const pool = this.pgConfig.getPool();
+    await pool.query(query, params);
+
+    this.logger.info(`Successfully completed update for order: ${orderId}`);
+  }
+
 
 
   async fetchOrder(orderId: number): Promise<OrderProfile> {

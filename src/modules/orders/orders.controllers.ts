@@ -296,6 +296,39 @@ export class OrdersController {
     }
   }
 
+  @Put(':id/complete')
+  async completeOrderUpdate(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const idParam = req.params.id;
+      const orderId = Array.isArray(idParam) ? parseInt(idParam[0]) : parseInt(idParam);
+
+      const payload: UpdateOrderPayload = { ...req.body, orderId };
+      await this.orders.completeOrderUpdate(payload);
+
+      const response: ApiResponse = {
+        success: true,
+        message: `Successfully completed order update`
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error completing order update`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
   @Get('/individual/:id')
   async fetchOrder(
     @Req() req: Request,
