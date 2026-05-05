@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
-import { AllPaymentsApiResponse, BasePayment, BasePaymentFilters, CreatePaymentPayload, PaymentSources } from "../../types/payment.types";
+import { AllPayments, AllPaymentsApiResponse, BasePayment, BasePaymentFilters, CreatePaymentPayload, PaymentSources } from "../../types/payment.types";
 
 @Injectable()
 export class PaymentsModel{
@@ -61,7 +61,7 @@ export class PaymentsModel{
     pageInput: number,
     limitInput: number,
     filters: BasePaymentFilters
-  ): Promise<AllPaymentsApiResponse>{
+  ): Promise<AllPayments>{
 
     this.logger.warn(`Attempting to fetch all Payments`);
 
@@ -75,12 +75,55 @@ export class PaymentsModel{
 
     if (filters?.reference) {
       conditions.push(`reference::TEXT ILIKE $${paramIndex}`);
-      params.push(`%${filters.reference}%`)
+      params.push(`%${filters.reference}%`);
       paramIndex++
     }
 
+    if (filters.source) {
+      conditions.push(`source::TEXT ILIKE ${paramIndex}`)
+      params.push(`%${filters.source}%`);
+      paramIndex++;
+    }
 
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
+    const query = `
+      SELECT
+        id,
+        order_id,
+        amount,
+        source,
+        reference,
+        created_at
+      FROM payments
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1};
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*)
+      FROM payments
+      ${whereClause};
+    `;
+    const dataParams = [...params, limit, offset];
+
+    const pgPool = this.pgConfig.getPool();
+    const [dataResult, paginationResult] = await Promise.all([
+      pgPool.query(query, dataParams),
+      pgPool.query(countQuery, params)
+    ]);
+
+    const totalCount = parseInt(paginationResult.rows[0].count);
+
+    return {
+      payments: dataResult.rows,
+      pagination: {
+        totalCount,
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    };
   }
 
 
