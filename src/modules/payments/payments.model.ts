@@ -43,7 +43,7 @@ export class PaymentsModel{
     const query = `
       INSERT INTO payments(source, reference, order_id, amount)
       VALUES ( $1, $2, $3, $4)
-      RETURNING source, reference;
+      RETURNING source, amount;
     `
 
     const pgPool = this.pgConfig.getPool();
@@ -55,6 +55,8 @@ export class PaymentsModel{
 
     return payment;
   }
+
+  async getPayment
 
 
 }
