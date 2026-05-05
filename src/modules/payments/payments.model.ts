@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
-import { BasePayment, CreatePaymentPayload } from "../../types/payment.types";
+import { AllPaymentsApiResponse, BasePayment, BasePaymentFilters, CreatePaymentPayload, PaymentSources } from "../../types/payment.types";
 
 @Injectable()
 export class PaymentsModel{
@@ -19,9 +19,10 @@ export class PaymentsModel{
       CREATE TABLE IF NOT EXISTS payments(
         id SERIAL PRIMARY KEY,
         order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE SET NULL,
+        status row_status DEFAULT 'active',
+        amount INTEGER NOT NULL,
         source VARCHAR(30) NOT NULL,
         reference VARCHAR(30) NOT NULL,
-        amount INTEGER NOT NULL,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       );
     `
@@ -56,7 +57,31 @@ export class PaymentsModel{
     return payment;
   }
 
-  async getPayment
+  async getAllPayments(
+    pageInput: number,
+    limitInput: number,
+    filters: BasePaymentFilters
+  ): Promise<AllPaymentsApiResponse>{
+
+    this.logger.warn(`Attempting to fetch all Payments`);
+
+    const page = pageInput ? pageInput : 1;
+    const limit = limitInput ? limitInput : 10;
+    const offset = (page - 1) * limit;
+
+    const conditions: string[] = [`status != 'trash'`];
+    const params: (string | number | PaymentSources[])[] = [];
+    let paramIndex = 1;
+
+    if (filters?.reference) {
+      conditions.push(`reference::TEXT ILIKE $${paramIndex}`);
+      params.push(`%${filters.reference}%`)
+      paramIndex++
+    }
+
+
+
+  }
 
 
 }
