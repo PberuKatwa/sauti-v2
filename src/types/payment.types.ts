@@ -1,3 +1,5 @@
+import { ApiResponse } from "./api.types";
+
 export type PaymentSources =
   | 'MPESA'
   | 'AIRTEL_MONEY'
@@ -23,3 +25,20 @@ export interface PaymentProfile extends BasePayment{
   reference: string;
   created_at: Date;
 }
+
+export interface BasePaymentFilters{
+  source?: PaymentSources;
+  reference?: string;
+}
+
+export interface AllPayments{
+  payments: PaymentProfile[];
+  pagination: {
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+  };
+}
+
+export interface BasePaymentsApiResponse extends ApiResponse<BasePayment> { };
+export interface AllPaymentsApiResponse extends ApiResponse<AllPayments> { };
