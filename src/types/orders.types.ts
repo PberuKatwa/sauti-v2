@@ -67,6 +67,8 @@ export interface UpdateOrderPayload {
   delivery_type?: 'scheduled' | 'immediate';
   special_instructions?: string;
   rider_phone?: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface SingleOrderApiResponse extends ApiResponse {
