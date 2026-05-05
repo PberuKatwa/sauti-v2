@@ -195,7 +195,58 @@ export class OrdersModel {
     return existingOrder;
   }
 
+  async updateOrder(payload: UpdateOrderPayload): Promise<void> {
+    const { orderId, delivery_status, order_contact, delivery_type, special_instructions, rider_phone } = payload;
 
+    if (!orderId) throw new Error(`Please provide an order id`);
+
+    this.logger.warn(`Attempting to update order: ${orderId}`);
+
+    const updates: string[] = [];
+    const params: (string | number | null)[] = [];
+    let paramIndex = 1;
+
+    if (delivery_status !== undefined) {
+      updates.push(`delivery_status = $${paramIndex}`);
+      params.push(delivery_status);
+      paramIndex++;
+    }
+    if (order_contact !== undefined) {
+      updates.push(`order_contact = $${paramIndex}`);
+      params.push(order_contact);
+      paramIndex++;
+    }
+    if (delivery_type !== undefined) {
+      updates.push(`delivery_type = $${paramIndex}`);
+      params.push(delivery_type);
+      paramIndex++;
+    }
+    if (special_instructions !== undefined) {
+      updates.push(`special_instructions = $${paramIndex}`);
+      params.push(special_instructions);
+      paramIndex++;
+    }
+    if (rider_phone !== undefined) {
+      updates.push(`rider_phone = $${paramIndex}`);
+      params.push(rider_phone);
+      paramIndex++;
+    }
+
+    if (updates.length === 0) throw new Error(`No fields to update`);
+
+    const query = `
+      UPDATE orders
+      SET ${updates.join(',\n          ')}
+      WHERE id = $${paramIndex};
+    `;
+
+    params.push(orderId);
+
+    const pool = this.pgConfig.getPool();
+    await pool.query(query, params);
+
+    this.logger.info(`Successfully updated order: ${orderId}`);
+  }
 
   async updateContactAndDelivery(payload: UpdateContactPayload): Promise<void> {
 
@@ -283,58 +334,7 @@ export class OrdersModel {
     this.logger.info(`Successfully updated rider phone for order: ${orderId}`);
   }
 
-  async updateOrder(payload: UpdateOrderPayload): Promise<void> {
-    const { orderId, delivery_status, order_contact, delivery_type, special_instructions, rider_phone } = payload;
 
-    if (!orderId) throw new Error(`Please provide an order id`);
-
-    this.logger.warn(`Attempting to update order: ${orderId}`);
-
-    const updates: string[] = [];
-    const params: (string | number | null)[] = [];
-    let paramIndex = 1;
-
-    if (delivery_status !== undefined) {
-      updates.push(`delivery_status = $${paramIndex}`);
-      params.push(delivery_status);
-      paramIndex++;
-    }
-    if (order_contact !== undefined) {
-      updates.push(`order_contact = $${paramIndex}`);
-      params.push(order_contact);
-      paramIndex++;
-    }
-    if (delivery_type !== undefined) {
-      updates.push(`delivery_type = $${paramIndex}`);
-      params.push(delivery_type);
-      paramIndex++;
-    }
-    if (special_instructions !== undefined) {
-      updates.push(`special_instructions = $${paramIndex}`);
-      params.push(special_instructions);
-      paramIndex++;
-    }
-    if (rider_phone !== undefined) {
-      updates.push(`rider_phone = $${paramIndex}`);
-      params.push(rider_phone);
-      paramIndex++;
-    }
-
-    if (updates.length === 0) throw new Error(`No fields to update`);
-
-    const query = `
-      UPDATE orders
-      SET ${updates.join(',\n          ')}
-      WHERE id = $${paramIndex};
-    `;
-
-    params.push(orderId);
-
-    const pool = this.pgConfig.getPool();
-    await pool.query(query, params);
-
-    this.logger.info(`Successfully updated order: ${orderId}`);
-  }
 
   async fetchOrder(orderId: number): Promise<OrderProfile> {
     this.logger.warn(`Attempting to fetch order id: ${orderId}`);
