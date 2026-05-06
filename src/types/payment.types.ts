@@ -1,4 +1,4 @@
-import { ApiResponse } from "./api.types";
+import type { ApiResponse } from "./api.types";
 
 export type PaymentSources =
   | 'MPESA'

@@ -1,5 +1,5 @@
 import type { ApiResponse } from "./api.types";
-import { BasePayment, PaymentStatus } from "./payment.types";
+import type { BasePayment, PaymentStatus } from "./payment.types";
 
 export type OrderStatus = 'pending_location' | 'pending_contact' | 'pending_delivery_type' | 'pending_delivery' | 'enroute' | 'delivered';
 

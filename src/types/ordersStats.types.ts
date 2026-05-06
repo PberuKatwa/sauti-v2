@@ -1,5 +1,5 @@
-import { ApiResponse } from "./api.types";
-import { OrderStatus } from "./orders.types";
+import type { ApiResponse } from "./api.types";
+import type { OrderStatus } from "./orders.types";
 
 export interface TotalOrdersStats {
   count: number;
