@@ -92,20 +92,18 @@ export class OrderCompletionHandler{
   private readonly fieldCompletionMap: Record<OrderCompleteType, (
     userMessage: string,
     recipient: number,
-    order: OrderProfile,
-    updateOrder: UpdateOrderPayload
+    order: OrderProfile
   ) => Promise<any>> = {
-    'COMPLETE_CONTACT': (userMessage, recipient, order, updateOrder)=> this.completeOrderContact(userMessage, recipient, order, updateOrder),
-    'COMPLETE_LOCATION': (userMessage, recipient, order, updateOrder)=> this.completeOrderLocation(userMessage, recipient, order, updateOrder),
-    'COMPLETE_SPECIAL_INSTRUCTIONS': (userMessage, recipient, order, updateOrder) => this.completeOrderSpecialInstructions(userMessage, recipient, order, updateOrder),
-    'COMPLETE_DELIVERY_TYPE': (userMessage, recipient, order, updateOrder)=> this.completeOrderSpecialInstructions(userMessage, recipient, order, updateOrder),
+    'COMPLETE_CONTACT': (userMessage, recipient, order)=> this.completeOrderContact(userMessage, recipient, order),
+    'COMPLETE_LOCATION': (userMessage, recipient, order)=> this.completeOrderLocation(userMessage, recipient, order),
+    'COMPLETE_SPECIAL_INSTRUCTIONS': (userMessage, recipient, order) => this.completeOrderSpecialInstructions(userMessage, recipient, order),
+    'COMPLETE_DELIVERY_TYPE': (userMessage, recipient, order)=> this.completeOrderSpecialInstructions(userMessage, recipient, order),
   };
 
   private async completeOrderContact(
     userMessage: string,
     recipient: number,
-    order:OrderProfile,
-    updateOrder: UpdateOrderPayload
+    order:OrderProfile
   ):Promise<OrderProfile> {
     try {
 
@@ -113,10 +111,8 @@ export class OrderCompletionHandler{
 
       if (!isValid) throw new Error(`Phone number is invalid`);
 
-      updateOrder.order_contact = phone;
       order.order_contact = phone;
-      // await this.ordersModel.updateContactAndDelivery(updateOrder);
-      await this.ordersModel.completeOrderUpdate(updateOrder)
+      await this.ordersModel.completeOrderUpdate({ orderId: order.id, order_contact: phone });
 
       return order
     } catch (error) {
@@ -129,16 +125,12 @@ export class OrderCompletionHandler{
   private async completeOrderLocation(
     userMessage: string,
     recipient: number,
-    order:OrderProfile,
-    updateOrder: UpdateOrderPayload
+    order:OrderProfile
   ):Promise<OrderProfile> {
     try {
 
       const { latitude, longitude } = this.textToLocation(userMessage);
-      updateOrder.latitude = latitude;
-      updateOrder.longitude = longitude;
-      await this.ordersModel.completeOrderUpdate(updateOrder)
-
+      await this.ordersModel.completeOrderUpdate({orderId:order.id, latitude, longitude})
 
       order.latitude = latitude;
       order.longitude = longitude;
@@ -154,14 +146,12 @@ export class OrderCompletionHandler{
   private async completeOrderSpecialInstructions(
     userMessage: string,
     recipient: number,
-    order:OrderProfile,
-    updateOrder: UpdateOrderPayload
+    order:OrderProfile
   ):Promise<OrderProfile> {
     try {
 
-      updateOrder.special_instructions = userMessage;
       order.special_instructions = userMessage;
-      await this.ordersModel.completeOrderUpdate(updateOrder)
+      await this.ordersModel.completeOrderUpdate({ orderId: order.id, special_instructions: userMessage });
 
       return order;
     } catch (error) {
@@ -196,30 +186,12 @@ export class OrderCompletionHandler{
       return false;
     }
 
-    const updateOrder: UpdateContactPayload = {
-      orderId: order.id,
-      deliveryType: order.delivery_type,
-      orderContact: order.order_contact,
-      specialInstructions: order.special_instructions
-    };
-
-    const uupdateOrder: UpdateOrderPayload = {
-      orderId: order.id,
-      delivery_type: order.delivery_type,
-      order_contact: order.order_contact,
-      special_instructions: order.special_instructions,
-      latitude: order.latitude,
-      longitude: order.longitude,
-      delivery_status:order.delivery_status
-    }
-
     const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
-
     if (completionState) {
       this.logger.info(`Processing completion step: ${completionState} for order ${order.order_number}`);
 
       const handler = this.fieldCompletionMap[completionState];
-      order = await handler(userMessage, recipientInt, order, updateOrder);
+      order = await handler(userMessage, recipientInt, order);
 
       if (!order) {
         this.logger.warn(`Handler returned null for step ${completionState}, stopping flow.`);
@@ -258,7 +230,7 @@ export class OrderCompletionHandler{
     this.logger.info(`Order completion flow processed for order ${order.order_number}`);
 
     if (order.latitude && order.longitude && order.order_contact && order.delivery_type && order.special_instructions) {
-      await this.ordersModel.updateStatus({ orderId: order.id, status: "pending_delivery" });
+      await this.ordersModel.updateOrder({ orderId: order.id, delivery_status: "pending_delivery" });
       order.delivery_status = "pending_delivery";
       await this.orderHandler.sendOrder(recipient, order);
     }
