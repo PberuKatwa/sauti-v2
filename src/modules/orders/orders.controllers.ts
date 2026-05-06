@@ -232,10 +232,6 @@ export class OrdersController {
     }
   }
 
-
-
-
-
   @Get('client/:clientId/latest')
   async fetchLatestOrderByClient(
     @Req() req: Request,
