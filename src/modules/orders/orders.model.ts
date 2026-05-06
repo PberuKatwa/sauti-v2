@@ -10,6 +10,7 @@ import type {
   AllAdminOrders,
   OrderStatus,
   FullOrderFilters,
+  AdminOrder,
 } from "../../types/orders.types";
 
 @Injectable()
@@ -368,6 +369,105 @@ export class OrdersModel {
         totalPages: Math.ceil(totalCount / limit)
       }
     };
+  }
+
+  async fetchOrderWithPayments(
+    orderId: number
+  ): Promise<AdminOrder | null> {
+
+    this.logger.warn(`Attempting to fetch order with id: ${orderId}`);
+
+    const query = `
+      SELECT
+        o.id,
+        o.client_id,
+
+        o.order_number,
+
+        o.total,
+
+        o.delivery_status,
+
+        o.latitude,
+        o.longitude,
+
+        o.order_contact,
+
+        o.delivery_type,
+
+        o.rider_phone,
+
+        o.items,
+
+        o.special_instructions,
+
+        o.created_at,
+        o.updated_at,
+
+        c.phone_number AS client_phone,
+
+        COALESCE(SUM(p.amount), 0) AS total_paid,
+
+        CASE
+          WHEN COALESCE(SUM(p.amount), 0) = 0
+            THEN 'unpaid'
+
+          WHEN COALESCE(SUM(p.amount), 0) < o.total
+            THEN 'partially_paid'
+
+          WHEN COALESCE(SUM(p.amount), 0) = o.total
+            THEN 'paid'
+
+          WHEN COALESCE(SUM(p.amount), 0) > o.total
+            THEN 'overpaid'
+        END AS payment_status,
+
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'source', p.source,
+              'reference', p.reference,
+              'amount', p.amount
+            )
+            ORDER BY p.created_at DESC
+          ) FILTER (WHERE p.id IS NOT NULL),
+          '[]'
+        ) AS payments
+
+      FROM orders o
+
+      LEFT JOIN clients c
+        ON o.client_id = c.id
+
+      LEFT JOIN payments p
+        ON p.order_id = o.id
+        AND p.status != 'trash'
+
+      WHERE
+        o.id = $1
+        AND o.status != 'trash'
+
+      GROUP BY
+        o.id,
+        c.phone_number;
+    `;
+
+    const pgPool = this.pgConfig.getPool();
+
+    const result = await pgPool.query(query, [orderId]);
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const order = result.rows[0];
+
+    if (order.latitude && order.longitude) {
+      order.google_maps_link =
+        `https://www.google.com/maps?q=${order.latitude},${order.longitude}`;
+    }
+
+    return order;
   }
 
   async getIncompleteOrders(clientId:number): Promise<OrderProfile> {
