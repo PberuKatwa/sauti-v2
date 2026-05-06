@@ -24,32 +24,19 @@ export interface BaseOrder {
 
 export interface OrderProfile extends BaseOrder {
   client_id: number;
-  client_phone: number | null;
   latitude: string | number;
   longitude: string| number;
   rider_phone: number | null;
-  payments: BasePayment[] | null;
-  payment_status: PaymentStatus;
-  google_maps_link?: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface AdminOrderRow {
-  id: number;
-  order_number: number;
-  total: number;
-  delivery_status: OrderStatus;
+export interface AdminOrder extends OrderProfile {
   client_phone: number | null;
-  latitude: string | number;
-  longitude: string| number;
-  order_contact: number;
-  delivery_type: 'scheduled' | 'immediate';
-  special_instructions: string;
-  rider_phone: number;
-  items: OrderItem[];
+  payments: BasePayment[] | null;
+  payment_status: PaymentStatus;
+  total_paid: number;
   google_maps_link?: string;
-  created_at: string;
 }
 
 export interface AllCompleteOrders {
@@ -60,6 +47,20 @@ export interface AllCompleteOrders {
     totalPages: number;
   };
 }
+
+export interface AllAdminOrders {
+  orders: AdminOrder[];
+  pagination: {
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+  };
+}
+
+export interface AllOrdersApiResponse extends ApiResponse<AllCompleteOrders> { };
+export interface ApiResponseCompleteOrder extends ApiResponse<AllCompleteOrders> { };
+export interface AllAdminOrdersApiResponse extends ApiResponse<AllAdminOrders> { };
+export interface SingleOrderApiResponse extends ApiResponse<OrderProfile> { };
 
 export interface CreateOrderPayload {
   clientId: number;
@@ -82,12 +83,6 @@ export interface UpdateOrderPayload {
   longitude?: number;
 }
 
-export interface AllOrdersApiResponse extends ApiResponse {
-  data: OrderProfile[];
-}
-
-export interface ApiResponseCompleteOrder extends ApiResponse<AllCompleteOrders>{}
-
 export interface BaseOrderFilters {
   startDate?: string;
   endDate?: string;
@@ -99,24 +94,9 @@ export interface FullOrderFilters extends BaseOrderFilters {
   clientPhone?: string;
 }
 
-
-
-export interface AllAdminOrders {
-  orders: AdminOrderRow[];
-  pagination: {
-    totalCount: number;
-    currentPage: number;
-    totalPages: number;
-  };
-}
-
 export interface TotalOrdersStats {
   count: number;
   totalValue: number
-}
-
-export interface AllAdminOrdersApiResponse extends ApiResponse {
-  data: AllAdminOrders;
 }
 
 export interface TotalOrdersStatsApiResponse extends ApiResponse {
@@ -137,8 +117,4 @@ export interface MonthlyOrderStat {
 
 export interface MonthlyOrdersStatsApiResponse extends ApiResponse {
   data: MonthlyOrderStat[];
-}
-
-export interface SingleOrderApiResponse extends ApiResponse {
-  data: OrderProfile;
 }

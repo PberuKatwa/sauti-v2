@@ -220,349 +220,7 @@ export class OrdersModel {
     this.logger.info(`Successfully completed update for order: ${orderId}`);
   }
 
-  async getIncompleteOrders(clientId:number): Promise<OrderProfile> {
-
-    if (!clientId) throw new Error(`Please provide a client id`);
-    const pendingStatuses = ['pending_location', 'pending_contact', 'pending_delivery_type'];
-
-    const query = `
-      SELECT
-        id,
-        order_number,
-        subtotal,
-        tax,
-        total,
-        delivery_status,
-        order_contact,
-        delivery_type,
-        special_instructions,
-        items,
-        client_id,
-        latitude,
-        longitude,
-        created_at,
-        updated_at
-      FROM orders
-      WHERE client_id = $1
-        AND delivery_status = ANY($2)
-      ORDER BY id DESC
-      LIMIT 1;
-    `;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [clientId, pendingStatuses]);
-    const existingOrder:OrderProfile = result.rows[0];
-
-    return existingOrder;
-  }
-
-  async fetchOrder(orderId: number): Promise<OrderProfile> {
-    this.logger.warn(`Attempting to fetch order id: ${orderId}`);
-
-    const query = `
-      SELECT
-        id,
-        order_number,
-        subtotal,
-        tax,
-        total,
-        delivery_status,
-        order_contact,
-        delivery_type,
-        special_instructions,
-        items,
-        rider_phone,
-        client_id,
-        latitude,
-        longitude,
-        created_at,
-        updated_at
-      FROM orders
-      WHERE id = $1;
-    `;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [orderId]);
-
-    if (result.rowCount === 0) {
-      throw new Error(`Order not found`);
-    }
-
-    const order: OrderProfile = result.rows[0];
-
-    return order;
-  }
-
-  async fetchLatestOrderByClient(clientId: number): Promise<OrderProfile> {
-    this.logger.warn(`Attempting to fetch latest order for client id: ${clientId}`);
-
-    const query = `
-      SELECT
-        id,
-        order_number,
-        subtotal,
-        tax,
-        total,
-        delivery_status,
-        order_contact,
-        delivery_type,
-        special_instructions,
-        items,
-        client_id,
-        latitude,
-        longitude,
-        created_at,
-        updated_at
-      FROM orders
-      WHERE client_id = $1
-      ORDER BY id DESC
-      LIMIT 1;
-    `;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [clientId]);
-
-    if (result.rowCount === 0) {
-      throw new Error(`No orders found for client id ${clientId}`);
-    }
-
-    const order: OrderProfile = result.rows[0];
-
-    return order;
-  }
-
-  async fetchClientOrders(clientId: number): Promise<OrderProfile[]> {
-    this.logger.warn(`Attempting to fetch orders for client: ${clientId}`);
-
-    const query = `
-      SELECT
-        id,
-        order_number,
-        subtotal,
-        tax,
-        total,
-        delivery_status,
-        order_contact,
-        delivery_type,
-        special_instructions,
-        items,
-        client_id,
-        latitude,
-        longitude,
-        created_at,
-        updated_at
-      FROM orders
-      WHERE client_id = $1
-      ORDER BY created_at DESC;
-    `;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [clientId]);
-
-    const orders: OrderProfile[] = result.rows;
-
-    return orders;
-  }
-
   async fetchAllOrders(
-    pageInput: number,
-    limitInput: number,
-    filters: FullOrderFilters
-  ): Promise<AllAdminOrders> {
-    this.logger.warn(`Attempting to fetch all orders page: ${pageInput}, limit: ${limitInput}`);
-
-    const page = pageInput ? pageInput : 1;
-    const limit = limitInput ? limitInput : 10;
-    const offset = (page - 1) * limit;
-
-    const conditions: string[] = [`o.status != 'trash'`];
-    const params: (string | number | OrderStatus[])[] = [];
-    let paramIndex = 1;
-
-    // Add filters
-    if (filters?.orderNumber) {
-      conditions.push(`o.order_number::TEXT ILIKE $${paramIndex}`);
-      params.push(`%${filters.orderNumber}%`);
-      paramIndex++;
-    }
-
-    if (filters?.clientPhone) {
-      conditions.push(`c.phone_number::TEXT ILIKE $${paramIndex}`);
-      params.push(`%${filters.clientPhone}%`);
-      paramIndex++;
-    }
-
-    if (filters?.startDate) {
-      conditions.push(`o.created_at >= $${paramIndex}`);
-      params.push(filters.startDate);
-      paramIndex++;
-    }
-
-    if (filters?.endDate) {
-      conditions.push(`o.created_at <= $${paramIndex}`);
-      params.push(filters.endDate);
-      paramIndex++;
-    }
-
-    if (filters?.statuses && filters.statuses.length > 0) {
-      conditions.push(`o.delivery_status = ANY($${paramIndex})`);
-      params.push(filters.statuses as any);
-      paramIndex++;
-    }
-
-    const whereClause = `WHERE ${conditions.join(' AND ')}`;
-
-    const dataQuery = `
-      SELECT
-        o.id,
-        o.order_number,
-        o.total,
-        o.delivery_status,
-        o.latitude,
-        o.longitude,
-        o.order_contact,
-        o.delivery_type,
-        o.rider_phone,
-        o.items,
-        o.special_instructions,
-        c.phone_number AS client_phone,
-        o.created_at
-      FROM orders o
-      LEFT JOIN clients c ON o.client_id = c.id
-      ${whereClause}
-      ORDER BY o.created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1};
-    `;
-
-    const countQuery = `
-      SELECT COUNT(*)
-      FROM orders o
-      LEFT JOIN clients c ON o.client_id = c.id
-      ${whereClause};
-    `;
-
-    // Add limit and offset to params for data query
-    const dataParams = [...params, limit, offset];
-
-    const pgPool = this.pgConfig.getPool();
-    const [dataResult, paginationResult] = await Promise.all([
-      pgPool.query(dataQuery, dataParams),
-      pgPool.query(countQuery, params)
-    ]);
-
-    const totalCount = parseInt(paginationResult.rows[0].count);
-
-    return {
-      orders: dataResult.rows,
-      pagination: {
-        totalCount,
-        currentPage: page,
-        totalPages: Math.ceil(totalCount / limit)
-      }
-    };
-  }
-
-  async getTotalOrdersStats(filters: BaseOrderFilters): Promise<TotalOrdersStats> {
-    this.logger.warn(`Attempting to fetch total orders stats`);
-
-    const conditions: string[] = [];
-    const params: (string | OrderStatus[])[] = [];
-    let paramIndex = 1;
-
-    if (filters.startDate) {
-      conditions.push(`created_at >= $${paramIndex}`);
-      params.push(filters.startDate);
-      paramIndex++;
-    }
-
-    if (filters.endDate) {
-      conditions.push(`created_at <= $${paramIndex}`);
-      params.push(filters.endDate);
-      paramIndex++;
-    }
-
-    if (filters.statuses && filters.statuses.length > 0) {
-      conditions.push(`delivery_status = ANY($${paramIndex})`);
-      params.push(filters.statuses as any);
-      paramIndex++;
-    }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-
-    const query = `
-      SELECT
-        COUNT(*) AS count,
-        COALESCE(SUM(total), 0) AS total_value
-      FROM orders
-      ${whereClause};
-    `;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, params);
-
-    return {
-      count: parseInt(result.rows[0].count),
-      totalValue: parseFloat(result.rows[0].total_value),
-    };
-  }
-
-  async getMonthlyOrderTotals(filters: MonthlyOrderFilter): Promise<MonthlyOrderStat[]> {
-    const year = filters?.year || new Date().getFullYear();
-    const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-
-    this.logger.warn(`Attempting to fetch monthly order totals for year: ${year}`);
-
-    const conditions: string[] = [`EXTRACT(YEAR FROM created_at) = $1`];
-    const params: (string | number | OrderStatus)[] = [year];
-    let paramIndex = 2;
-
-    if (filters?.status) {
-      conditions.push(`delivery_status = $${paramIndex}`);
-      params.push(filters.status);
-      paramIndex++;
-    }
-
-    const whereClause = `WHERE ${conditions.join(' AND ')}`;
-
-    const query = `
-      SELECT
-        EXTRACT(MONTH FROM created_at) AS month,
-        COALESCE(SUM(total), 0) AS total_value,
-        COUNT(*) AS order_count
-      FROM orders
-      ${whereClause}
-      GROUP BY EXTRACT(MONTH FROM created_at);
-    `;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, params);
-
-    const monthlyMap = new Map<number, { totalValue: number; orderCount: number }>();
-    for (const row of result.rows) {
-      monthlyMap.set(parseInt(row.month), {
-        totalValue: parseFloat(row.total_value),
-        orderCount: parseInt(row.order_count)
-      });
-    }
-
-    const monthlyStats: MonthlyOrderStat[] = [];
-    for (let m = 1; m <= 12; m++) {
-      const data = monthlyMap.get(m);
-      monthlyStats.push({
-        month: m,
-        monthName: monthNames[m - 1],
-        totalValue: data ? data.totalValue : 0,
-        orderCount: data ? data.orderCount : 0
-      });
-    }
-
-    return monthlyStats;
-  }
-
-  async fetchAllOrdersWithPayments(
     pageInput: number,
     limitInput: number,
     filters: FullOrderFilters
@@ -713,4 +371,250 @@ export class OrdersModel {
       }
     };
   }
+
+  async getIncompleteOrders(clientId:number): Promise<OrderProfile> {
+
+    if (!clientId) throw new Error(`Please provide a client id`);
+    const pendingStatuses = ['pending_location', 'pending_contact', 'pending_delivery_type'];
+
+    const query = `
+      SELECT
+        id,
+        order_number,
+        subtotal,
+        tax,
+        total,
+        delivery_status,
+        order_contact,
+        delivery_type,
+        special_instructions,
+        items,
+        client_id,
+        latitude,
+        longitude,
+        created_at,
+        updated_at
+      FROM orders
+      WHERE client_id = $1
+        AND delivery_status = ANY($2)
+      ORDER BY id DESC
+      LIMIT 1;
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, [clientId, pendingStatuses]);
+    const existingOrder:OrderProfile = result.rows[0];
+
+    return existingOrder;
+  }
+
+  async fetchOrder(orderId: number): Promise<OrderProfile> {
+    this.logger.warn(`Attempting to fetch order id: ${orderId}`);
+
+    const query = `
+      SELECT
+        id,
+        order_number,
+        subtotal,
+        tax,
+        total,
+        delivery_status,
+        order_contact,
+        delivery_type,
+        special_instructions,
+        items,
+        rider_phone,
+        client_id,
+        latitude,
+        longitude,
+        created_at,
+        updated_at
+      FROM orders
+      WHERE id = $1;
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, [orderId]);
+
+    if (result.rowCount === 0) {
+      throw new Error(`Order not found`);
+    }
+
+    const order: OrderProfile = result.rows[0];
+
+    return order;
+  }
+
+  async fetchLatestOrderByClient(clientId: number): Promise<OrderProfile> {
+    this.logger.warn(`Attempting to fetch latest order for client id: ${clientId}`);
+
+    const query = `
+      SELECT
+        id,
+        order_number,
+        subtotal,
+        tax,
+        total,
+        delivery_status,
+        order_contact,
+        delivery_type,
+        special_instructions,
+        items,
+        client_id,
+        latitude,
+        longitude,
+        created_at,
+        updated_at
+      FROM orders
+      WHERE client_id = $1
+      ORDER BY id DESC
+      LIMIT 1;
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, [clientId]);
+
+    if (result.rowCount === 0) {
+      throw new Error(`No orders found for client id ${clientId}`);
+    }
+
+    const order: OrderProfile = result.rows[0];
+
+    return order;
+  }
+
+  async fetchClientOrders(clientId: number): Promise<OrderProfile[]> {
+    this.logger.warn(`Attempting to fetch orders for client: ${clientId}`);
+
+    const query = `
+      SELECT
+        id,
+        order_number,
+        subtotal,
+        tax,
+        total,
+        delivery_status,
+        order_contact,
+        delivery_type,
+        special_instructions,
+        items,
+        client_id,
+        latitude,
+        longitude,
+        created_at,
+        updated_at
+      FROM orders
+      WHERE client_id = $1
+      ORDER BY created_at DESC;
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, [clientId]);
+
+    const orders: OrderProfile[] = result.rows;
+
+    return orders;
+  }
+
+  async getTotalOrdersStats(filters: BaseOrderFilters): Promise<TotalOrdersStats> {
+    this.logger.warn(`Attempting to fetch total orders stats`);
+
+    const conditions: string[] = [];
+    const params: (string | OrderStatus[])[] = [];
+    let paramIndex = 1;
+
+    if (filters.startDate) {
+      conditions.push(`created_at >= $${paramIndex}`);
+      params.push(filters.startDate);
+      paramIndex++;
+    }
+
+    if (filters.endDate) {
+      conditions.push(`created_at <= $${paramIndex}`);
+      params.push(filters.endDate);
+      paramIndex++;
+    }
+
+    if (filters.statuses && filters.statuses.length > 0) {
+      conditions.push(`delivery_status = ANY($${paramIndex})`);
+      params.push(filters.statuses as any);
+      paramIndex++;
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const query = `
+      SELECT
+        COUNT(*) AS count,
+        COALESCE(SUM(total), 0) AS total_value
+      FROM orders
+      ${whereClause};
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, params);
+
+    return {
+      count: parseInt(result.rows[0].count),
+      totalValue: parseFloat(result.rows[0].total_value),
+    };
+  }
+
+  async getMonthlyOrderTotals(filters: MonthlyOrderFilter): Promise<MonthlyOrderStat[]> {
+    const year = filters?.year || new Date().getFullYear();
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    this.logger.warn(`Attempting to fetch monthly order totals for year: ${year}`);
+
+    const conditions: string[] = [`EXTRACT(YEAR FROM created_at) = $1`];
+    const params: (string | number | OrderStatus)[] = [year];
+    let paramIndex = 2;
+
+    if (filters?.status) {
+      conditions.push(`delivery_status = $${paramIndex}`);
+      params.push(filters.status);
+      paramIndex++;
+    }
+
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
+
+    const query = `
+      SELECT
+        EXTRACT(MONTH FROM created_at) AS month,
+        COALESCE(SUM(total), 0) AS total_value,
+        COUNT(*) AS order_count
+      FROM orders
+      ${whereClause}
+      GROUP BY EXTRACT(MONTH FROM created_at);
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, params);
+
+    const monthlyMap = new Map<number, { totalValue: number; orderCount: number }>();
+    for (const row of result.rows) {
+      monthlyMap.set(parseInt(row.month), {
+        totalValue: parseFloat(row.total_value),
+        orderCount: parseInt(row.order_count)
+      });
+    }
+
+    const monthlyStats: MonthlyOrderStat[] = [];
+    for (let m = 1; m <= 12; m++) {
+      const data = monthlyMap.get(m);
+      monthlyStats.push({
+        month: m,
+        monthName: monthNames[m - 1],
+        totalValue: data ? data.totalValue : 0,
+        orderCount: data ? data.orderCount : 0
+      });
+    }
+
+    return monthlyStats;
+  }
+
+
 }
