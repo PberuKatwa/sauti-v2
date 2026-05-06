@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
-import { OrderProfile, UpdateContactPayload } from "../../types/orders.types";
+import { OrderProfile, UpdateContactPayload, UpdateOrderPayload } from "../../types/orders.types";
 import { UserMessagePayload } from "../../types/whatsapp.webhook";
 import { OrderCacheService, OrderCompleteType } from "../cache/cache.order";
 import { ClientModel } from "../client/client.model";
@@ -93,7 +93,7 @@ export class OrderCompletionHandler{
     userMessage: string,
     recipient: number,
     order: OrderProfile,
-    updateOrder: UpdateContactPayload
+    updateOrder: UpdateOrderPayload
   ) => Promise<any>> = {
     'COMPLETE_CONTACT': (userMessage, recipient, order, updateOrder)=> this.completeOrderContact(userMessage, recipient, order, updateOrder),
     'COMPLETE_LOCATION': (userMessage, recipient, order, updateOrder)=> this.completeOrderLocation(userMessage, recipient, order, updateOrder),
@@ -105,7 +105,7 @@ export class OrderCompletionHandler{
     userMessage: string,
     recipient: number,
     order:OrderProfile,
-    updateOrder: UpdateContactPayload
+    updateOrder: UpdateOrderPayload
   ):Promise<OrderProfile> {
     try {
 
@@ -113,9 +113,10 @@ export class OrderCompletionHandler{
 
       if (!isValid) throw new Error(`Phone number is invalid`);
 
-      updateOrder.orderContact = phone;
+      updateOrder.order_contact = phone;
       order.order_contact = phone;
-      await this.ordersModel.updateContactAndDelivery(updateOrder);
+      // await this.ordersModel.updateContactAndDelivery(updateOrder);
+      await this.ordersModel.completeOrderUpdate(updateOrder)
 
       return order
     } catch (error) {
@@ -129,12 +130,16 @@ export class OrderCompletionHandler{
     userMessage: string,
     recipient: number,
     order:OrderProfile,
-    updateOrder: UpdateContactPayload
+    updateOrder: UpdateOrderPayload
   ):Promise<OrderProfile> {
     try {
 
       const { latitude, longitude } = this.textToLocation(userMessage);
-      await this.ordersModel.updateLocation({ orderId: order.id, latitude: latitude, longitude: longitude });
+      updateOrder.latitude = latitude;
+      updateOrder.longitude = longitude;
+      await this.ordersModel.completeOrderUpdate(updateOrder)
+
+
       order.latitude = latitude;
       order.longitude = longitude;
 
@@ -150,13 +155,13 @@ export class OrderCompletionHandler{
     userMessage: string,
     recipient: number,
     order:OrderProfile,
-    updateOrder: UpdateContactPayload
+    updateOrder: UpdateOrderPayload
   ):Promise<OrderProfile> {
     try {
 
-      updateOrder.specialInstructions = userMessage;
+      updateOrder.special_instructions = userMessage;
       order.special_instructions = userMessage;
-      await this.ordersModel.updateContactAndDelivery(updateOrder);
+      await this.ordersModel.completeOrderUpdate(updateOrder)
 
       return order;
     } catch (error) {
@@ -197,6 +202,16 @@ export class OrderCompletionHandler{
       orderContact: order.order_contact,
       specialInstructions: order.special_instructions
     };
+
+    const uupdateOrder: UpdateOrderPayload = {
+      orderId: order.id,
+      delivery_type: order.delivery_type,
+      order_contact: order.order_contact,
+      special_instructions: order.special_instructions,
+      latitude: order.latitude,
+      longitude: order.longitude,
+      delivery_status:order.delivery_status
+    }
 
     const completionState = this.orderCache.getOrderCompletionMessage(recipientInt);
 

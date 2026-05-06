@@ -100,6 +100,7 @@ export class HandlerService{
     const { userMessage, recipient } = this.extractMessageAndRecepient(messages);
 
     this.logger.info("Message extracted", { recipient, type: messages[0].type });
+    console.log("userrr message", userMessage)
 
     const orderCompletionResult = await this.orderCompletionHandler.handleOrderCompletion(userMessage, recipient);
     if (orderCompletionResult) return;
@@ -139,6 +140,7 @@ export class HandlerService{
       if (type === "MESSAGE") {
         const messages = data.entry?.[0]?.changes?.[0]?.value.messages;
         const msg = messages[0];
+        console.log("messages mmm", messages)
 
         if (msg.type === "order") {
           await this.processCatalogOrder(msg.order, msg.from);
