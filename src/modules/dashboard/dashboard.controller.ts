@@ -3,9 +3,10 @@ import { AuthGuard } from "../auth/guards/auth.guard";
 import { AppLogger } from "../../logger/winston.logger";
 import { Request, Response } from "express";
 import { ApiResponse } from "../../types/api.types";
-import { BaseOrderFilters, MonthlyOrderFilter, MonthlyOrdersStatsApiResponse, OrderStatus, TotalOrdersStatsApiResponse } from "../../types/orders.types";
-import { OrdersModel } from "../orders/orders.model";
+import { BaseOrderFilters, OrderStatus } from "../../types/orders.types";
+import { MonthlyOrderFilter, MonthlyOrdersStatsApiResponse, TotalOrdersStatsApiResponse } from "../../types/ordersStats.types";
 import { ClientModel } from "../client/client.model";
+import { OrdersStats } from "../orders/orders.stats";
 
 @Controller("dashboard")
 @UseGuards(AuthGuard)
@@ -13,7 +14,7 @@ export class DashboardController{
 
   constructor(
     private readonly logger: AppLogger,
-    private readonly orderModel:OrdersModel,
+    private readonly orderStats:OrdersStats,
     private readonly clientModel:ClientModel
 
   ) { }
@@ -34,7 +35,7 @@ export class DashboardController{
         statuses: statuses ? statuses.split(',') as OrderStatus[] : undefined
       };
 
-      const stats = await this.orderModel.getTotalOrdersStats(filters);
+      const stats = await this.orderStats.getTotalOrdersStats(filters);
 
       const response: TotalOrdersStatsApiResponse = {
         success: true,
@@ -70,7 +71,7 @@ export class DashboardController{
         status:status as OrderStatus
       };
 
-      const stats = await this.orderModel.getMonthlyOrderTotals(filters);
+      const stats = await this.orderStats.getMonthlyOrderTotals(filters);
 
       const response: MonthlyOrdersStatsApiResponse = {
         success: true,

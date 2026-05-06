@@ -11,7 +11,8 @@ import type {
   AllAdminOrdersApiResponse,
   FullOrderFilters,
   OrderStatus,
-  AdminOrder
+  AdminOrder,
+  OrderProfile
 } from "../../types/orders.types";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { ClientModel } from "../client/client.model";
@@ -278,7 +279,7 @@ export class OrdersController {
 
       const orders = await this.orders.fetchClientOrders(parseInt(clientId));
 
-      const response: AllOrdersApiResponse = {
+      const response: ApiResponse<OrderProfile[]> = {
         success: true,
         message: `Successfully fetched client orders`,
         data: orders
