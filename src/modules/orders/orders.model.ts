@@ -121,14 +121,18 @@ export class OrdersModel {
       RETURNING
         id,
         order_number,
-        subtotal,
-        tax,
         total,
         delivery_status,
         order_contact,
         delivery_type,
         special_instructions,
-        items;
+        items,
+        client_id,
+        latitude,
+        longitude,
+        rider_phone,
+        created_at,
+        updated_at;
     `;
 
     const pool = this.pgConfig.getPool();
@@ -375,8 +379,6 @@ export class OrdersModel {
       SELECT
         id,
         order_number,
-        subtotal,
-        tax,
         total,
         delivery_status,
         order_contact,
@@ -386,6 +388,7 @@ export class OrdersModel {
         client_id,
         latitude,
         longitude,
+        rider_phone,
         created_at,
         updated_at
       FROM orders
@@ -409,8 +412,6 @@ export class OrdersModel {
       SELECT
         id,
         order_number,
-        subtotal,
-        tax,
         total,
         delivery_status,
         order_contact,
@@ -446,8 +447,6 @@ export class OrdersModel {
       SELECT
         id,
         order_number,
-        subtotal,
-        tax,
         total,
         delivery_status,
         order_contact,
@@ -457,6 +456,7 @@ export class OrdersModel {
         client_id,
         latitude,
         longitude,
+        rider_phone,
         created_at,
         updated_at
       FROM orders
@@ -484,8 +484,6 @@ export class OrdersModel {
       SELECT
         id,
         order_number,
-        subtotal,
-        tax,
         total,
         delivery_status,
         order_contact,
@@ -495,6 +493,7 @@ export class OrdersModel {
         client_id,
         latitude,
         longitude,
+        rider_phone,
         created_at,
         updated_at
       FROM orders
