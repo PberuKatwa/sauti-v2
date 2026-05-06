@@ -86,6 +86,8 @@ export interface AllOrdersApiResponse extends ApiResponse {
   data: OrderProfile[];
 }
 
+export interface ApiResponseCompleteOrder extends ApiResponse<AllCompleteOrders>{}
+
 export interface BaseOrderFilters {
   startDate?: string;
   endDate?: string;

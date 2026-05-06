@@ -11,7 +11,9 @@ import type {
   AllAdminOrdersApiResponse,
   FullOrderFilters,
   OrderStatus,
-  AdminOrderRow
+  AdminOrderRow,
+  ApiResponseCompleteOrder,
+  OrderProfile
 } from "../../types/orders.types";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { ClientModel } from "../client/client.model";
@@ -322,10 +324,10 @@ export class OrdersController {
         statuses:statuses ? statuses.split(',') as OrderStatus[] : undefined
       }
 
-      const { orders, pagination } = await this.orders.fetchAllOrders(page, limit, filters);
+      const { orders, pagination } = await this.orders.fetchAllOrdersWithPayments(page, limit, filters);
 
-      const orderMap:AdminOrderRow[] = orders.map(
-        (order: AdminOrderRow) => {
+      const orderMap:OrderProfile[] = orders.map(
+        (order: OrderProfile) => {
           if (order.latitude && order.longitude) {
             order.google_maps_link = `https://www.google.com/maps?q=${order.latitude},${order.longitude}`
           }
@@ -333,7 +335,7 @@ export class OrdersController {
         }
       )
 
-      const response: AllAdminOrdersApiResponse = {
+      const response: ApiResponseCompleteOrder = {
         success: true,
         message: `Successfully fetched all orders`,
         data: {

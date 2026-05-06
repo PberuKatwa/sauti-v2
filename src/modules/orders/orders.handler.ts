@@ -192,8 +192,6 @@ export class OrdersHandler {
       `Instructions: ${instructionsLabel}\n\n` +
 
       `*Summary:*\n` +
-      `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
-      `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
       `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
 
       `Status: _${order.delivery_status.replace(/_/g, " ").toUpperCase()}_`;

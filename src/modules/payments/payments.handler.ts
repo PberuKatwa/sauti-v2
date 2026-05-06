@@ -82,8 +82,6 @@ export class PaymentsHandler{
       `*Order Details:*\n${itemSummary}\n\n` +
 
       `*Summary:*\n` +
-      `Subtotal: KES ${Number(order.subtotal).toLocaleString()}\n` +
-      `Tax (VAT): KES ${Number(order.tax).toLocaleString()}\n` +
       `*Total: KES ${Number(order.total).toLocaleString()}*\n\n` +
 
       `*How to Pay via M-Pesa:*\n` +
