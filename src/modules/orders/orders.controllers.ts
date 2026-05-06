@@ -12,7 +12,8 @@ import type {
   FullOrderFilters,
   OrderStatus,
   AdminOrder,
-  OrderProfile
+  OrderProfile,
+  SingleAdminOrderApiResponse
 } from "../../types/orders.types";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { ClientModel } from "../client/client.model";
@@ -134,9 +135,8 @@ export class OrdersController {
       const idParam = req.params.id;
       const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
-      const order = await this.orders.fetchOrder(parseInt(id));
-
-      const response: SingleOrderApiResponse = {
+      const order = await this.orders.fetchOrderWithPayments(parseInt(id));
+      const response: SingleAdminOrderApiResponse = {
         success: true,
         message: `Successfully fetched order`,
         data: order

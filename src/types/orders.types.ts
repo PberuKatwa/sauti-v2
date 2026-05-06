@@ -60,6 +60,8 @@ export interface AllAdminOrders {
 export interface AllOrdersApiResponse extends ApiResponse<AllCompleteOrders> { };
 export interface AllAdminOrdersApiResponse extends ApiResponse<AllAdminOrders> { };
 export interface SingleOrderApiResponse extends ApiResponse<OrderProfile> { };
+export interface SingleAdminOrderApiResponse extends ApiResponse<AdminOrder> { };
+
 
 export interface CreateOrderPayload {
   clientId: number;
