@@ -112,7 +112,7 @@ export class OrderCompletionHandler{
       if (!isValid) throw new Error(`Phone number is invalid`);
 
       order.order_contact = phone;
-      await this.ordersModel.completeOrderUpdate({ orderId: order.id, order_contact: phone });
+      await this.ordersModel.updateOrder({ orderId: order.id, order_contact: phone });
 
       return order
     } catch (error) {
@@ -130,7 +130,7 @@ export class OrderCompletionHandler{
     try {
 
       const { latitude, longitude } = this.textToLocation(userMessage);
-      await this.ordersModel.completeOrderUpdate({orderId:order.id, latitude, longitude})
+      await this.ordersModel.updateOrder({orderId:order.id, latitude, longitude})
 
       order.latitude = latitude;
       order.longitude = longitude;
@@ -151,7 +151,7 @@ export class OrderCompletionHandler{
     try {
 
       order.special_instructions = userMessage;
-      await this.ordersModel.completeOrderUpdate({ orderId: order.id, special_instructions: userMessage });
+      await this.ordersModel.updateOrder({ orderId: order.id, special_instructions: userMessage });
 
       return order;
     } catch (error) {
