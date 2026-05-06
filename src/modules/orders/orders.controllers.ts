@@ -124,6 +124,39 @@ export class OrdersController {
     }
   }
 
+  @Get(':id')
+  async fetchOrder(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const idParam = req.params.id;
+      const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+      const order = await this.orders.fetchOrder(parseInt(id));
+
+      const response: SingleOrderApiResponse = {
+        success: true,
+        message: `Successfully fetched order`,
+        data: order
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error fetching order`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
   @Put(':id')
   async updateOrder(
     @Req() req: Request,
@@ -201,38 +234,7 @@ export class OrdersController {
 
 
 
-  @Get(':id')
-  async fetchOrder(
-    @Req() req: Request,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
 
-      const idParam = req.params.id;
-      const id = Array.isArray(idParam) ? idParam[0] : idParam;
-
-      const order = await this.orders.fetchOrder(parseInt(id));
-
-      const response: SingleOrderApiResponse = {
-        success: true,
-        message: `Successfully fetched order`,
-        data: order
-      };
-
-      return res.status(200).json(response);
-
-    } catch (error) {
-
-      this.logger.error(`Error fetching order`, error);
-
-      const response: ApiResponse = {
-        success: false,
-        message: `${error}`
-      };
-
-      return res.status(500).json(response);
-    }
-  }
 
   @Get('client/:clientId/latest')
   async fetchLatestOrderByClient(
