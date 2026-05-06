@@ -78,11 +78,35 @@ export class OrdersHandler {
       }
     )
 
-    const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: productItems })
+    try {
+      const orderCreated = await this.ordersModel.createOrder({ clientId: client.id, items: productItems })
 
-    this.logger.info(`Successfully created catalogue order id: ${orderCreated.id}`);
+      this.logger.info(`Successfully created catalogue order id: ${orderCreated.id}`);
 
-    await this.sendOrder(recipient, orderCreated)
+      await this.sendOrder(recipient, orderCreated)
+    } catch (error) {
+
+      if (
+        error instanceof Error &&
+        error.message.includes('has more than 2 undelivered orders')
+      ) {
+        await this.whatsappService.sendText(
+          'You already have more than 2 pending deliveries. Please wait for delivery before placing another order.',
+          recipient,
+        );
+
+        await this.handleGetAllOrders("hello", recipient)
+        return;
+      }
+
+      this.logger.error('Failed to create catalogue order', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      throw error;
+    }
+
   }
 
   private async handleGetAllOrders(userMessage: string, recipient: string) {
