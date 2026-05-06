@@ -201,7 +201,7 @@ export class OrdersController {
 
 
 
-  @Get('/individual/:id')
+  @Get(':id')
   async fetchOrder(
     @Req() req: Request,
     @Res() res: Response
