@@ -11,9 +11,7 @@ import type {
   AllAdminOrdersApiResponse,
   FullOrderFilters,
   OrderStatus,
-  AdminOrderRow,
-  ApiResponseCompleteOrder,
-  OrderProfile
+  AdminOrder
 } from "../../types/orders.types";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { ClientModel } from "../client/client.model";
@@ -28,38 +26,56 @@ export class OrdersController {
     private readonly clientModel:ClientModel
   ) { }
 
-  @Post('create-client/:clientPhone')
-  async createOrderAndCLient(
+  @Get('')
+  async fetchAllOrders(
+    @Query('page') pageQuery: string,
+    @Query('limit') limitQuery: string,
+    @Query('orderNumber') orderNumber: string,
+    @Query('clientPhone') clientPhone: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Query('statuses') statuses: string,
     @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
     try {
 
-      const phoneParam = req.params.clientPhone;
-      const phoneNumber = Array.isArray(phoneParam) ? parseInt(phoneParam[0]) : parseInt(phoneParam);
+      const page = pageQuery ? parseInt(pageQuery) : 1;
+      const limit = limitQuery ? parseInt(limitQuery) : 10;
 
-      const client = await this.clientModel.createClient({ phoneNumber });
+      const filters: FullOrderFilters = {
+        orderNumber,
+        clientPhone,
+        startDate,
+        endDate,
+        statuses:statuses ? statuses.split(',') as OrderStatus[] : undefined
+      }
 
-      const { items } = req.body;
+      const { orders, pagination } = await this.orders.fetchAllOrders(page, limit, filters);
 
-      const payload: CreateOrderPayload = {
-        clientId: client.id,
-        items
-      };
+      const orderMap:AdminOrder[] = orders.map(
+        (order: AdminOrder) => {
+          if (order.latitude && order.longitude) {
+            order.google_maps_link = `https://www.google.com/maps?q=${order.latitude},${order.longitude}`
+          }
+          return order
+        }
+      )
 
-      const order = await this.orders.createOrder(payload);
-
-      const response: SingleOrderApiResponse = {
+      const response: AllAdminOrdersApiResponse = {
         success: true,
-        message: `Successfully created order`,
-        data: order
+        message: `Successfully fetched all orders`,
+        data: {
+          orders: orderMap,
+          pagination
+        }
       };
 
       return res.status(200).json(response);
 
     } catch (error) {
 
-      this.logger.error(`Error creating order`, error);
+      this.logger.error(`Error fetching all orders`, error);
 
       const response: ApiResponse = {
         success: false,
@@ -139,6 +155,50 @@ export class OrdersController {
       return res.status(500).json(response);
     }
   }
+
+  @Post('create-client/:clientPhone')
+  async createOrderAndCLient(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const phoneParam = req.params.clientPhone;
+      const phoneNumber = Array.isArray(phoneParam) ? parseInt(phoneParam[0]) : parseInt(phoneParam);
+
+      const client = await this.clientModel.createClient({ phoneNumber });
+
+      const { items } = req.body;
+
+      const payload: CreateOrderPayload = {
+        clientId: client.id,
+        items
+      };
+
+      const order = await this.orders.createOrder(payload);
+
+      const response: SingleOrderApiResponse = {
+        success: true,
+        message: `Successfully created order`,
+        data: order
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error creating order`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+
 
   @Get('/individual/:id')
   async fetchOrder(
@@ -239,124 +299,6 @@ export class OrdersController {
     }
   }
 
-  @Get('admin')
-  async fetchAllOrders(
-    @Query('page') pageQuery: string,
-    @Query('limit') limitQuery: string,
-    @Query('orderNumber') orderNumber: string,
-    @Query('clientPhone') clientPhone: string,
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-    @Query('statuses') statuses: string,
-    @Req() req: Request,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
 
-      const page = pageQuery ? parseInt(pageQuery) : 1;
-      const limit = limitQuery ? parseInt(limitQuery) : 10;
-
-      const filters: FullOrderFilters = {
-        orderNumber,
-        clientPhone,
-        startDate,
-        endDate,
-        statuses:statuses ? statuses.split(',') as OrderStatus[] : undefined
-      }
-
-      const { orders, pagination } = await this.orders.fetchAllOrders(page, limit, filters);
-
-      const orderMap:AdminOrderRow[] = orders.map(
-        (order: AdminOrderRow) => {
-          if (order.latitude && order.longitude) {
-            order.google_maps_link = `https://www.google.com/maps?q=${order.latitude},${order.longitude}`
-          }
-          return order
-        }
-      )
-
-      const response: AllAdminOrdersApiResponse = {
-        success: true,
-        message: `Successfully fetched all orders`,
-        data: {
-          orders: orderMap,
-          pagination
-        }
-      };
-
-      return res.status(200).json(response);
-
-    } catch (error) {
-
-      this.logger.error(`Error fetching all orders`, error);
-
-      const response: ApiResponse = {
-        success: false,
-        message: `${error}`
-      };
-
-      return res.status(500).json(response);
-    }
-  }
-
-  @Get('')
-  async fetchAllCompleteOrders(
-    @Query('page') pageQuery: string,
-    @Query('limit') limitQuery: string,
-    @Query('orderNumber') orderNumber: string,
-    @Query('clientPhone') clientPhone: string,
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-    @Query('statuses') statuses: string,
-    @Req() req: Request,
-    @Res() res: Response
-  ): Promise<Response> {
-    try {
-
-      const page = pageQuery ? parseInt(pageQuery) : 1;
-      const limit = limitQuery ? parseInt(limitQuery) : 10;
-
-      const filters: FullOrderFilters = {
-        orderNumber,
-        clientPhone,
-        startDate,
-        endDate,
-        statuses:statuses ? statuses.split(',') as OrderStatus[] : undefined
-      }
-
-      const { orders, pagination } = await this.orders.fetchAllOrdersWithPayments(page, limit, filters);
-
-      const orderMap:OrderProfile[] = orders.map(
-        (order: OrderProfile) => {
-          if (order.latitude && order.longitude) {
-            order.google_maps_link = `https://www.google.com/maps?q=${order.latitude},${order.longitude}`
-          }
-          return order
-        }
-      )
-
-      const response: ApiResponseCompleteOrder = {
-        success: true,
-        message: `Successfully fetched all orders`,
-        data: {
-          orders: orderMap,
-          pagination
-        }
-      };
-
-      return res.status(200).json(response);
-
-    } catch (error) {
-
-      this.logger.error(`Error fetching all orders`, error);
-
-      const response: ApiResponse = {
-        success: false,
-        message: `${error}`
-      };
-
-      return res.status(500).json(response);
-    }
-  }
 
 }

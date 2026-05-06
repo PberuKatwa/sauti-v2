@@ -8,14 +8,12 @@ import type {
   CreateOrderPayload,
   UpdateOrderPayload,
   BaseOrderFilters,
-  AdminOrderRow,
   AllAdminOrders,
   OrderStatus,
   TotalOrdersStats,
   FullOrderFilters,
   MonthlyOrderFilter,
-  MonthlyOrderStat,
-  AllCompleteOrders
+  MonthlyOrderStat
 } from "../../types/orders.types";
 
 @Injectable()
@@ -224,7 +222,7 @@ export class OrdersModel {
     pageInput: number,
     limitInput: number,
     filters: FullOrderFilters
-  ): Promise<AllCompleteOrders> {
+  ): Promise<AllAdminOrders> {
 
     this.logger.warn(
       `Attempting to fetch all orders page: ${pageInput}, limit: ${limitInput}`
