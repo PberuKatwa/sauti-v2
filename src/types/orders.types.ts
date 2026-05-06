@@ -58,7 +58,6 @@ export interface AllAdminOrders {
 }
 
 export interface AllOrdersApiResponse extends ApiResponse<AllCompleteOrders> { };
-export interface ApiResponseCompleteOrder extends ApiResponse<AllCompleteOrders> { };
 export interface AllAdminOrdersApiResponse extends ApiResponse<AllAdminOrders> { };
 export interface SingleOrderApiResponse extends ApiResponse<OrderProfile> { };
 

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import nlp from 'compromise';
 import * as natural from "natural";
 import { BestIntent, IntentDefinition } from "../../types/intent.types";
-import { IntentGeminiService } from "./intent.gemini";
 import { buildIntentPrompt } from "../../utils/intent.prompt";
 import { addOrganisationToken } from "../../utils/json.utils";
 import { AiService } from './ai.service';
@@ -21,7 +20,6 @@ export class IntentDetectorService {
   };
 
   constructor(
-    private readonly geminiService: IntentGeminiService,
     private readonly aiService:AiService
   ) { }
 
