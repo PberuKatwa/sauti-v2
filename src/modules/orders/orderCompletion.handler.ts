@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { AppLogger } from "../../logger/winston.logger";
-import { OrderProfile, UpdateContactPayload, UpdateOrderPayload } from "../../types/orders.types";
+import { OrderProfile, UpdateOrderPayload } from "../../types/orders.types";
 import { UserMessagePayload } from "../../types/whatsapp.webhook";
 import { OrderCacheService, OrderCompleteType } from "../cache/cache.order";
 import { ClientModel } from "../client/client.model";

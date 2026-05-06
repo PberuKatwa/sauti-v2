@@ -6,9 +6,6 @@ import { AppLogger } from "../../logger/winston.logger";
 import type {
   OrderProfile,
   CreateOrderPayload,
-  UpdateContactPayload,
-  UpdateLocationPayload,
-  UpdateStatusPayload,
   UpdateOrderPayload,
   BaseOrderFilters,
   AdminOrderRow,
@@ -17,7 +14,8 @@ import type {
   TotalOrdersStats,
   FullOrderFilters,
   MonthlyOrderFilter,
-  MonthlyOrderStat
+  MonthlyOrderStat,
+  AllCompleteOrders
 } from "../../types/orders.types";
 
 @Injectable()
@@ -159,42 +157,6 @@ export class OrdersModel {
     return order;
   }
 
-  async getIncompleteOrders(clientId:number): Promise<OrderProfile> {
-
-    if (!clientId) throw new Error(`Please provide a client id`);
-    const pendingStatuses = ['pending_location', 'pending_contact', 'pending_delivery_type'];
-
-    const query = `
-      SELECT
-        id,
-        order_number,
-        subtotal,
-        tax,
-        total,
-        delivery_status,
-        order_contact,
-        delivery_type,
-        special_instructions,
-        items,
-        client_id,
-        latitude,
-        longitude,
-        created_at,
-        updated_at
-      FROM orders
-      WHERE client_id = $1
-        AND delivery_status = ANY($2)
-      ORDER BY id DESC
-      LIMIT 1;
-    `;
-
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [clientId, pendingStatuses]);
-    const existingOrder:OrderProfile = result.rows[0];
-
-    return existingOrder;
-  }
-
   async updateOrder(payload: UpdateOrderPayload): Promise<void> {
     const { orderId, delivery_status, order_contact, delivery_type, special_instructions, rider_phone, latitude, longitude } = payload;
 
@@ -258,6 +220,42 @@ export class OrdersModel {
     this.logger.info(`Successfully completed update for order: ${orderId}`);
   }
 
+  async getIncompleteOrders(clientId:number): Promise<OrderProfile> {
+
+    if (!clientId) throw new Error(`Please provide a client id`);
+    const pendingStatuses = ['pending_location', 'pending_contact', 'pending_delivery_type'];
+
+    const query = `
+      SELECT
+        id,
+        order_number,
+        subtotal,
+        tax,
+        total,
+        delivery_status,
+        order_contact,
+        delivery_type,
+        special_instructions,
+        items,
+        client_id,
+        latitude,
+        longitude,
+        created_at,
+        updated_at
+      FROM orders
+      WHERE client_id = $1
+        AND delivery_status = ANY($2)
+      ORDER BY id DESC
+      LIMIT 1;
+    `;
+
+    const pool = this.pgConfig.getPool();
+    const result = await pool.query(query, [clientId, pendingStatuses]);
+    const existingOrder:OrderProfile = result.rows[0];
+
+    return existingOrder;
+  }
+
   async fetchOrder(orderId: number): Promise<OrderProfile> {
     this.logger.warn(`Attempting to fetch order id: ${orderId}`);
 
@@ -294,8 +292,6 @@ export class OrdersModel {
 
     return order;
   }
-
-
 
   async fetchLatestOrderByClient(clientId: number): Promise<OrderProfile> {
     this.logger.warn(`Attempting to fetch latest order for client id: ${clientId}`);
@@ -564,5 +560,157 @@ export class OrdersModel {
     }
 
     return monthlyStats;
+  }
+
+  async fetchAllOrdersWithPayments(
+    pageInput: number,
+    limitInput: number,
+    filters: FullOrderFilters
+  ): Promise<AllCompleteOrders> {
+
+    this.logger.warn(
+      `Attempting to fetch all orders page: ${pageInput}, limit: ${limitInput}`
+    );
+
+    const page = pageInput || 1;
+    const limit = limitInput || 10;
+    const offset = (page - 1) * limit;
+
+    const conditions: string[] = [`o.status != 'trash'`];
+    const params: (string | number | OrderStatus[])[] = [];
+
+    let paramIndex = 1;
+
+    // Filters
+    if (filters?.orderNumber) {
+      conditions.push(`o.order_number::TEXT ILIKE $${paramIndex}`);
+      params.push(`%${filters.orderNumber}%`);
+      paramIndex++;
+    }
+
+    if (filters?.clientPhone) {
+      conditions.push(`c.phone_number::TEXT ILIKE $${paramIndex}`);
+      params.push(`%${filters.clientPhone}%`);
+      paramIndex++;
+    }
+
+    if (filters?.startDate) {
+      conditions.push(`o.created_at >= $${paramIndex}`);
+      params.push(filters.startDate);
+      paramIndex++;
+    }
+
+    if (filters?.endDate) {
+      conditions.push(`o.created_at <= $${paramIndex}`);
+      params.push(filters.endDate);
+      paramIndex++;
+    }
+
+    if (filters?.statuses?.length) {
+      conditions.push(`o.delivery_status = ANY($${paramIndex})`);
+      params.push(filters.statuses as any);
+      paramIndex++;
+    }
+
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
+
+    const dataQuery = `
+      SELECT
+        o.id,
+        o.client_id,
+        o.order_number,
+        o.total,
+        o.delivery_status,
+        o.latitude,
+        o.longitude,
+        o.order_contact,
+        o.delivery_type,
+        o.rider_phone,
+        o.items,
+        o.special_instructions,
+        o.created_at,
+        o.updated_at,
+
+        c.phone_number AS client_phone,
+
+        COALESCE(SUM(p.amount), 0) AS total_paid,
+
+        CASE
+          WHEN COALESCE(SUM(p.amount), 0) = 0
+            THEN 'unpaid'
+
+          WHEN COALESCE(SUM(p.amount), 0) < o.total
+            THEN 'partially_paid'
+
+          WHEN COALESCE(SUM(p.amount), 0) = o.total
+            THEN 'paid'
+
+          WHEN COALESCE(SUM(p.amount), 0) > o.total
+            THEN 'overpaid'
+        END AS payment_status,
+
+        COALESCE(
+          json_agg(
+          json_build_object(
+            'source', p.source,
+            'reference', p.reference,
+            'amount', p.amount
+          )
+            ORDER BY p.created_at DESC
+          ) FILTER (WHERE p.id IS NOT NULL),
+          '[]'
+        ) AS payments
+
+      FROM orders o
+
+      LEFT JOIN clients c
+        ON o.client_id = c.id
+
+      LEFT JOIN payments p
+        ON p.order_id = o.id
+        AND p.status != 'trash'
+
+      ${whereClause}
+
+      GROUP BY
+        o.id,
+        c.phone_number
+
+      ORDER BY o.created_at DESC
+
+      LIMIT $${paramIndex}
+      OFFSET $${paramIndex + 1};
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*)
+
+      FROM orders o
+
+      LEFT JOIN clients c
+        ON o.client_id = c.id
+
+      ${whereClause};
+    `;
+
+    const dataParams = [...params, limit, offset];
+
+    const pgPool = this.pgConfig.getPool();
+
+    const [dataResult, paginationResult] = await Promise.all([
+      pgPool.query(dataQuery, dataParams),
+      pgPool.query(countQuery, params)
+    ]);
+
+    const totalCount = parseInt(paginationResult.rows[0].count);
+
+    return {
+      orders: dataResult.rows,
+      pagination: {
+        totalCount,
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    };
   }
 }

@@ -5,9 +5,6 @@ import type { ApiResponse } from "../../types/api.types";
 import { OrdersModel } from "./orders.model";
 import type {
   CreateOrderPayload,
-  UpdateContactPayload,
-  UpdateLocationPayload,
-  UpdateStatusPayload,
   UpdateOrderPayload,
   SingleOrderApiResponse,
   AllOrdersApiResponse,
@@ -242,6 +239,66 @@ export class OrdersController {
 
   @Get('admin')
   async fetchAllOrders(
+    @Query('page') pageQuery: string,
+    @Query('limit') limitQuery: string,
+    @Query('orderNumber') orderNumber: string,
+    @Query('clientPhone') clientPhone: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Query('statuses') statuses: string,
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+
+      const page = pageQuery ? parseInt(pageQuery) : 1;
+      const limit = limitQuery ? parseInt(limitQuery) : 10;
+
+      const filters: FullOrderFilters = {
+        orderNumber,
+        clientPhone,
+        startDate,
+        endDate,
+        statuses:statuses ? statuses.split(',') as OrderStatus[] : undefined
+      }
+
+      const { orders, pagination } = await this.orders.fetchAllOrders(page, limit, filters);
+
+      const orderMap:AdminOrderRow[] = orders.map(
+        (order: AdminOrderRow) => {
+          if (order.latitude && order.longitude) {
+            order.google_maps_link = `https://www.google.com/maps?q=${order.latitude},${order.longitude}`
+          }
+          return order
+        }
+      )
+
+      const response: AllAdminOrdersApiResponse = {
+        success: true,
+        message: `Successfully fetched all orders`,
+        data: {
+          orders: orderMap,
+          pagination
+        }
+      };
+
+      return res.status(200).json(response);
+
+    } catch (error) {
+
+      this.logger.error(`Error fetching all orders`, error);
+
+      const response: ApiResponse = {
+        success: false,
+        message: `${error}`
+      };
+
+      return res.status(500).json(response);
+    }
+  }
+
+  @Get('')
+  async fetchAllCompleteOrders(
     @Query('page') pageQuery: string,
     @Query('limit') limitQuery: string,
     @Query('orderNumber') orderNumber: string,

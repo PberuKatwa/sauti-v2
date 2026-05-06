@@ -8,21 +8,21 @@ export type PaymentSources =
   | 'EQUITY'
   | 'COOPERATIVE_BANK'
 
+export type PaymentStatus = 'unpaid' | 'partially_paid' | 'paid' | 'overpaid';
 
 export interface BasePayment{
   source: PaymentSources;
+  reference: string;
   amount: number;
 }
 
 export interface CreatePaymentPayload extends BasePayment{
   order_id: number;
-  reference: string;
 }
 
 export interface PaymentProfile extends BasePayment{
   id: number;
   order_id: number;
-  reference: string;
   created_at: Date;
 }
 
