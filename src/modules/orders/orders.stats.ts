@@ -51,8 +51,7 @@ export class OrdersStats extends OrdersModel{
       ${whereClause};
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, params);
+    const result = await this.pool.query(query, params);
 
     return {
       count: parseInt(result.rows[0].count),
@@ -91,8 +90,7 @@ export class OrdersStats extends OrdersModel{
       GROUP BY EXTRACT(MONTH FROM created_at);
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, params);
+    const result = await this.pool.query(query, params);
 
     const monthlyMap = new Map<number, { totalValue: number; orderCount: number }>();
     for (const row of result.rows) {
