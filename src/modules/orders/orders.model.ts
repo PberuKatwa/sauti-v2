@@ -16,8 +16,6 @@ import type {
 @Injectable()
 export class OrdersModel {
 
-  private readonly pool: Pool | null;
-
   constructor(
     protected readonly logger: AppLogger,
     protected readonly pgConfig: PostgresConfig,
@@ -92,6 +90,10 @@ export class OrdersModel {
     return "orders";
   }
 
+  protected get pool(): Pool {
+    return this.pgConfig.getPool();
+  }
+
   async createOrder(payload: CreateOrderPayload): Promise<OrderProfile> {
     const { clientId, items } = payload;
 
@@ -136,8 +138,7 @@ export class OrdersModel {
         updated_at;
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [
+    const result = await this.pool.query(query, [
       clientId,
       subtotal,
       tax,
