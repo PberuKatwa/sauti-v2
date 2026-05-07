@@ -82,11 +82,8 @@ export class OrdersModel {
       EXECUTE FUNCTION set_timestamp();
     `;
 
-    const pool = this.pgConfig.getPool();
-    await pool.query(query);
-
+    await this.pool.query(query);
     this.logger.info(`Successfully created orders table`);
-
     return "orders";
   }
 
@@ -214,8 +211,7 @@ export class OrdersModel {
 
     params.push(orderId);
 
-    const pool = this.pgConfig.getPool();
-    await pool.query(query, params);
+    await this.pool.query(query, params);
 
     this.logger.info(`Successfully completed update for order: ${orderId}`);
   }
@@ -353,11 +349,9 @@ export class OrdersModel {
 
     const dataParams = [...params, limit, offset];
 
-    const pgPool = this.pgConfig.getPool();
-
     const [dataResult, paginationResult] = await Promise.all([
-      pgPool.query(dataQuery, dataParams),
-      pgPool.query(countQuery, params)
+      this.pool.query(dataQuery, dataParams),
+      this.pool.query(countQuery, params)
     ]);
 
     const totalCount = parseInt(paginationResult.rows[0].count);
@@ -453,9 +447,7 @@ export class OrdersModel {
         c.phone_number;
     `;
 
-    const pgPool = this.pgConfig.getPool();
-
-    const result = await pgPool.query(query, [orderId]);
+    const result = await this.pool.query(query, [orderId]);
 
     if (result.rows.length === 0) {
       return null;
@@ -499,8 +491,7 @@ export class OrdersModel {
       LIMIT 1;
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [clientId, pendingStatuses]);
+    const result = await this.pool.query(query, [clientId, pendingStatuses]);
     const existingOrder:OrderProfile = result.rows[0];
 
     return existingOrder;
@@ -529,8 +520,7 @@ export class OrdersModel {
       WHERE id = $1;
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [orderId]);
+    const result = await this.pool.query(query, [orderId]);
 
     if (result.rowCount === 0) {
       throw new Error(`Order not found`);
@@ -566,8 +556,7 @@ export class OrdersModel {
       LIMIT 1;
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [clientId]);
+    const result = await this.pool.query(query, [clientId]);
 
     if (result.rowCount === 0) {
       throw new Error(`No orders found for client id ${clientId}`);
@@ -602,8 +591,7 @@ export class OrdersModel {
       ORDER BY created_at DESC;
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [clientId]);
+    const result = await this.pool.query(query, [clientId]);
 
     const orders: OrderProfile[] = result.rows;
 
