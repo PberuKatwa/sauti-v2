@@ -23,6 +23,10 @@ export class ProductsModel{
     private readonly pgConfig: PostgresConfig
   ) {}
 
+  private get pool(): Pool {
+    return this.pgConfig.getPool();
+  }
+
   async createTable() {
     try {
 
@@ -72,8 +76,7 @@ export class ProductsModel{
         );
       `
 
-      const pgPool = this.pgConfig.getPool();
-      await pgPool.query(query);
+      await this.pool.query(query);
 
       this.logger.info(`Successfully created products table`);
       return "products";
@@ -96,8 +99,7 @@ export class ProductsModel{
         RETURNING id, retailer_id, name, description, price;
       `
 
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [user_id, name, description, price, currency, availability, brand, category, file_id, inventory, false]);
+      const result = await this.pool.query(query, [user_id, name, description, price, currency, availability, brand, category, file_id, inventory, false]);
       const product: BaseProduct = result.rows[0];
 
       this.logger.info(`Successfully created product`);
@@ -123,8 +125,7 @@ export class ProductsModel{
         WHERE id= $2;
       `;
 
-      const pgPool = this.pgConfig.getPool()
-      await pgPool.query(query, [status, id])
+      await this.pool.query(query, [status, id])
 
       this.logger.info(`Successfully updated table products status`)
     } catch (error) {
@@ -188,10 +189,9 @@ export class ProductsModel{
         ${whereClause};
       `;
 
-      const pgPool = this.pgConfig.getPool();
       const [dataResult, paginationResult] = await Promise.all([
-        pgPool.query(dataQuery, [...queryParams, limit, offset]),
-        pgPool.query(countQuery, queryParams)
+        this.pool.query(dataQuery, [...queryParams, limit, offset]),
+        this.pool.query(countQuery, queryParams)
       ]);
 
       const totalCount = parseInt(paginationResult.rows[0].count);
@@ -246,9 +246,7 @@ export class ProductsModel{
       ORDER BY p.created_at DESC;
     `;
 
-    const pgPool = this.pgConfig.getPool();
-
-    const result = await pgPool.query(query, [false]);
+    const result = await this.pool.query(query, [false]);
     const products:UnsyncedProducts[] = result.rows
 
     return products;
@@ -259,8 +257,7 @@ export class ProductsModel{
 
       this.logger.warn(`Attempting to fetch product with id:${productId}`);
 
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(`
+      const result = await this.pool.query(`
         SELECT
           p.id,
           p.user_id,
@@ -302,7 +299,6 @@ export class ProductsModel{
 
       const { id, name, description, price, currency, availability, brand, category, file_id, inventory, metadata } = payload;
 
-      const pgPool = this.pgConfig.getPool();
       const query = `
         UPDATE products
         SET name = $1,
@@ -319,7 +315,7 @@ export class ProductsModel{
         WHERE id = $12;
       `;
 
-      await pgPool.query(query, [name, description, price, currency, availability, brand, category, file_id, inventory, metadata, false, id]);
+      await this.pool.query(query, [name, description, price, currency, availability, brand, category, file_id, inventory, metadata, false, id]);
 
       this.logger.info(`Successfully updated product`);
 
@@ -333,10 +329,9 @@ export class ProductsModel{
 
       this.logger.warn(`Attempting to trash product with id:${id}`);
 
-      const pool = this.pgConfig.getPool();
       const query = `UPDATE products SET status = $1, is_catalog_deleted = $2 WHERE id = $3;`;
 
-      await pool.query(query, ['trash', false, id]);
+      await this.pool.query(query, ['trash', false, id]);
 
       this.logger.info(`Successfully trashed product`);
     } catch (error) {
@@ -364,8 +359,7 @@ export class ProductsModel{
         LIMIT 5;
       `;
 
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [patterns]);
+      const result = await this.pool.query(query, [patterns]);
       const products: BaseProduct[] = result.rows;
 
       this.logger.info(`Successfully fetched ${products.length} products (search or fallback)`);
@@ -397,8 +391,7 @@ export class ProductsModel{
       ORDER BY p.created_at DESC;
     `;
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [retailerIds]);
+    const result = await this.pool.query(query, [retailerIds]);
     const products: BaseProduct[] = result.rows;
 
     this.logger.info(`Successfully fetched ${products.length} products for ${retailerIds.length} retailer(s)`);
