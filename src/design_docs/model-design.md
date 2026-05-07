@@ -25,19 +25,23 @@ import type {
 
 ## Pool Access
 
-Models access the database pool through a **private getter** that wraps `PostgresConfig.getPool()`:
+Models access the database pool through a **getter** that wraps `PostgresConfig.getPool()`:
 
 ```typescript
-private get pool(): Pool {
+// Use `private` for leaf models, `protected` for models that may be extended
+protected get pool(): Pool {
   return this.pgConfig.getPool();
 }
 ```
 
 This provides a clean `this.pool` accessor in all methods instead of repeating `this.pgConfig.getPool()` in every function body. The getter is placed immediately after the constructor.
 
+> **Note:** When a model is designed to be extended (e.g., `OrdersModel` → `OrdersStats`), use `protected` for the getter, logger, and pgConfig so subclasses can access them. Use `private` for final/leaf models.
+
 ## Class Structure
 
 ```typescript
+// Standard (leaf) model
 @Injectable()
 export class ModelName {
 
@@ -50,23 +54,49 @@ export class ModelName {
     return this.pgConfig.getPool();
   }
 
-  async methodName(payload: PayloadType): ReturnType {
-    this.logger.warn(`Attempting to [action]`);
+  // ... methods
+}
 
-    const query = `
-      SELECT
-        column1,
-        column2,
-        column3
-      FROM table_name
-      WHERE id = $1;
-    `;
+// Extendable model (when subclassing, e.g. OrdersStats extends OrdersModel)
+@Injectable()
+export class ParentModel {
 
-    const result = await this.pool.query(query, [param]);
+  constructor(
+    protected readonly logger: AppLogger,
+    protected readonly pgConfig: PostgresConfig,
+  ) { }
 
-    const data: ReturnType = result.rows[0];
-    return data;
+  protected get pool(): Pool {
+    return this.pgConfig.getPool();
   }
+
+  // ... methods
+}
+```
+
+### Basic method shape
+
+```typescript
+async methodName(payload: PayloadType): ReturnType {
+  this.logger.warn(`Attempting to [action]`);
+
+  const query = `
+    SELECT
+      column1,
+      column2,
+      column3
+    FROM table_name
+    WHERE id = $1;
+  `;
+
+  const result = await this.pool.query(query, [param]);
+
+  if (result.rowCount === 0) {
+    throw new Error(`Resource not found`);
+  }
+
+  const data: ReturnType = result.rows[0];
+  return data;
 }
 ```
 
@@ -74,39 +104,128 @@ export class ModelName {
 
 Always return **minimal data** unless specifically requesting full documents. Never use `SELECT *`.
 
+Types are defined in `src/types/{module}.types.ts` and imported with `import type`.
+
 ### Type Hierarchy
 
-| Type | Usage | Example |
-|------|-------|---------|
-| `BaseX` | Minimal response (ID + essential fields) | Create, search results |
-| `FullX` | Complete response | Get by ID |
-| `XProfile` | Profile with relations | Orders with client details |
+Types use inheritance layering - each level adds more relational data:
 
-### Example Types
+| Level | Purpose | Example (Orders) |
+|-------|---------|------------------|
+| `BaseX` | Core identity fields returned by CREATE, search | `BaseOrder` — id, order_number, total, items, status |
+| `XProfile` extends `BaseX` | Full row + FK refs + timestamps | `OrderProfile` — adds client_id, lat/lng, rider_phone, created_at |
+| `FullX` / `AdminX` extends `XProfile` | Profile + JOINed relations | `AdminOrder` — adds client_phone, payments, payment_status, total_paid |
+
+### Example Types (Orders)
 
 ```typescript
-// src/types/resource.types.ts
-export interface BaseResource {
+// src/types/orders.types.ts
+import type { BasePayment, PaymentStatus } from "./payment.types";
+
+export type OrderStatus = 'pending_location' | 'pending_contact' | 'pending_delivery_type' | 'pending_delivery' | 'enroute' | 'delivered';
+
+export interface BaseOrder {
   id: number;
-  name: string;
+  order_number: number;
+  total: number;
+  delivery_status: OrderStatus;
+  order_contact: number | null;
+  delivery_type: 'scheduled' | 'immediate';
+  special_instructions: string | null;
+  items: OrderItem[];
 }
 
-export interface FullResource {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
+export interface OrderProfile extends BaseOrder {
+  client_id: number;
+  latitude: string | number;
+  longitude: string | number;
+  rider_phone: number | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface ResourceProfile extends FullResource {
-  user_id: number;
-  metadata: Record<string, any>;
+export interface AdminOrder extends OrderProfile {
+  client_phone: number | null;
+  payments: BasePayment[] | null;
+  payment_status: PaymentStatus;
+  total_paid: number;
+  google_maps_link?: string;
+}
+```
+
+### Payload Types
+
+Payloads use a mix of camelCase (for JS-side identifiers) and snake_case (for DB column mappings):
+
+```typescript
+export interface CreateOrderPayload {
+  clientId: number;          // camelCase — JS identifier, destructured
+  items: OrderItem[];
+}
+
+export interface UpdateOrderPayload {
+  orderId: number;           // camelCase — JS identifier
+  delivery_status?: OrderStatus;  // snake_case — maps directly to DB column
+  rider_phone?: number;           // snake_case — maps directly to DB column
+  latitude?: number;
+}
+```
+
+### Pagination Return Types
+
+Each paginated query gets its own response interface:
+
+```typescript
+export interface AllAdminOrders {
+  orders: AdminOrder[];
+  pagination: {
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+  };
 }
 ```
 
 ## Query Patterns
+
+### createTable — Idempotent DDL with custom enums
+
+Use `DO $$` blocks for custom enum types that need IF NOT EXISTS guards. Include triggers and sequences inline.
+
+```typescript
+async createTable(): Promise<string> {
+  this.logger.warn(`Attempting to create resources table`);
+
+  const query = `
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'resource_status') THEN
+        CREATE TYPE resource_status AS ENUM ('active', 'pending', 'archived');
+        END IF;
+    END
+    $$;
+
+    CREATE TABLE IF NOT EXISTS resources (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      status row_status DEFAULT 'active',
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    );
+
+    DROP TRIGGER IF EXISTS update_resources_timestamp ON resources;
+
+    CREATE TRIGGER update_resources_timestamp
+    BEFORE UPDATE ON resources
+    FOR EACH ROW
+    EXECUTE FUNCTION set_timestamp();
+  `;
+
+  await this.pool.query(query);
+  this.logger.info(`Successfully created resources table`);
+  return "resources";
+}
+```
 
 ### CREATE - Insert with RETURNING minimal fields
 
@@ -156,35 +275,65 @@ async getResource(id: number): Promise<FullResource> {
 }
 ```
 
-### GET ALL - With pagination
+### GET ALL - With pagination and dynamic filters
+
+Build conditions dynamically, apply them to both dataQuery (with LIMIT/OFFSET) and countQuery (without).
 
 ```typescript
-async getAllResources(page: number, limit: number): Promise<AllResources> {
-  this.logger.warn(`Attempting to fetch resources page: ${page}, limit: ${limit}`);
+async getAllResources(
+  pageInput: number,
+  limitInput: number,
+  filters?: ResourceFilters
+): Promise<AllResources> {
 
+  this.logger.warn(`Attempting to fetch resources page: ${pageInput}, limit: ${limitInput}`);
+
+  const page = pageInput || 1;
+  const limit = limitInput || 10;
   const offset = (page - 1) * limit;
+
+  const conditions: string[] = [`r.status != 'trash'`];
+  const params: (string | number)[] = [];
+  let paramIndex = 1;
+
+  if (filters?.name) {
+    conditions.push(`r.name ILIKE $${paramIndex}`);
+    params.push(`%${filters.name}%`);
+    paramIndex++;
+  }
+  if (filters?.startDate) {
+    conditions.push(`r.created_at >= $${paramIndex}`);
+    params.push(filters.startDate);
+    paramIndex++;
+  }
+
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
   const dataQuery = `
     SELECT
-      id,
-      name,
-      description,
-      price
-    FROM resources
-    WHERE status != 'trash'
-    ORDER BY created_at DESC
-    LIMIT $1 OFFSET $2;
+      r.id,
+      r.name,
+      r.created_at
+    FROM resources r
+    ${whereClause}
+    ORDER BY r.created_at DESC
+    LIMIT $${paramIndex}
+    OFFSET $${paramIndex + 1};
   `;
 
   const countQuery = `
     SELECT COUNT(*)
-    FROM resources
-    WHERE status != 'trash';
+    FROM resources r
+    ${whereClause};
   `;
 
+  // dataParams: all filter params + limit + offset
+  // countParams: filter params only (no pagination needed)
+  const dataParams = [...params, limit, offset];
+
   const [dataResult, paginationResult] = await Promise.all([
-    this.pool.query(dataQuery, [limit, offset]),
-    this.pool.query(countQuery)
+    this.pool.query(dataQuery, dataParams),
+    this.pool.query(countQuery, params)
   ]);
 
   const totalCount = parseInt(paginationResult.rows[0].count);
@@ -200,22 +349,48 @@ async getAllResources(page: number, limit: number): Promise<AllResources> {
 }
 ```
 
-### UPDATE - Partial update
+### UPDATE - Partial / dynamic field update
+
+Use dynamic field building when many optional fields exist. Collect `updates[]` and `params[]` arrays, then join them into the query.
 
 ```typescript
 async updateResource(payload: UpdateResourcePayload): Promise<void> {
-  const { id, name, description } = payload;
+  const { id, name, status, latitude } = payload;
+
+  if (!id) throw new Error(`Please provide a resource id`);
 
   this.logger.warn(`Attempting to update resource: ${id}`);
 
+  const updates: string[] = [];
+  const params: (string | number | null)[] = [];
+  let paramIndex = 1;
+
+  if (name !== undefined) {
+    updates.push(`name = $${paramIndex}`);
+    params.push(name);
+    paramIndex++;
+  }
+  if (status !== undefined) {
+    updates.push(`status = $${paramIndex}`);
+    params.push(status);
+    paramIndex++;
+  }
+  if (latitude !== undefined) {
+    updates.push(`latitude = $${paramIndex}`);
+    params.push(latitude);
+    paramIndex++;
+  }
+
+  if (updates.length === 0) throw new Error(`No fields to update`);
+
   const query = `
     UPDATE resources
-    SET name = $1,
-        description = $2
-    WHERE id = $3;
+    SET ${updates.join(',\n          ')}
+    WHERE id = $${paramIndex};
   `;
 
-  await this.pool.query(query, [name, description, id]);
+  params.push(id);
+  await this.pool.query(query, params);
 
   this.logger.info(`Successfully updated resource: ${id}`);
 }
@@ -289,13 +464,14 @@ async searchResources(term: string): Promise<BaseResource[]> {
 
 | Method | Purpose | Return Type |
 |--------|---------|-------------|
-| `createX()` | Create new record | `BaseX` |
-| `getX(id)` | Fetch single record | `FullX` |
-| `getAllX(page, limit)` | List with pagination | `{ data: X[], pagination }` |
-| `updateX(payload)` | Update record | `void` |
-| `trashX(id)` | Soft delete | `void` |
-| `searchX(term)` | Search records | `BaseX[]` |
-| `createTable()` | Create DB table | `string` |
+| `createTable()` | Idempotent DDL for table, enums, triggers | `string` (table name) |
+| `createX(payload)` | Create new record | `BaseX` or `XProfile` |
+| `getX(id)` / `fetchX(id)` | Fetch single record by ID | `FullX` / `XProfile` |
+| `getAllX(page, limit, filters?)` | List with pagination and optional filters | `{ data: X[], pagination }` |
+| `updateX(payload)` | Dynamic partial update | `void` |
+| `trashX(id)` | Soft delete (SET status = 'trash') | `void` |
+| `searchX(term)` | Search with LIKE / ILIKE, limited results | `BaseX[]` |
+| `fetchXByY(y)` | Fetch by non-PK field (e.g. phone, email) | `XProfile` |
 
 ## Field Name Mapping
 
@@ -350,7 +526,7 @@ import { PostgresConfig } from "../../databases/postgres.config";
 import { AppLogger } from "../../logger/winston.logger";
 import type {
   BaseProduct,
-  FullProduct,
+  ProductProfile,
   CreateProductPayload,
   UpdateProductPayload,
   AllProducts
@@ -360,18 +536,52 @@ import type {
 export class ProductsModel {
 
   constructor(
-    private readonly logger: AppLogger,
-    private readonly pgConfig: PostgresConfig
+    protected readonly logger: AppLogger,
+    protected readonly pgConfig: PostgresConfig
   ) { }
 
-  private get pool(): Pool {
+  protected get pool(): Pool {
     return this.pgConfig.getPool();
   }
 
-  async createProduct(payload: CreateProductPayload): Promise<BaseProduct> {
-    this.logger.warn(`Attempting to create product: ${payload.name}`);
+  async createTable(): Promise<string> {
+    this.logger.warn(`Attempting to create products table`);
 
+    const query = `
+      CREATE TABLE IF NOT EXISTS products (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        description VARCHAR(240) NOT NULL,
+        price NUMERIC(10,2) NOT NULL,
+        user_id INTEGER NOT NULL,
+        status row_status DEFAULT 'active',
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (user_id)
+          REFERENCES users(id)
+          ON DELETE CASCADE
+      );
+
+      DROP TRIGGER IF EXISTS update_products_timestamp ON products;
+
+      CREATE TRIGGER update_products_timestamp
+      BEFORE UPDATE ON products
+      FOR EACH ROW
+      EXECUTE FUNCTION set_timestamp();
+    `;
+
+    await this.pool.query(query);
+    this.logger.info(`Successfully created products table`);
+    return "products";
+  }
+
+  async createProduct(payload: CreateProductPayload): Promise<BaseProduct> {
     const { name, description, price, userId } = payload;
+
+    if (!name) throw new Error(`Please provide a product name`);
+
+    this.logger.warn(`Attempting to create product: ${name}`);
 
     const query = `
       INSERT INTO products (name, description, price, user_id)
@@ -382,10 +592,11 @@ export class ProductsModel {
     const result = await this.pool.query(query, [name, description, price, userId]);
 
     const product: BaseProduct = result.rows[0];
+    this.logger.info(`Successfully created product id: ${product.id}`);
     return product;
   }
 
-  async getProduct(id: number): Promise<FullProduct> {
+  async getProduct(id: number): Promise<ProductProfile> {
     this.logger.warn(`Attempting to fetch product id: ${id}`);
 
     const query = `
@@ -394,7 +605,7 @@ export class ProductsModel {
         name,
         description,
         price,
-        availability,
+        user_id,
         created_at,
         updated_at
       FROM products
@@ -407,35 +618,66 @@ export class ProductsModel {
       throw new Error(`Product not found`);
     }
 
-    const product: FullProduct = result.rows[0];
+    const product: ProductProfile = result.rows[0];
     return product;
   }
 
-  async getAllProducts(page: number, limit: number): Promise<AllProducts> {
-    this.logger.warn(`Attempting to fetch products page: ${page}, limit: ${limit}`);
+  async getAllProducts(
+    pageInput: number,
+    limitInput: number,
+    filters?: { name?: string; startDate?: string }
+  ): Promise<AllProducts> {
 
+    this.logger.warn(`Attempting to fetch products page: ${pageInput}, limit: ${limitInput}`);
+
+    const page = pageInput || 1;
+    const limit = limitInput || 10;
     const offset = (page - 1) * limit;
+
+    const conditions: string[] = [`p.status != 'trash'`];
+    const params: (string | number)[] = [];
+    let paramIndex = 1;
+
+    if (filters?.name) {
+      conditions.push(`p.name ILIKE $${paramIndex}`);
+      params.push(`%${filters.name}%`);
+      paramIndex++;
+    }
+    if (filters?.startDate) {
+      conditions.push(`p.created_at >= $${paramIndex}`);
+      params.push(filters.startDate);
+      paramIndex++;
+    }
+
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
     const dataQuery = `
       SELECT
-        id,
-        name,
-        description,
-        price,
-        availability
-      FROM products
-      WHERE status != 'trash'
-      ORDER BY created_at DESC
-      LIMIT $1 OFFSET $2;
+        p.id,
+        p.name,
+        p.description,
+        p.price,
+        p.user_id,
+        p.created_at,
+        p.updated_at
+      FROM products p
+      ${whereClause}
+      ORDER BY p.created_at DESC
+      LIMIT $${paramIndex}
+      OFFSET $${paramIndex + 1};
     `;
 
     const countQuery = `
-      SELECT COUNT(*) FROM products WHERE status != 'trash';
+      SELECT COUNT(*)
+      FROM products p
+      ${whereClause};
     `;
 
+    const dataParams = [...params, limit, offset];
+
     const [dataResult, countResult] = await Promise.all([
-      this.pool.query(dataQuery, [limit, offset]),
-      this.pool.query(countQuery)
+      this.pool.query(dataQuery, dataParams),
+      this.pool.query(countQuery, params)
     ]);
 
     const totalCount = parseInt(countResult.rows[0].count);
@@ -451,19 +693,47 @@ export class ProductsModel {
   }
 
   async updateProduct(payload: UpdateProductPayload): Promise<void> {
-    const { id, name, description, price } = payload;
+    const { id, name, description, price, status } = payload;
+
+    if (!id) throw new Error(`Please provide a product id`);
 
     this.logger.warn(`Attempting to update product: ${id}`);
 
+    const updates: string[] = [];
+    const params: (string | number | null)[] = [];
+    let paramIndex = 1;
+
+    if (name !== undefined) {
+      updates.push(`name = $${paramIndex}`);
+      params.push(name);
+      paramIndex++;
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${paramIndex}`);
+      params.push(description);
+      paramIndex++;
+    }
+    if (price !== undefined) {
+      updates.push(`price = $${paramIndex}`);
+      params.push(price);
+      paramIndex++;
+    }
+    if (status !== undefined) {
+      updates.push(`status = $${paramIndex}`);
+      params.push(status);
+      paramIndex++;
+    }
+
+    if (updates.length === 0) throw new Error(`No fields to update`);
+
     const query = `
       UPDATE products
-      SET name = $1,
-          description = $2,
-          price = $3
-      WHERE id = $4;
+      SET ${updates.join(',\n          ')}
+      WHERE id = $${paramIndex};
     `;
 
-    await this.pool.query(query, [name, description, price, id]);
+    params.push(id);
+    await this.pool.query(query, params);
 
     this.logger.info(`Successfully updated product: ${id}`);
   }
