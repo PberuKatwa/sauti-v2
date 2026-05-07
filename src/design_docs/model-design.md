@@ -23,18 +23,32 @@ import type {
 } from "../../types/{module}.types";
 ```
 
+## Pool Access
+
+Models access the database pool through a **private getter** that wraps `PostgresConfig.getPool()`:
+
+```typescript
+private get pool(): Pool {
+  return this.pgConfig.getPool();
+}
+```
+
+This provides a clean `this.pool` accessor in all methods instead of repeating `this.pgConfig.getPool()` in every function body. The getter is placed immediately after the constructor.
+
 ## Class Structure
 
 ```typescript
 @Injectable()
 export class ModelName {
 
-  private readonly pool: Pool | null;
-
   constructor(
     private readonly logger: AppLogger,
     private readonly pgConfig: PostgresConfig,
   ) { }
+
+  private get pool(): Pool {
+    return this.pgConfig.getPool();
+  }
 
   async methodName(payload: PayloadType): ReturnType {
     this.logger.warn(`Attempting to [action]`);
@@ -48,8 +62,7 @@ export class ModelName {
       WHERE id = $1;
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [param]);
+    const result = await this.pool.query(query, [param]);
 
     const data: ReturnType = result.rows[0];
     return data;
@@ -107,8 +120,7 @@ async createResource(payload: CreateResourcePayload): Promise<BaseResource> {
     RETURNING id, name;
   `;
 
-  const pool = this.pgConfig.getPool();
-  const result = await pool.query(query, [payload.name, payload.description, payload.price]);
+  const result = await this.pool.query(query, [payload.name, payload.description, payload.price]);
 
   const resource: BaseResource = result.rows[0];
   return resource;
@@ -133,8 +145,7 @@ async getResource(id: number): Promise<FullResource> {
     WHERE id = $1;
   `;
 
-  const pool = this.pgConfig.getPool();
-  const result = await pool.query(query, [id]);
+  const result = await this.pool.query(query, [id]);
 
   if (result.rowCount === 0) {
     throw new Error(`Resource not found`);
@@ -171,10 +182,9 @@ async getAllResources(page: number, limit: number): Promise<AllResources> {
     WHERE status != 'trash';
   `;
 
-  const pool = this.pgConfig.getPool();
   const [dataResult, paginationResult] = await Promise.all([
-    pool.query(dataQuery, [limit, offset]),
-    pool.query(countQuery)
+    this.pool.query(dataQuery, [limit, offset]),
+    this.pool.query(countQuery)
   ]);
 
   const totalCount = parseInt(paginationResult.rows[0].count);
@@ -205,8 +215,7 @@ async updateResource(payload: UpdateResourcePayload): Promise<void> {
     WHERE id = $3;
   `;
 
-  const pool = this.pgConfig.getPool();
-  await pool.query(query, [name, description, id]);
+  await this.pool.query(query, [name, description, id]);
 
   this.logger.info(`Successfully updated resource: ${id}`);
 }
@@ -224,8 +233,7 @@ async trashResource(id: number): Promise<void> {
     WHERE id = $1;
   `;
 
-  const pool = this.pgConfig.getPool();
-  await pool.query(query, [id]);
+  await this.pool.query(query, [id]);
 
   this.logger.info(`Successfully trashed resource: ${id}`);
 }
@@ -248,8 +256,7 @@ async getResourceWithFile(id: number): Promise<ResourceWithFile> {
     WHERE r.id = $1;
   `;
 
-  const pool = this.pgConfig.getPool();
-  const result = await pool.query(query, [id]);
+  const result = await this.pool.query(query, [id]);
 
   return result.rows[0];
 }
@@ -272,8 +279,7 @@ async searchResources(term: string): Promise<BaseResource[]> {
     LIMIT 10;
   `;
 
-  const pool = this.pgConfig.getPool();
-  const result = await pool.query(query, [`%${term}%`]);
+  const result = await this.pool.query(query, [`%${term}%`]);
 
   return result.rows;
 }
@@ -358,6 +364,10 @@ export class ProductsModel {
     private readonly pgConfig: PostgresConfig
   ) { }
 
+  private get pool(): Pool {
+    return this.pgConfig.getPool();
+  }
+
   async createProduct(payload: CreateProductPayload): Promise<BaseProduct> {
     this.logger.warn(`Attempting to create product: ${payload.name}`);
 
@@ -369,8 +379,7 @@ export class ProductsModel {
       RETURNING id, name, price;
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [name, description, price, userId]);
+    const result = await this.pool.query(query, [name, description, price, userId]);
 
     const product: BaseProduct = result.rows[0];
     return product;
@@ -392,8 +401,7 @@ export class ProductsModel {
       WHERE id = $1 AND status != 'trash';
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, [id]);
+    const result = await this.pool.query(query, [id]);
 
     if (result.rowCount === 0) {
       throw new Error(`Product not found`);
@@ -425,10 +433,9 @@ export class ProductsModel {
       SELECT COUNT(*) FROM products WHERE status != 'trash';
     `;
 
-    const pool = this.pgConfig.getPool();
     const [dataResult, countResult] = await Promise.all([
-      pool.query(dataQuery, [limit, offset]),
-      pool.query(countQuery)
+      this.pool.query(dataQuery, [limit, offset]),
+      this.pool.query(countQuery)
     ]);
 
     const totalCount = parseInt(countResult.rows[0].count);
@@ -456,8 +463,7 @@ export class ProductsModel {
       WHERE id = $4;
     `;
 
-    const pool = this.pgConfig.getPool();
-    await pool.query(query, [name, description, price, id]);
+    await this.pool.query(query, [name, description, price, id]);
 
     this.logger.info(`Successfully updated product: ${id}`);
   }
@@ -471,8 +477,7 @@ export class ProductsModel {
       WHERE id = $1;
     `;
 
-    const pool = this.pgConfig.getPool();
-    await pool.query(query, [id]);
+    await this.pool.query(query, [id]);
 
     this.logger.info(`Successfully trashed product: ${id}`);
   }
