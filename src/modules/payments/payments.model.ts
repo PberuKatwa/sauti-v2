@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Pool } from "pg";
 import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
 import { AllPayments, AllPaymentsApiResponse, BasePayment, BasePaymentFilters, CreatePaymentPayload, PaymentProfile, PaymentSources } from "../../types/payment.types";
@@ -10,6 +11,10 @@ export class PaymentsModel{
     private readonly logger: AppLogger,
     private readonly pgConfig:PostgresConfig
   ) { };
+
+  private get pool(): Pool {
+    return this.pgConfig.getPool();
+  }
 
   async createTable() {
 
@@ -27,8 +32,7 @@ export class PaymentsModel{
       );
     `
 
-    const pgPool = this.pgConfig.getPool();
-    await pgPool.query(query);
+    await this.pool.query(query);
 
     this.logger.info(`Successfully created payments table`);
     return "payments";
@@ -47,8 +51,7 @@ export class PaymentsModel{
       RETURNING source, amount;
     `
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [source, reference, order_id, amount]);
+    const result = await this.pool.query(query, [source, reference, order_id, amount]);
 
     this.logger.info(`Successfully created payment for ${order_id}`);
 
@@ -108,10 +111,9 @@ export class PaymentsModel{
     `;
     const dataParams = [...params, limit, offset];
 
-    const pgPool = this.pgConfig.getPool();
     const [dataResult, paginationResult] = await Promise.all([
-      pgPool.query(query, dataParams),
-      pgPool.query(countQuery, params)
+      this.pool.query(query, dataParams),
+      this.pool.query(countQuery, params)
     ]);
 
     const totalCount = parseInt(paginationResult.rows[0].count);
@@ -142,8 +144,7 @@ export class PaymentsModel{
       WHERE id = $1 AND status != 'trash';
     `;
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [id]);
+    const result = await this.pool.query(query, [id]);
 
     if (result.rowCount === 0) {
       throw new Error(`Payment not found`);
@@ -169,8 +170,7 @@ export class PaymentsModel{
       WHERE order_id = $1 AND status != 'trash';
     `;
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [orderId]);
+    const result = await this.pool.query(query, [orderId]);
 
     const payments: PaymentProfile[] = result.rows;
     return payments;
@@ -186,8 +186,7 @@ export class PaymentsModel{
       WHERE id = $1;
     `;
 
-    const pgPool = this.pgConfig.getPool();
-    await pgPool.query(query, [id]);
+    await this.pool.query(query, [id]);
 
     this.logger.info(`Successfully trashed payment for order id: ${id}`);
   }
