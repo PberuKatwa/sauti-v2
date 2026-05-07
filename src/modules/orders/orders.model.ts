@@ -210,7 +210,6 @@ export class OrdersModel {
     `;
 
     params.push(orderId);
-
     await this.pool.query(query, params);
 
     this.logger.info(`Successfully completed update for order: ${orderId}`);

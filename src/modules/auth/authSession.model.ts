@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Pool } from "pg";
 import { PostgresConfig } from "../../databases/postgres.config";
 import { AppLogger } from "../../logger/winston.logger";
 import type { BaseAuthSession } from "../../types/authSession.types";
@@ -11,11 +12,13 @@ export class AuthSessionModel {
     private readonly pgConfig: PostgresConfig
   ) { };
 
+  private get pool(): Pool {
+    return this.pgConfig.getPool();
+  }
+
   async createTable(): Promise<string> {
     try {
       this.logger.warn(`Attempting to create auth_sessions table`);
-
-      const pgPool = this.pgConfig.getPool();
 
       const query = `
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -33,7 +36,7 @@ export class AuthSessionModel {
         );
       `;
 
-      await pgPool.query(query);
+      await this.pool.query(query);
 
       this.logger.info(`Successfully created auth_sessions table`);
       return "auth_sessions";
@@ -46,7 +49,6 @@ export class AuthSessionModel {
     try {
       this.logger.warn(`Attempting to create auth session for user: ${userId}`);
 
-      const pgPool = this.pgConfig.getPool();
       const query = `
         WITH invalidate_old AS (
           UPDATE auth_sessions
@@ -61,7 +63,7 @@ export class AuthSessionModel {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 1);
 
-      const result = await pgPool.query(query, [userId, expiresAt]);
+      const result = await this.pool.query(query, [userId, expiresAt]);
       const authSession: BaseAuthSession = result.rows[0];
 
       this.logger.info(`Successfully created auth session`);
@@ -75,7 +77,6 @@ export class AuthSessionModel {
     try {
       this.logger.warn(`Attempting to get auth session: ${sessionId}`);
 
-      const pgPool = this.pgConfig.getPool();
       const query = `
         SELECT
           s.id,
@@ -89,7 +90,7 @@ export class AuthSessionModel {
       `;
 
 
-      const result = await pgPool.query(query, [sessionId]);
+      const result = await this.pool.query(query, [sessionId]);
 
       if (!result.rowCount || result.rowCount === 0) {
         throw new Error(`No valid session found`);
@@ -106,8 +107,7 @@ export class AuthSessionModel {
     try {
       this.logger.warn(`Attempting to trash auth session: ${id}`);
 
-      const pgPool = this.pgConfig.getPool();
-      await pgPool.query(
+      await this.pool.query(
         `UPDATE auth_sessions SET status = $1 WHERE id = $2;`,
         ["trash", id]
       );

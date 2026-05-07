@@ -13,12 +13,14 @@ import type {
 @Injectable()
 export class ClientModel {
 
-  private readonly pool: Pool | null;
-
   constructor(
     private readonly logger: AppLogger,
     private readonly pgConfig: PostgresConfig,
   ) { }
+
+  private get pool(): Pool {
+    return this.pgConfig.getPool();
+  }
 
   async createTable(): Promise<string> {
     try {
@@ -44,8 +46,7 @@ export class ClientModel {
         EXECUTE FUNCTION set_timestamp();
       `;
 
-      const pool = this.pgConfig.getPool();
-      await pool.query(query);
+      await this.pool.query(query);
 
       this.logger.info(`Successfully created clients table`);
 
@@ -70,8 +71,7 @@ export class ClientModel {
         RETURNING id, first_name, last_name, phone_number;
       `;
 
-      const pool = this.pgConfig.getPool();
-      const result = await pool.query(query, [phoneNumber]);
+      const result = await this.pool.query(query, [phoneNumber]);
 
       const client: ClientProfile = result.rows[0];
 
@@ -101,8 +101,7 @@ export class ClientModel {
         WHERE id=$3;
       `;
 
-      const pool = this.pgConfig.getPool();
-      await pool.query(query, [firstName, lastName, id]);
+      await this.pool.query(query, [firstName, lastName, id]);
 
       this.logger.info(`Successfully updated client id: ${id}`);
 
@@ -126,8 +125,7 @@ export class ClientModel {
         WHERE id=$1;
       `;
 
-      const pool = this.pgConfig.getPool();
-      const result = await pool.query(query, [id]);
+      const result = await this.pool.query(query, [id]);
 
       if (result.rowCount === 0) {
         throw new Error(`Client not found`);
@@ -157,8 +155,7 @@ export class ClientModel {
         WHERE phone_number=$1;
       `;
 
-      const pool = this.pgConfig.getPool();
-      const result = await pool.query(query, [phoneNumber]);
+      const result = await this.pool.query(query, [phoneNumber]);
 
       if (result.rowCount === 0) {
         throw new Error(`Client not found`);
@@ -211,10 +208,9 @@ export class ClientModel {
 
     const dataParams = [...params, limit, offset];
 
-    const pool = this.pgConfig.getPool();
     const [dataResult, paginationResult] = await Promise.all([
-      pool.query(dataQuery, dataParams),
-      pool.query(countQuery, params)
+      this.pool.query(dataQuery, dataParams),
+      this.pool.query(countQuery, params)
     ]);
 
     const totalCount = parseInt(paginationResult.rows[0].count);
@@ -254,8 +250,7 @@ export class ClientModel {
       SELECT COUNT(*) FROM clients ${whereClause};
     `;
 
-    const pool = this.pgConfig.getPool();
-    const result = await pool.query(query, params);
+    const result = await this.pool.query(query, params);
 
     return parseInt(result.rows[0].count);
   }

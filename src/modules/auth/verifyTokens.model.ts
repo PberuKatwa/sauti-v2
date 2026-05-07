@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Pool } from "pg";
 import { AppLogger } from "../../logger/winston.logger";
 import { PostgresConfig } from "../../databases/postgres.config";
 import { UsersModel } from "../users/users.model";
@@ -12,6 +13,10 @@ export class VerifyTokens{
     private readonly pgConfig: PostgresConfig,
     private readonly users:UsersModel
   ) { };
+
+  private get pool(): Pool {
+    return this.pgConfig.getPool();
+  }
 
   async createTable() {
 
@@ -42,8 +47,7 @@ export class VerifyTokens{
       );
     `
 
-    const pool = this.pgConfig.getPool();
-    await pool.query(query);
+    await this.pool.query(query);
 
     this.logger.info(`Successfully created table`);
 
@@ -69,8 +73,7 @@ export class VerifyTokens{
 
     const expiryTime = new Date(Date.now() + 1000 * 60 * 14);
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [user.id, expiryTime, "reset_password"]);
+    const result = await this.pool.query(query, [user.id, expiryTime, "reset_password"]);
     const verifyToken: BaseVerifyToken = result.rows[0];
 
     const tokenMail:TokenMailPayload = {
@@ -94,8 +97,7 @@ export class VerifyTokens{
         AND expires_at > NOW();
     `
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [tokenId]);
+    const result = await this.pool.query(query, [tokenId]);
 
     if (result.rowCount === 0) throw new Error(`Reset token is invalid`);
 
@@ -117,8 +119,7 @@ export class VerifyTokens{
       WHERE id = $2 AND status != 'trash';
     `;
 
-    const pgPool = this.pgConfig.getPool();
-    await pgPool.query(updateQuery, [true, token]);
+    await this.pool.query(updateQuery, [true, token]);
   }
 
 

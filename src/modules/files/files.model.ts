@@ -1,4 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { Pool } from "pg";
 import { PostgresConfig } from "../../databases/postgres.config";
 import { AppLogger } from "../../logger/winston.logger";
 import { File } from "../../types/file.types";
@@ -9,6 +10,10 @@ export class FilesModel {
     private readonly logger: AppLogger,
     private readonly pgConfig: PostgresConfig,
   ) {}
+
+  private get pool(): Pool {
+    return this.pgConfig.getPool();
+  }
 
   async createTable(): Promise<string> {
     try {
@@ -35,8 +40,7 @@ export class FilesModel {
         EXECUTE FUNCTION set_timestamp();
       `;
 
-      const pgPool = this.pgConfig.getPool();
-      await pgPool.query(query);
+      await this.pool.query(query);
       this.logger.info(`Successfully created files table`);
 
       return "files";
@@ -56,8 +60,7 @@ export class FilesModel {
         RETURNING id, uploaded_by , file_name,file_url, file_size, mime_type;
       `;
 
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [userId, fileName, fileUrl, fileSize, mimeType]);
+      const result = await this.pool.query(query, [userId, fileName, fileUrl, fileSize, mimeType]);
       const file:File = result.rows[0];
 
       this.logger.info(`File metadata saved successfully with ID.`);
@@ -74,8 +77,7 @@ export class FilesModel {
       this.logger.warn(`Attempting to get file by id`);
 
       const query = `SELECT id, user_id, file_name , file_url , file_size, mime_type FROM files WHERE id=${id}`;
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [id]);
+      const result = await this.pool.query(query, [id]);
       const file: File = result.rows[0];
 
       return file;
@@ -88,8 +90,7 @@ export class FilesModel {
   async deleteFile(id: number): Promise<boolean> {
     try {
       const query = `UPDATE files SET status = 'trash' WHERE id = $1`;
-      const pgPool = this.pgConfig.getPool();
-      await pgPool.query(query, [id]);
+      await this.pool.query(query, [id]);
       return true;
     } catch (error) {
       throw error;

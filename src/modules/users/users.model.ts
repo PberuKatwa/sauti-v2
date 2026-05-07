@@ -17,13 +17,16 @@ import type {
 
 @Injectable()
 export class UsersModel {
-  private readonly pool: Pool | null;
 
   constructor(
     private readonly logger: AppLogger,
     private readonly pgConfig: PostgresConfig,
     private readonly configService: ConfigService
   ) { }
+
+  private get pool(): Pool {
+    return this.pgConfig.getPool();
+  }
 
   async createTable(): Promise<string> {
     try {
@@ -51,8 +54,7 @@ export class UsersModel {
 
       `;
 
-      const pgPool = this.pgConfig.getPool();
-      await pgPool.query(query);
+      await this.pool.query(query);
 
       this.logger.info(`Successfully created users table`);
       return "users";
@@ -81,8 +83,7 @@ export class UsersModel {
       RETURNING id, first_name
     `;
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [
+    const result = await this.pool.query(query, [
       firstName,
       lastName,
       email,
@@ -104,8 +105,7 @@ export class UsersModel {
       WHERE email = $1 AND status != 'trash'
     `;
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [email]);
+    const result = await this.pool.query(query, [email]);
 
     const user: UserProfile = result.rows[0];
     return user;
@@ -121,8 +121,7 @@ export class UsersModel {
       WHERE id = $1 AND status != 'trash'
     `;
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [id]);
+    const result = await this.pool.query(query, [id]);
 
     const user: UserProfile = result.rows[0];
     return user;
@@ -138,8 +137,7 @@ export class UsersModel {
         WHERE email = $1 AND status != 'trash';
       `;
 
-      const pgPool = this.pgConfig.getPool();
-      const result = await pgPool.query(query, [email]);
+      const result = await this.pool.query(query, [email]);
 
       if (result.rowCount === 0) throw new Error(`Invalid email or password`);
 
@@ -181,8 +179,7 @@ export class UsersModel {
       WHERE id = $2 AND status != 'trash'
     `;
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, [hashedPassword, userId]);
+    const result = await this.pool.query(query, [hashedPassword, userId]);
 
     if (result.rowCount === 0) {
       throw new Error(`User not found`);
@@ -232,8 +229,7 @@ export class UsersModel {
       WHERE id = $${paramIndex} AND status != 'trash';
     `;
 
-    const pgPool = this.pgConfig.getPool();
-    const result = await pgPool.query(query, values);
+    const result = await this.pool.query(query, values);
 
     if (result.rowCount === 0) {
       throw new Error(`User not found`);
@@ -282,10 +278,9 @@ export class UsersModel {
       ${whereClause};
     `;
 
-    const pgPool = this.pgConfig.getPool();
     const [dataResult, paginationResult] = await Promise.all([
-      pgPool.query(dataQuery, [...queryParams, limit, offset]),
-      pgPool.query(countQuery, queryParams)
+      this.pool.query(dataQuery, [...queryParams, limit, offset]),
+      this.pool.query(countQuery, queryParams)
     ]);
 
     const totalCount = parseInt(paginationResult.rows[0].count);
@@ -312,9 +307,7 @@ export class UsersModel {
       WHERE id= $2 AND status != 'trash';
     `;
 
-    const pgPool = this.pgConfig.getPool();
-
-    await pgPool.query(query, ["trash", userId]);
+    await this.pool.query(query, ["trash", userId]);
   }
 
 }
