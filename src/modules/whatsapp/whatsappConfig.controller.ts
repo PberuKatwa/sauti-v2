@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Req, Res } from "@nestjs/common";
+import { Controller, Post, Get, Req, Res, UseGuards } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AppLogger } from "../../logger/winston.logger";
 import type { ApiResponse } from "../../types/api.types";
@@ -10,8 +10,10 @@ import {
   UpdateConfigPayload
 } from "../../types/whatsappConfig.types";
 import { WhatsappConfig } from "./whatsapp.config";
+import { AuthGuard } from "../auth/guards/auth.guard";
 
 @Controller('whatsapp/config')
+@UseGuards(AuthGuard)
 export class WhatsappConfigController {
 
   constructor(
